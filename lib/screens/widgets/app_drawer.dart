@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
+import '../../core/branding.dart';
 import '../../providers/auth_provider.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -33,23 +34,18 @@ class AppDrawer extends StatelessWidget {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Center(
-                    child: Text(
-                      (user?.fullName ?? 'T')[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                  padding: const EdgeInsets.all(3),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: Image.asset(Branding.logoAsset, fit: BoxFit.cover),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  user?.companyName ?? user?.fullName ?? 'Teklif Pro',
+                  user?.companyName ?? Branding.companyName,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -75,7 +71,13 @@ class AppDrawer extends StatelessWidget {
               children: [
                 _DrawerItem(
                   icon: Icons.grid_view_rounded,
-                  label: 'Ana Sayfa',
+                  label: 'Panel',
+                  route: '/panel',
+                  currentRoute: currentRoute,
+                ),
+                _DrawerItem(
+                  icon: Icons.public_outlined,
+                  label: 'Kurumsal Site',
                   route: '/',
                   currentRoute: currentRoute,
                 ),
@@ -124,8 +126,11 @@ class AppDrawer extends StatelessWidget {
                 color: const Color(0xFFFFEEEE),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.logout_rounded,
-                  color: Color(0xFFEF4444), size: 18),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Color(0xFFEF4444),
+                size: 18,
+              ),
             ),
             title: const Text(
               'Çıkış Yap',
@@ -138,6 +143,7 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               context.read<AuthProvider>().logout();
+              context.go('/');
             },
           ),
           const SizedBox(height: 16),

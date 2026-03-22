@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../core/app_theme.dart';
-import '../../providers/service_request_provider.dart';
+import 'package:provider/provider.dart';
+
 import '../../providers/customer_provider.dart';
+import '../../providers/service_request_provider.dart';
+import '../widgets/app_shell.dart';
 
 class ServiceRequestFormScreen extends StatefulWidget {
   final int? requestId;
+
   const ServiceRequestFormScreen({super.key, this.requestId});
 
   @override
@@ -33,20 +35,20 @@ class _ServiceRequestFormScreenState extends State<ServiceRequestFormScreen> {
     super.initState();
     if (_isEdit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final r = context
+        final request = context
             .read<ServiceRequestProvider>()
             .items
-            .where((e) => e.id == widget.requestId)
+            .where((item) => item.id == widget.requestId)
             .firstOrNull;
-        if (r != null) {
+        if (request != null) {
           setState(() {
-            _titleCtrl.text = r.title;
-            _descCtrl.text = r.description ?? '';
-            _locationCtrl.text = r.location ?? '';
-            _customerId = r.customerId;
-            _status = r.status;
-            _priority = r.priority;
-            _scheduledDate = r.scheduledDate;
+            _titleCtrl.text = request.title;
+            _descCtrl.text = request.description ?? '';
+            _locationCtrl.text = request.location ?? '';
+            _customerId = request.customerId;
+            _status = request.status;
+            _priority = request.priority;
+            _scheduledDate = request.scheduledDate;
           });
         }
       });
@@ -62,23 +64,27 @@ class _ServiceRequestFormScreenState extends State<ServiceRequestFormScreen> {
   }
 
   Future<void> _pickDate() async {
-    final d = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _scheduledDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (d != null) setState(() => _scheduledDate = d);
+    if (picked != null) {
+      setState(() => _scheduledDate = picked);
+    }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _saving = true);
     final data = {
       'customer_id': _customerId,
       'title': _titleCtrl.text.trim(),
-      'description':
-          _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      'description': _descCtrl.text.trim().isEmpty
+          ? null
+          : _descCtrl.text.trim(),
       'status': _status,
       'priority': _priority,
       'location': _locationCtrl.text.trim().isEmpty
@@ -87,107 +93,158 @@ class _ServiceRequestFormScreenState extends State<ServiceRequestFormScreen> {
       if (_scheduledDate != null)
         'scheduled_date': _scheduledDate!.toIso8601String(),
     };
+
     try {
-      final prov = context.read<ServiceRequestProvider>();
+      final provider = context.read<ServiceRequestProvider>();
       if (_isEdit) {
-        await prov.update(widget.requestId!, data);
+        await provider.update(widget.requestId!, data);
       } else {
-        await prov.create(data);
+        await provider.create(data);
       }
-      if (mounted) context.go('/service-requests');
+
+      if (mounted) {
+        context.go('/service-requests');
+      }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(_errorSnack('Hata oluştu'));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(buildErrorSnackBar('Servis talebi kaydedilemedi'));
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final customers = context.watch<CustomerProvider>().items;
+
     return Scaffold(
       appBar: AppBar(
-          title: Text(_isEdit ? 'Talebi Düzenle' : 'Yeni Servis Talebi')),
+        title: Text(_isEdit ? 'Talebi Düzenle' : 'Yeni Servis Talebi'),
+      ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: AppScrollableBody(
+          maxWidth: 980,
           children: [
-            _Section(
-              title: 'Temel Bilgiler',
-              icon: Icons.build_circle_outlined,
+            AppPageIntro(
+              badge: _isEdit ? 'Düzenleme Modu' : 'Yeni Talep',
+              icon: _isEdit
+                  ? Icons.build_circle_outlined
+                  : Icons.add_task_rounded,
+              title: _isEdit
+                  ? 'Servis talebini güncelleyin'
+                  : 'Yeni servis talebi oluşturun',
+              subtitle:
+                  'Talep başlığı, müşteri seçimi, öncelik ve planlanan tarih tek akışta kalır. Bu yapı ekip koordinasyonunu kolaylaştırır.',
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.assignment_outlined,
+              title: 'Talep Özeti',
+              description:
+                  'Talebin hangi müşteri için açıldığını ve hangi konuyu kapsadığını belirleyin.',
               children: [
-                DropdownButtonFormField<int>(
-                  key: ValueKey(_customerId),
-                  initialValue: _customerId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Müşteri *',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  items: customers
-                      .map((c) => DropdownMenuItem(
-                          value: c.id, child: Text(c.fullName, overflow: TextOverflow.ellipsis)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _customerId = v),
-                  validator: (v) => v == null ? 'Müşteri seçin' : null,
+                AdaptiveFieldRow(
+                  children: [
+                    DropdownButtonFormField<int>(
+                      key: ValueKey(_customerId),
+                      initialValue: _customerId,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Müşteri',
+                        prefixIcon: Icon(Icons.person_outline),
+                      ),
+                      items: customers
+                          .map(
+                            (customer) => DropdownMenuItem(
+                              value: customer.id,
+                              child: Text(
+                                customer.fullName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) => setState(() => _customerId = value),
+                      validator: (value) =>
+                          value == null ? 'Müşteri seçin' : null,
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: _priority,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Öncelik',
+                        prefixIcon: Icon(Icons.flag_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'low', child: Text('Düşük')),
+                        DropdownMenuItem(
+                          value: 'normal',
+                          child: Text('Normal'),
+                        ),
+                        DropdownMenuItem(value: 'high', child: Text('Yüksek')),
+                        DropdownMenuItem(value: 'urgent', child: Text('Acil')),
+                      ],
+                      onChanged: (value) => setState(() => _priority = value!),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleCtrl,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Başlık *',
+                    labelText: 'Başlık',
+                    hintText: 'Örn. Klima bakım talebi',
                     prefixIcon: Icon(Icons.title_outlined),
                   ),
-                  validator: (v) => v!.isEmpty ? 'Zorunlu alan' : null,
+                  validator: (value) => value!.isEmpty ? 'Zorunlu alan' : null,
                 ),
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _descCtrl,
-                  maxLines: 3,
+                  maxLines: 4,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
                     labelText: 'Açıklama',
+                    hintText: 'Talep kapsamı, arıza veya servis detayları',
                     prefixIcon: Icon(Icons.notes_outlined),
                     alignLabelWithHint: true,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Detaylar',
+            const SizedBox(height: 20),
+            AppSectionCard(
               icon: Icons.tune_outlined,
+              title: 'Planlama Detayları',
+              description:
+                  'Saha ekibinin planlama yapabilmesi için konum, tarih ve durum alanlarını yönetin.',
               children: [
-                TextFormField(
-                  controller: _locationCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Konum',
-                    prefixIcon: Icon(Icons.location_on_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _priority,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Öncelik',
-                    prefixIcon: Icon(Icons.flag_outlined),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'low', child: Text('Düşük')),
-                    DropdownMenuItem(value: 'normal', child: Text('Normal')),
-                    DropdownMenuItem(value: 'high', child: Text('Yüksek')),
-                    DropdownMenuItem(value: 'urgent', child: Text('Acil')),
+                AdaptiveFieldRow(
+                  children: [
+                    TextFormField(
+                      controller: _locationCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Konum',
+                        hintText: 'İlçe, tesis veya adres bilgisi',
+                        prefixIcon: Icon(Icons.location_on_outlined),
+                      ),
+                    ),
+                    AppDatePickerField(
+                      label: 'Planlanan Tarih',
+                      icon: Icons.calendar_today_outlined,
+                      value: _scheduledDate == null
+                          ? null
+                          : DateFormat('dd.MM.yyyy').format(_scheduledDate!),
+                      onTap: _pickDate,
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _priority = v!),
                 ),
-                if (_isEdit) ...[
-                  const SizedBox(height: 12),
+                if (_isEdit)
                   DropdownButtonFormField<String>(
                     key: ValueKey(_status),
                     initialValue: _status,
@@ -199,132 +256,48 @@ class _ServiceRequestFormScreenState extends State<ServiceRequestFormScreen> {
                     items: const [
                       DropdownMenuItem(value: 'new', child: Text('Yeni')),
                       DropdownMenuItem(
-                          value: 'quoted', child: Text('Teklif Verildi')),
+                        value: 'quoted',
+                        child: Text('Teklif Verildi'),
+                      ),
                       DropdownMenuItem(
-                          value: 'in_progress', child: Text('Devam Ediyor')),
+                        value: 'in_progress',
+                        child: Text('Devam Ediyor'),
+                      ),
                       DropdownMenuItem(
-                          value: 'completed', child: Text('Tamamlandı')),
+                        value: 'completed',
+                        child: Text('Tamamlandı'),
+                      ),
                       DropdownMenuItem(
-                          value: 'cancelled', child: Text('İptal')),
+                        value: 'cancelled',
+                        child: Text('İptal'),
+                      ),
                     ],
-                    onChanged: (v) => setState(() => _status = v!),
+                    onChanged: (value) => setState(() => _status = value!),
                   ),
-                ],
-                const SizedBox(height: 12),
-                _DatePickerField(
-                  label: 'Planlanan Tarih',
-                  icon: Icons.calendar_today_outlined,
-                  value: _scheduledDate == null
-                      ? null
-                      : DateFormat('dd.MM.yyyy').format(_scheduledDate!),
-                  onTap: _pickDate,
-                ),
               ],
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            FilledButton.icon(
               onPressed: _saving ? null : _submit,
-              child: _saving
+              icon: _saving
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: 18,
+                      width: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      _isEdit ? Icons.save_outlined : Icons.add_task_outlined,
+                    ),
+              label: Text(
+                _isEdit ? 'Talebi Güncelle' : 'Servis Talebini Kaydet',
+              ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 }
-
-class _DatePickerField extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String? value;
-  final VoidCallback onTap;
-  const _DatePickerField(
-      {required this.label,
-      required this.icon,
-      required this.value,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          suffixIcon: const Icon(Icons.arrow_drop_down,
-              color: AppTheme.textMedium),
-        ),
-        child: Text(
-          value ?? 'Seçilmedi',
-          style: TextStyle(
-            fontSize: 14,
-            color: value == null ? AppTheme.textLight : AppTheme.textDark,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-  const _Section(
-      {required this.title, required this.icon, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(
-              children: [
-                Icon(icon, size: 16, color: AppTheme.primary),
-                const SizedBox(width: 6),
-                Text(title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.primary,
-                      letterSpacing: 0.3,
-                    )),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-SnackBar _errorSnack(String msg) => SnackBar(
-      content: Text(msg),
-      backgroundColor: const Color(0xFFEF4444),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    );

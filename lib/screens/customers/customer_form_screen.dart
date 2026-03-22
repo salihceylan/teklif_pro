@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../core/app_theme.dart';
+
 import '../../providers/customer_provider.dart';
+import '../widgets/app_shell.dart';
 
 class CustomerFormScreen extends StatefulWidget {
   final int? customerId;
+
   const CustomerFormScreen({super.key, this.customerId});
 
   @override
@@ -29,18 +31,18 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     super.initState();
     if (_isEdit) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final c = context
+        final customer = context
             .read<CustomerProvider>()
             .items
-            .where((e) => e.id == widget.customerId)
+            .where((item) => item.id == widget.customerId)
             .firstOrNull;
-        if (c != null) {
-          _nameCtrl.text = c.fullName;
-          _emailCtrl.text = c.email ?? '';
-          _phoneCtrl.text = c.phone ?? '';
-          _addressCtrl.text = c.address ?? '';
-          _cityCtrl.text = c.city ?? '';
-          _notesCtrl.text = c.notes ?? '';
+        if (customer != null) {
+          _nameCtrl.text = customer.fullName;
+          _emailCtrl.text = customer.email ?? '';
+          _phoneCtrl.text = customer.phone ?? '';
+          _addressCtrl.text = customer.address ?? '';
+          _cityCtrl.text = customer.city ?? '';
+          _notesCtrl.text = customer.notes ?? '';
         }
       });
     }
@@ -59,111 +61,152 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _saving = true);
     final data = {
       'full_name': _nameCtrl.text.trim(),
       'email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
       'phone': _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-      'address':
-          _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+      'address': _addressCtrl.text.trim().isEmpty
+          ? null
+          : _addressCtrl.text.trim(),
       'city': _cityCtrl.text.trim().isEmpty ? null : _cityCtrl.text.trim(),
       'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
     };
+
     try {
-      final prov = context.read<CustomerProvider>();
+      final provider = context.read<CustomerProvider>();
       if (_isEdit) {
-        await prov.update(widget.customerId!, data);
+        await provider.update(widget.customerId!, data);
       } else {
-        await prov.create(data);
+        await provider.create(data);
       }
-      if (mounted) context.go('/customers');
-    } catch (e) {
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(_errorSnack('Hata oluştu'));
+        context.go('/customers');
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(buildErrorSnackBar('Müşteri kaydedilemedi'));
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-          AppBar(title: Text(_isEdit ? 'Müşteriyi Düzenle' : 'Yeni Müşteri')),
+      appBar: AppBar(
+        title: Text(_isEdit ? 'Müşteriyi Düzenle' : 'Yeni Müşteri'),
+      ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: AppScrollableBody(
+          maxWidth: 980,
           children: [
-            _Section(
+            AppPageIntro(
+              badge: _isEdit ? 'Düzenleme Modu' : 'Yeni Kayıt',
+              icon: _isEdit
+                  ? Icons.person_pin_circle_outlined
+                  : Icons.person_add_alt_1_rounded,
+              title: _isEdit
+                  ? 'Müşteri kaydını güncelleyin'
+                  : 'Yeni müşteri profili oluşturun',
+              subtitle:
+                  'İletişim, adres ve not alanlarını düzenli tutarak teklif ve servis operasyonlarında veri kaybını önleyin.',
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.badge_outlined,
               title: 'Temel Bilgiler',
-              icon: Icons.person_outline,
+              description:
+                  'İsim ve iletişim alanları listelerde, tekliflerde ve servis kayıtlarında kullanılır.',
               children: [
                 TextFormField(
                   controller: _nameCtrl,
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
-                    labelText: 'Ad Soyad *',
-                    prefixIcon: Icon(Icons.badge_outlined),
+                    labelText: 'Ad Soyad',
+                    hintText: 'Müşteri adı soyadı',
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                  validator: (v) => v!.isEmpty ? 'Zorunlu alan' : null,
+                  validator: (value) => value!.isEmpty ? 'Zorunlu alan' : null,
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-posta',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
+                AdaptiveFieldRow(
+                  children: [
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Telefon',
+                        hintText: '05xx xxx xx xx',
+                        prefixIcon: Icon(Icons.phone_outlined),
+                      ),
+                    ),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'E-posta',
+                        hintText: 'ornek@firma.com',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Adres',
+            const SizedBox(height: 20),
+            AppSectionCard(
               icon: Icons.location_on_outlined,
+              title: 'Adres Bilgileri',
+              description:
+                  'Saha ziyaretleri ve servis planlaması için konum bilgisini net tutun.',
               children: [
-                TextFormField(
-                  controller: _cityCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Şehir',
-                    prefixIcon: Icon(Icons.location_city_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _addressCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Adres',
-                    prefixIcon: Icon(Icons.home_outlined),
-                    alignLabelWithHint: true,
-                  ),
+                AdaptiveFieldRow(
+                  minItemWidth: 260,
+                  children: [
+                    TextFormField(
+                      controller: _cityCtrl,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'Şehir',
+                        hintText: 'İstanbul',
+                        prefixIcon: Icon(Icons.location_city_outlined),
+                      ),
+                    ),
+                    TextFormField(
+                      controller: _addressCtrl,
+                      maxLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Adres',
+                        hintText: 'Mahalle, sokak, bina bilgisi',
+                        prefixIcon: Icon(Icons.home_outlined),
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Notlar',
+            const SizedBox(height: 20),
+            AppSectionCard(
               icon: Icons.notes_outlined,
+              title: 'Operasyon Notları',
+              description:
+                  'Ödeme alışkanlıkları, randevu detayları veya ekip içi notlar için kullanılabilir.',
               children: [
                 TextFormField(
                   controller: _notesCtrl,
-                  maxLines: 3,
+                  maxLines: 4,
                   decoration: const InputDecoration(
                     labelText: 'Notlar',
+                    hintText: 'Müşteri ile ilgili operasyon notları',
                     prefixIcon: Icon(Icons.edit_note_outlined),
                     alignLabelWithHint: true,
                   ),
@@ -171,76 +214,25 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            FilledButton.icon(
               onPressed: _saving ? null : _submit,
-              child: _saving
+              icon: _saving
                   ? const SizedBox(
-                      height: 20,
-                      width: 20,
+                      height: 18,
+                      width: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : Text(_isEdit ? 'Güncelle' : 'Kaydet'),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(_isEdit ? Icons.save_outlined : Icons.person_add_alt),
+              label: Text(
+                _isEdit ? 'Değişiklikleri Kaydet' : 'Müşteriyi Kaydet',
+              ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 }
-
-class _Section extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<Widget> children;
-  const _Section(
-      {required this.title, required this.icon, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(
-              children: [
-                Icon(icon, size: 16, color: AppTheme.primary),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-SnackBar _errorSnack(String msg) => SnackBar(
-      content: Text(msg),
-      backgroundColor: const Color(0xFFEF4444),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    );
