@@ -118,6 +118,7 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                         40,
                       ),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _HeroSection(
@@ -423,6 +424,7 @@ class _AboutSection extends StatelessWidget {
         border: Border.all(color: AppTheme.border),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _SectionHeading(
@@ -1322,85 +1324,94 @@ class _ProductShowcase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Row(
-            children: [
-              _MiniDot(color: Color(0xFFE45858)),
-              SizedBox(width: 6),
-              _MiniDot(color: Color(0xFFF59E0B)),
-              SizedBox(width: 6),
-              _MiniDot(color: Color(0xFF10B981)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF102B46), Color(0xFF1B4D8C)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 380;
+        final height = compact ? 500.0 : 360.0;
+        const metricMinWidth = 96.0;
+
+        return SizedBox(
+          height: height,
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: AppTheme.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.dashboard_customize_rounded,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Teklif Pro Paneli',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ],
+                    _MiniDot(color: Color(0xFFE45858)),
+                    SizedBox(width: 6),
+                    _MiniDot(color: Color(0xFFF59E0B)),
+                    SizedBox(width: 6),
+                    _MiniDot(color: Color(0xFF10B981)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF102B46), Color(0xFF1B4D8C)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(22),
                     ),
-                    SizedBox(height: 18),
-                    Expanded(
-                      child: AdaptiveFieldRow(
-                        maxColumns: 2,
-                        minItemWidth: 120,
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _ProductMetric(title: 'Müşteri', value: '128'),
-                          _ProductMetric(title: 'Teklif', value: '46'),
-                          _ProductMetric(title: 'Ziyaret', value: '21'),
-                          _ProductMetric(title: 'Fatura', value: '18'),
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.dashboard_customize_rounded,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Teklif Pro Paneli',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          AdaptiveFieldRow(
+                            maxColumns: 2,
+                            minItemWidth: metricMinWidth,
+                            children: const [
+                              _ProductMetric(title: 'Müşteri', value: '128'),
+                              _ProductMetric(title: 'Teklif', value: '46'),
+                              _ProductMetric(title: 'Ziyaret', value: '21'),
+                              _ProductMetric(title: 'Fatura', value: '18'),
+                            ],
+                          ),
+                          const Spacer(),
+                          const _DarkInfoCard(
+                            text:
+                                'Yer tutucu ürün vitrin alanı. Gerçek ekran görüntüleri daha sonra eklenebilir.',
+                          ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 14),
-                    _DarkInfoCard(
-                      text:
-                          'Yer tutucu ürün vitrin alanı. Gerçek ekran görüntüleri daha sonra eklenebilir.',
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -1521,53 +1532,58 @@ class _ImagePlaceholderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppTheme.border),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFDFEFF), Color(0xFFEFF4FB)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return SizedBox(
+      height: 300,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: AppTheme.border),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFDFEFF), Color(0xFFEFF4FB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1B4D8C), Color(0xFF2F87D1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1B4D8C), Color(0xFF2F87D1)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  borderRadius: BorderRadius.circular(22),
+                  child: Center(
+                    child: Icon(icon, color: Colors.white, size: 52),
+                  ),
                 ),
-                child: Center(child: Icon(icon, color: Colors.white, size: 52)),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textDark,
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textDark,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.5,
-                color: AppTheme.textMedium,
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: AppTheme.textMedium,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

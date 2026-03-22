@@ -4,15 +4,23 @@ import 'constants.dart';
 class Storage {
   static SharedPreferences? _prefs;
 
+  static Future<SharedPreferences> _ensurePrefs() async {
+    return _prefs ??= await SharedPreferences.getInstance();
+  }
+
   static Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+    await _ensurePrefs();
   }
 
   static Future<void> saveToken(String token) async {
-    await _prefs!.setString(AppConstants.tokenKey, token);
+    final prefs = await _ensurePrefs();
+    await prefs.setString(AppConstants.tokenKey, token);
   }
 
-  static String? getToken() => _prefs!.getString(AppConstants.tokenKey);
+  static String? getToken() => _prefs?.getString(AppConstants.tokenKey);
 
-  static Future<void> clear() async => await _prefs!.clear();
+  static Future<void> clear() async {
+    final prefs = await _ensurePrefs();
+    await prefs.clear();
+  }
 }
