@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sshpass -p 'Fingon08.' ssh -p 22667 -o StrictHostKeyChecking=no salihceylan@178.210.161.55 \"echo ''=== OS ==='' && lsb_release -a 2>/dev/null && echo ''=== Python ==='' && python3 --version 2>/dev/null || echo ''yok'' && echo ''=== Node ==='' && node --version 2>/dev/null || echo ''yok'' && echo ''=== npm ==='' && npm --version 2>/dev/null || echo ''yok'' && echo ''=== Docker ==='' && docker --version 2>/dev/null || echo ''yok'' && echo ''=== Nginx ==='' && nginx -v 2>&1 || echo ''yok'' && echo ''=== PostgreSQL ==='' && psql --version 2>/dev/null || echo ''yok'' && echo ''=== Redis ==='' && redis-cli --version 2>/dev/null || echo ''yok'' && echo ''=== PM2 ==='' && pm2 --version 2>/dev/null || echo ''yok'' && echo ''=== pip ==='' && pip3 --version 2>/dev/null || echo ''yok''\")",
+      "Bash(ssh -V)",
+      "Bash(python3 -c \"import paramiko; print\\(''paramiko ok''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(python3:*)",
+      "Bash(python -c \"import paramiko; print\\(''ok''\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(python \"C:/Users/fingonancalime/AppData/Local/Temp/fix_auth.py\")",
+      "Bash(python \"C:/Users/fingonancalime/AppData/Local/Temp/seed_update.py\")",
+      "Bash(sshpass -p 'Fingon08.' ssh -p 22667 -o StrictHostKeyChecking=no salihceylan@178.210.161.55 \"echo ''connected'' && uname -a && whoami\")"
+    ],
+    "additionalDirectories": [
+      "g:\\projeler\\flutter_projeleri\\teklif_pro\\lib"
+    ]
+  }
+}
