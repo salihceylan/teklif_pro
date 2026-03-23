@@ -6,15 +6,21 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/home/company_home_screen.dart';
+import '../screens/notifications/notification_settings_screen.dart';
 import '../screens/customers/customers_screen.dart';
+import '../screens/customers/customer_detail_screen.dart';
 import '../screens/customers/customer_form_screen.dart';
 import '../screens/service_requests/service_requests_screen.dart';
+import '../screens/service_requests/service_request_detail_screen.dart';
 import '../screens/service_requests/service_request_form_screen.dart';
 import '../screens/quotes/quotes_screen.dart';
+import '../screens/quotes/quote_detail_screen.dart';
 import '../screens/quotes/quote_form_screen.dart';
 import '../screens/visits/visits_screen.dart';
+import '../screens/visits/visit_detail_screen.dart';
 import '../screens/visits/visit_form_screen.dart';
 import '../screens/invoices/invoices_screen.dart';
+import '../screens/invoices/invoice_detail_screen.dart';
 import '../screens/invoices/invoice_form_screen.dart';
 
 GoRouter buildRouter(BuildContext context) {
@@ -38,6 +44,10 @@ GoRouter buildRouter(BuildContext context) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/panel', builder: (_, _) => const DashboardScreen()),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, _) => const NotificationSettingsScreen(),
+      ),
       GoRoute(path: '/customers', builder: (_, _) => const CustomersScreen()),
       GoRoute(
         path: '/customers/new',
@@ -49,6 +59,12 @@ GoRouter buildRouter(BuildContext context) {
         builder: (_, s) => CustomerFormScreen(
           customerId: int.parse(s.pathParameters['id']!),
           returnTo: s.uri.queryParameters['returnTo'],
+        ),
+      ),
+      GoRoute(
+        path: '/customers/:id',
+        builder: (_, s) => CustomerDetailScreen(
+          customerId: int.parse(s.pathParameters['id']!),
         ),
       ),
       GoRoute(
@@ -65,6 +81,12 @@ GoRouter buildRouter(BuildContext context) {
           requestId: int.parse(s.pathParameters['id']!),
         ),
       ),
+      GoRoute(
+        path: '/service-requests/:id',
+        builder: (_, s) => ServiceRequestDetailScreen(
+          requestId: int.parse(s.pathParameters['id']!),
+        ),
+      ),
       GoRoute(path: '/quotes', builder: (_, _) => const QuotesScreen()),
       GoRoute(path: '/quotes/new', builder: (_, _) => const QuoteFormScreen()),
       GoRoute(
@@ -72,12 +94,22 @@ GoRouter buildRouter(BuildContext context) {
         builder: (_, s) =>
             QuoteFormScreen(quoteId: int.parse(s.pathParameters['id']!)),
       ),
+      GoRoute(
+        path: '/quotes/:id',
+        builder: (_, s) =>
+            QuoteDetailScreen(quoteId: int.parse(s.pathParameters['id']!)),
+      ),
       GoRoute(path: '/visits', builder: (_, _) => const VisitsScreen()),
       GoRoute(path: '/visits/new', builder: (_, _) => const VisitFormScreen()),
       GoRoute(
         path: '/visits/:id/edit',
         builder: (_, s) =>
             VisitFormScreen(visitId: int.parse(s.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/visits/:id',
+        builder: (_, s) =>
+            VisitDetailScreen(visitId: int.parse(s.pathParameters['id']!)),
       ),
       GoRoute(path: '/invoices', builder: (_, _) => const InvoicesScreen()),
       GoRoute(
@@ -88,6 +120,11 @@ GoRouter buildRouter(BuildContext context) {
         path: '/invoices/:id/edit',
         builder: (_, s) =>
             InvoiceFormScreen(invoiceId: int.parse(s.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/invoices/:id',
+        builder: (_, s) =>
+            InvoiceDetailScreen(invoiceId: int.parse(s.pathParameters['id']!)),
       ),
     ],
   );

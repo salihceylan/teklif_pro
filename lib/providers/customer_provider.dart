@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_notifications.dart';
 import '../models/customer.dart';
 import '../services/customer_service.dart';
 
@@ -22,13 +23,25 @@ class CustomerProvider extends ChangeNotifier {
     final c = await _service.create(data);
     _items.insert(0, c);
     notifyListeners();
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.companyRecords,
+      title: 'Yeni firma kaydedildi',
+      body: '${c.companyName} icin firma karti olusturuldu.',
+    );
   }
 
   Future<void> update(int id, Map<String, dynamic> data) async {
+    final previous = _items.where((e) => e.id == id).firstOrNull;
     final c = await _service.update(id, data);
     final idx = _items.indexWhere((e) => e.id == id);
     if (idx != -1) _items[idx] = c;
     notifyListeners();
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.companyRecords,
+      title: 'Firma profili guncellendi',
+      body:
+          '${previous?.companyName ?? c.companyName} firma kaydi guncellendi.',
+    );
   }
 
   Future<void> delete(int id) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_notifications.dart';
 import '../models/quote.dart';
 import '../services/quote_service.dart';
 
@@ -22,13 +23,28 @@ class QuoteProvider extends ChangeNotifier {
     final q = await _service.create(data);
     _items.insert(0, q);
     notifyListeners();
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.quoteLifecycle,
+      title: 'Yeni teklif hazirlandi',
+      body: '${q.title} icin ${q.quoteCode ?? 'yeni teklif'} olusturuldu.',
+    );
   }
 
   Future<void> update(int id, Map<String, dynamic> data) async {
+    final previous = _items.where((e) => e.id == id).firstOrNull;
     final q = await _service.update(id, data);
     final idx = _items.indexWhere((e) => e.id == id);
     if (idx != -1) _items[idx] = q;
     notifyListeners();
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.quoteLifecycle,
+      title: previous?.status != q.status
+          ? 'Teklif durumu guncellendi'
+          : 'Teklif guncellendi',
+      body: previous?.status != q.status
+          ? '${q.title} durumu ${q.statusLabel} oldu.'
+          : '${q.title} teklifi guncellendi.',
+    );
   }
 
   Future<void> delete(int id) async {
@@ -48,6 +64,12 @@ class QuoteProvider extends ChangeNotifier {
       email: email,
       subject: subject,
       message: message,
+    );
+    final quote = _items.where((e) => e.id == id).firstOrNull;
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.quoteDelivery,
+      title: 'Teklif mail ile gonderildi',
+      body: '${quote?.title ?? 'Teklif'} belgesi $email adresine gonderildi.',
     );
   }
 }

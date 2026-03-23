@@ -17,10 +17,23 @@ class Storage {
     await prefs.setString(AppConstants.tokenKey, token);
   }
 
+  static Future<void> setBool(String key, bool value) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setBool(key, value);
+  }
+
   static String? getToken() => _prefs?.getString(AppConstants.tokenKey);
 
-  static Future<void> clear() async {
+  static bool getBool(String key, {bool defaultValue = false}) =>
+      _prefs?.getBool(key) ?? defaultValue;
+
+  static Future<void> remove(String key) async {
     final prefs = await _ensurePrefs();
-    await prefs.clear();
+    await prefs.remove(key);
+  }
+
+  static Future<void> clear() async {
+    await remove(AppConstants.tokenKey);
+    await remove(AppConstants.userKey);
   }
 }

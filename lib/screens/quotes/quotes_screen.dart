@@ -6,12 +6,12 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../models/customer.dart';
 import '../../models/quote.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/invoice_provider.dart';
 import '../../providers/quote_provider.dart';
-import '../../services/quote_document_service.dart';
+import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import 'quote_ui_actions.dart';
 
 class QuotesScreen extends StatefulWidget {
   const QuotesScreen({super.key});
@@ -36,150 +36,6 @@ class _QuotesScreenState extends State<QuotesScreen> {
   Customer? _customerFor(List<Customer> customers, int id) =>
       customers.where((item) => item.id == id).firstOrNull;
 
-  Future<void> _printQuote(
-    BuildContext context,
-    Quote quote,
-    Customer? customer,
-  ) async {
-    await QuoteDocumentService.printQuote(
-      quote: quote,
-      customer: customer,
-      user: context.read<AuthProvider>().user,
-    );
-  }
-
-  Future<void> _showSendEmailDialog(
-    BuildContext context,
-    Quote quote,
-    Customer? customer,
-  ) async {
-    final emailCtrl = TextEditingController(text: customer?.email ?? '');
-    final subjectCtrl = TextEditingController(
-      text: 'Teklif ${quote.quoteCode ?? quote.id} - ${quote.title}',
-    );
-    final messageCtrl = TextEditingController(
-      text:
-          'Merhaba,\n\nTeklifinizi ekte PDF olarak iletiyoruz. Inceleyip geri donus saglayabilirsiniz.',
-    );
-    var sending = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: const Text('Teklifi Mail Gonder'),
-              content: SizedBox(
-                width: 460,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Alici E-posta',
-                          prefixIcon: Icon(Icons.alternate_email_outlined),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: subjectCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Konu',
-                          prefixIcon: Icon(Icons.subject_outlined),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: messageCtrl,
-                        maxLines: 5,
-                        decoration: const InputDecoration(
-                          labelText: 'Mesaj',
-                          alignLabelWithHint: true,
-                          prefixIcon: Icon(Icons.mail_outline),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: sending
-                      ? null
-                      : () => Navigator.pop(dialogContext),
-                  child: const Text('Iptal'),
-                ),
-                FilledButton.icon(
-                  onPressed: sending
-                      ? null
-                      : () async {
-                          final email = emailCtrl.text.trim();
-                          if (!email.contains('@')) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Gecerli bir e-posta girin'),
-                              ),
-                            );
-                            return;
-                          }
-                          setState(() => sending = true);
-                          try {
-                            await context.read<QuoteProvider>().sendEmail(
-                              quote.id,
-                              email: email,
-                              subject: subjectCtrl.text.trim(),
-                              message: messageCtrl.text.trim(),
-                            );
-                            if (context.mounted) {
-                              Navigator.pop(dialogContext);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Teklif $email adresine gonderildi',
-                                  ),
-                                ),
-                              );
-                            }
-                          } catch (_) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Mail gonderimi basarisiz oldu',
-                                  ),
-                                ),
-                              );
-                            }
-                            setState(() => sending = false);
-                          }
-                        },
-                  icon: sending
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_outlined),
-                  label: const Text('Gonder'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Future<void> _handleMenuAction(
     BuildContext context, {
     required String value,
@@ -189,10 +45,22 @@ class _QuotesScreenState extends State<QuotesScreen> {
     final quotes = context.read<QuoteProvider>();
     final invoices = context.read<InvoiceProvider>();
 
-    if (value == 'print') {
-      await _printQuote(context, quote, customer);
+    if (value == 'show') {
+      if (context.mounted) {
+        context.push('/quotes/${quote.id}');
+      }
+    } else if (value == 'print') {
+      await QuoteUiActions.printQuote(
+        context,
+        quote: quote,
+        customer: customer,
+      );
     } else if (value == 'mail') {
-      await _showSendEmailDialog(context, quote, customer);
+      await QuoteUiActions.showSendEmailDialog(
+        context,
+        quote: quote,
+        customer: customer,
+      );
     } else if (value == 'edit') {
       if (context.mounted) {
         context.go('/quotes/${quote.id}/edit');
@@ -229,27 +97,40 @@ class _QuotesScreenState extends State<QuotesScreen> {
       ),
       items: const [
         PopupMenuItem(
+          value: 'show',
+          child: ActionMenuRow(
+            icon: Icons.visibility_outlined,
+            label: 'Teklifi Goster',
+          ),
+        ),
+        PopupMenuItem(
           value: 'print',
-          child: _MenuRow(icon: Icons.print_outlined, label: 'Teklif Ciktisi'),
+          child: ActionMenuRow(
+            icon: Icons.print_outlined,
+            label: 'Teklif Ciktisi',
+          ),
         ),
         PopupMenuItem(
           value: 'mail',
-          child: _MenuRow(icon: Icons.email_outlined, label: 'Mail Gonder'),
+          child: ActionMenuRow(
+            icon: Icons.email_outlined,
+            label: 'Mail Gonder',
+          ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: _MenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
         ),
         PopupMenuItem(
           value: 'invoice',
-          child: _MenuRow(
+          child: ActionMenuRow(
             icon: Icons.receipt_long_outlined,
             label: 'Fatura Olustur',
           ),
         ),
         PopupMenuItem(
           value: 'delete',
-          child: _MenuRow(
+          child: ActionMenuRow(
             icon: Icons.delete_outline,
             label: 'Sil',
             color: Color(0xFFEF4444),
@@ -433,32 +314,6 @@ class _Chip extends StatelessWidget {
           color: AppTheme.primary,
         ),
       ),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _MenuRow({required this.icon, required this.label, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color ?? AppTheme.textMedium),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: color ?? AppTheme.textDark,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }

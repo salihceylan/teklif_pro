@@ -1,0 +1,408 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/app_theme.dart';
+import '../../models/visit.dart';
+import '../../providers/customer_provider.dart';
+import '../../providers/visit_provider.dart';
+import '../widgets/action_menu_row.dart';
+import '../widgets/app_shell.dart';
+
+class VisitDetailScreen extends StatefulWidget {
+  final int visitId;
+
+  const VisitDetailScreen({super.key, required this.visitId});
+
+  @override
+  State<VisitDetailScreen> createState() => _VisitDetailScreenState();
+}
+
+class _VisitDetailScreenState extends State<VisitDetailScreen> {
+  final _currency = NumberFormat('#,##0.00', 'tr_TR');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final visitProvider = context.read<VisitProvider>();
+      final customerProvider = context.read<CustomerProvider>();
+      if (visitProvider.items.isEmpty) {
+        await visitProvider.load();
+      }
+      if (!mounted) return;
+      if (customerProvider.items.isEmpty) {
+        await customerProvider.load();
+      }
+    });
+  }
+
+  ServiceVisit? _visit(VisitProvider provider) =>
+      provider.items.where((item) => item.id == widget.visitId).firstOrNull;
+
+  String _customerName(List<dynamic> customers, int id) =>
+      customers.where((item) => item.id == id).firstOrNull?.companyName ??
+      'Musteri #$id';
+
+  void _goBack() {
+    if (Navigator.of(context).canPop()) {
+      context.pop();
+    } else {
+      context.go('/visits');
+    }
+  }
+
+  Future<void> _handleMenuAction(String value, ServiceVisit visit) async {
+    if (value == 'edit') {
+      context.push('/visits/${visit.id}/edit');
+    } else if (value == 'delete') {
+      await context.read<VisitProvider>().delete(visit.id);
+      if (mounted) {
+        _goBack();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visitProvider = context.watch<VisitProvider>();
+    final customerProvider = context.watch<CustomerProvider>();
+    final visit = _visit(visitProvider);
+
+    if (visitProvider.loading && visit == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (visit == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: _goBack,
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+          title: const Text('Servis Formu Bulunamadi'),
+        ),
+        body: const Center(
+          child: Text(
+            'Servis formu bulunamadi',
+            style: TextStyle(color: AppTheme.textMedium),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: _goBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(visit.serviceCode ?? 'Servis Formu'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(value, visit),
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'edit',
+                child: ActionMenuRow(
+                  icon: Icons.edit_outlined,
+                  label: 'Duzenle',
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: ActionMenuRow(
+                  icon: Icons.delete_outline,
+                  label: 'Sil',
+                  color: Color(0xFFEF4444),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: AppScrollableBody(
+        maxWidth: 1080,
+        children: [
+          AppPageIntro(
+            badge: visit.statusLabel,
+            icon: Icons.build_circle_outlined,
+            title: _customerName(customerProvider.items, visit.customerId),
+            subtitle:
+                '${visit.serviceCode ?? 'Servis belgesi'} icin operasyon ve maliyet ozeti',
+          ),
+          const SizedBox(height: 20),
+          AppSectionCard(
+            icon: Icons.event_note_outlined,
+            title: 'Ziyaret Bilgileri',
+            children: [
+              AdaptiveFieldRow(
+                maxColumns: 3,
+                minItemWidth: 220,
+                children: [
+                  _InfoPanel(
+                    label: 'Planlanan Tarih',
+                    value: DateFormat(
+                      'dd.MM.yyyy HH:mm',
+                      'tr_TR',
+                    ).format(visit.scheduledDate),
+                  ),
+                  _InfoPanel(
+                    label: 'Gerceklesen Tarih',
+                    value: visit.actualDate == null
+                        ? '-'
+                        : DateFormat(
+                            'dd.MM.yyyy HH:mm',
+                            'tr_TR',
+                          ).format(visit.actualDate!),
+                  ),
+                  _InfoPanel(label: 'Durum', value: visit.statusLabel),
+                  _InfoPanel(
+                    label: 'Teknik Personel',
+                    value: visit.technicianName ?? '-',
+                  ),
+                  _InfoPanel(
+                    label: 'Toplam',
+                    value: '${_currency.format(visit.grandTotal)} ₺',
+                  ),
+                  _InfoPanel(label: 'KDV Orani', value: '%${visit.vatRate}'),
+                ],
+              ),
+              _DetailLine('Sikayet / Talep', visit.complaint),
+            ],
+          ),
+          const SizedBox(height: 20),
+          AppSectionCard(
+            icon: Icons.inventory_2_outlined,
+            title: 'Malzeme Kalemleri',
+            children: [
+              for (final item in visit.items)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FBFD),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFD8E3EE)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.materialName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          _MiniPill('Kod ${item.productCode ?? '-'}'),
+                          _MiniPill('Adet ${item.quantity}'),
+                          _MiniPill(
+                            'Birim ${_currency.format(item.unitPrice)} ₺',
+                          ),
+                          _MiniPill(
+                            'Toplam ${_currency.format(item.totalPrice)} ₺',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF5FB),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    _SummaryRow(
+                      'Malzeme',
+                      _currency.format(visit.materialTotal),
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow('Iscilik', _currency.format(visit.laborAmount)),
+                    const SizedBox(height: 8),
+                    _SummaryRow('KDV', _currency.format(visit.vatTotal)),
+                    const Divider(height: 24),
+                    _SummaryRow(
+                      'Genel Toplam',
+                      '${_currency.format(visit.grandTotal)} ₺',
+                      highlighted: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if ((visit.notes ?? '').isNotEmpty ||
+              (visit.technicianNotes ?? '').isNotEmpty) ...[
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.notes_outlined,
+              title: 'Notlar',
+              children: [
+                _DetailLine('Musteri Notlari', visit.notes),
+                _DetailLine('Teknisyen Notlari', visit.technicianNotes),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoPanel extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoPanel({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFD),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD8E3EE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textMedium,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailLine extends StatelessWidget {
+  final String label;
+  final String? value;
+
+  const _DetailLine(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFD),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD8E3EE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textMedium,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textDark,
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniPill extends StatelessWidget {
+  final String text;
+
+  const _MiniPill(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppTheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool highlighted;
+
+  const _SummaryRow(this.label, this.value, {this.highlighted = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
+              color: highlighted
+                  ? const Color(0xFF17304C)
+                  : const Color(0xFF5A6B7F),
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: highlighted ? 18 : 14,
+            fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
+            color: highlighted
+                ? const Color(0xFF1F5EA8)
+                : const Color(0xFF17304C),
+          ),
+        ),
+      ],
+    );
+  }
+}

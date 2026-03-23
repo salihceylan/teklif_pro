@@ -111,6 +111,13 @@ class AppDrawer extends StatelessWidget {
                   route: '/invoices',
                   currentRoute: currentRoute,
                 ),
+                const _DrawerDivider(label: 'TERCIHLER'),
+                _DrawerItem(
+                  icon: Icons.notifications_outlined,
+                  label: 'Bildirimler',
+                  route: '/notifications',
+                  currentRoute: currentRoute,
+                ),
               ],
             ),
           ),

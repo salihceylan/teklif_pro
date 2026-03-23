@@ -327,9 +327,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           status: request.status,
                           statusLabel: request.statusLabel,
                           createdAt: request.createdAt,
-                          onTap: () => context.go(
-                            '/service-requests/${request.id}/edit',
-                          ),
+                          onTap: () =>
+                              context.push('/service-requests/${request.id}'),
                         ),
                     ],
                   ),
@@ -594,7 +593,7 @@ class _VisitOverviewCard extends StatelessWidget {
     final timeText = DateFormat('HH:mm', 'tr_TR').format(visit.scheduledDate);
 
     return InkWell(
-      onTap: () => context.go('/visits/${visit.id}/edit'),
+      onTap: () => context.push('/visits/${visit.id}'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(18),
