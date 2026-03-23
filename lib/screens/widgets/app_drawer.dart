@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/app_theme.dart';
 import '../../core/branding.dart';
 import '../../providers/auth_provider.dart';
 
 class AppDrawer extends StatelessWidget {
   final String currentRoute;
+
   const AppDrawer({super.key, required this.currentRoute});
 
   @override
@@ -16,7 +18,6 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          // ── Header ──────────────────────────────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
@@ -33,11 +34,11 @@ class AppDrawer extends StatelessWidget {
                 Container(
                   width: 52,
                   height: 52,
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  padding: const EdgeInsets.all(3),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(11),
                     child: Image.asset(Branding.logoAsset, fit: BoxFit.cover),
@@ -63,8 +64,6 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-
-          // ── Menu ────────────────────────────────────────────────
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -81,10 +80,10 @@ class AppDrawer extends StatelessWidget {
                   route: '/',
                   currentRoute: currentRoute,
                 ),
-                const _DrawerDivider(label: 'İŞ YÖNETİMİ'),
+                const _DrawerDivider(label: 'IS YONETIMI'),
                 _DrawerItem(
                   icon: Icons.people_alt_outlined,
-                  label: 'Müşteriler',
+                  label: 'Firmalar',
                   route: '/customers',
                   currentRoute: currentRoute,
                 ),
@@ -102,7 +101,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _DrawerItem(
                   icon: Icons.calendar_month_outlined,
-                  label: 'Servis Ziyaretleri',
+                  label: 'Servis Formlari',
                   route: '/visits',
                   currentRoute: currentRoute,
                 ),
@@ -115,8 +114,6 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-
-          // ── Footer ──────────────────────────────────────────────
           const Divider(height: 1),
           ListTile(
             leading: Container(
@@ -133,7 +130,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             title: const Text(
-              'Çıkış Yap',
+              'Cikis Yap',
               style: TextStyle(
                 color: Color(0xFFEF4444),
                 fontWeight: FontWeight.w600,
@@ -155,6 +152,7 @@ class AppDrawer extends StatelessWidget {
 
 class _DrawerDivider extends StatelessWidget {
   final String label;
+
   const _DrawerDivider({required this.label});
 
   @override
@@ -187,10 +185,10 @@ class _DrawerItem extends StatelessWidget {
     required this.currentRoute,
   });
 
-  bool get _isActive => currentRoute == route;
-
   @override
   Widget build(BuildContext context) {
+    final isActive = currentRoute == route;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       child: ListTile(
@@ -198,7 +196,7 @@ class _DrawerItem extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: _isActive
+            color: isActive
                 ? AppTheme.primary.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
@@ -206,25 +204,25 @@ class _DrawerItem extends StatelessWidget {
           child: Icon(
             icon,
             size: 20,
-            color: _isActive ? AppTheme.primary : AppTheme.textMedium,
+            color: isActive ? AppTheme.primary : AppTheme.textMedium,
           ),
         ),
         title: Text(
           label,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: _isActive ? FontWeight.w700 : FontWeight.w500,
-            color: _isActive ? AppTheme.primary : AppTheme.textDark,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            color: isActive ? AppTheme.primary : AppTheme.textDark,
           ),
         ),
-        tileColor: _isActive
+        tileColor: isActive
             ? AppTheme.primary.withValues(alpha: 0.07)
             : Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         dense: true,
         onTap: () {
           Navigator.pop(context);
-          if (!_isActive) context.go(route);
+          if (!isActive) context.go(route);
         },
       ),
     );

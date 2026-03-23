@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '../../core/app_theme.dart';
 import '../../providers/customer_provider.dart';
 import '../widgets/app_drawer.dart';
@@ -17,84 +18,136 @@ class _CustomersScreenState extends State<CustomersScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-        (_) => context.read<CustomerProvider>().load());
+      (_) => context.read<CustomerProvider>().load(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<CustomerProvider>();
+    final provider = context.watch<CustomerProvider>();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Müşteriler')),
+      appBar: AppBar(title: const Text('Firmalar')),
       drawer: const AppDrawer(currentRoute: '/customers'),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/customers/new'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_business_outlined),
+        label: const Text('Yeni Firma'),
       ),
-      body: prov.loading
+      body: provider.loading
           ? const Center(child: CircularProgressIndicator())
-          : prov.items.isEmpty
+          : provider.items.isEmpty
               ? _EmptyState(
-                  icon: Icons.people_alt_outlined,
-                  message: 'Henüz müşteri eklenmedi',
-                  actionLabel: 'Müşteri Ekle',
+                  icon: Icons.apartment_outlined,
+                  message: 'Henuz firma eklenmedi',
+                  actionLabel: 'Firma Ekle',
                   onAction: () => context.go('/customers/new'),
                 )
               : RefreshIndicator(
-                  onRefresh: prov.load,
+                  onRefresh: provider.load,
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
-                    itemCount: prov.items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) {
-                      final c = prov.items[i];
-                      final color = AppTheme.avatarColor(c.fullName);
+                    itemCount: provider.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final customer = provider.items[index];
                       return Card(
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          leading: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Text(
-                                c.fullName[0].toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    customer.customerCode ?? customer.companyName[0],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          title: Text(c.fullName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 15)),
-                          subtitle: Text(
-                            [
-                              if (c.phone != null) c.phone!,
-                              if (c.email != null) c.email!,
-                            ].join(' • '),
-                            style: const TextStyle(
-                                fontSize: 12, color: AppTheme.textMedium),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _IconBtn(
-                                icon: Icons.edit_outlined,
-                                color: AppTheme.primary,
-                                onTap: () =>
-                                    context.go('/customers/${c.id}/edit'),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      children: [
+                                        Text(
+                                          customer.companyName,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.textDark,
+                                          ),
+                                        ),
+                                        if ((customer.customerCode ?? '').isNotEmpty)
+                                          _ChipLabel(
+                                            label: 'ID ${customer.customerCode!}',
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      [
+                                        if ((customer.contactName ?? '').isNotEmpty)
+                                          customer.contactName!,
+                                        if ((customer.phone ?? '').isNotEmpty)
+                                          customer.phone!,
+                                        if ((customer.email ?? '').isNotEmpty)
+                                          customer.email!,
+                                      ].join('  •  '),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textMedium,
+                                      ),
+                                    ),
+                                    if ((customer.taxNumber ?? '').isNotEmpty ||
+                                        (customer.city ?? '').isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 6),
+                                        child: Text(
+                                          [
+                                            if ((customer.taxNumber ?? '').isNotEmpty)
+                                              'Vergi No: ${customer.taxNumber}',
+                                            if ((customer.city ?? '').isNotEmpty)
+                                              customer.city!,
+                                          ].join('  •  '),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textLight,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 4),
-                              _IconBtn(
-                                icon: Icons.delete_outline,
-                                color: const Color(0xFFEF4444),
-                                onTap: () => _confirmDelete(context, c.id),
+                              const SizedBox(width: 12),
+                              Column(
+                                children: [
+                                  _IconBtn(
+                                    icon: Icons.edit_outlined,
+                                    color: AppTheme.primary,
+                                    onTap: () => context.go('/customers/${customer.id}/edit'),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _IconBtn(
+                                    icon: Icons.delete_outline,
+                                    color: const Color(0xFFEF4444),
+                                    onTap: () => _confirmDelete(context, customer.id),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -110,17 +163,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Müşteriyi Sil'),
-        content: const Text('Bu müşteriyi silmek istediğinizden emin misiniz?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Firmayi Sil'),
+        content: const Text('Bu firma kaydini silmek istediginizden emin misiniz?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('İptal')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Iptal'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444)),
+              backgroundColor: const Color(0xFFEF4444),
+            ),
             onPressed: () {
               Navigator.pop(context);
               context.read<CustomerProvider>().delete(id);
@@ -133,26 +187,55 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 }
 
+class _ChipLabel extends StatelessWidget {
+  final String label;
+
+  const _ChipLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _IconBtn(
-      {required this.icon, required this.color, required this.onTap});
+
+  const _IconBtn({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
-        width: 34,
-        height: 34,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, size: 17, color: color),
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }
@@ -187,16 +270,16 @@ class _EmptyState extends StatelessWidget {
             child: Icon(icon, size: 32, color: AppTheme.primary),
           ),
           const SizedBox(height: 16),
-          Text(message,
-              style: const TextStyle(
-                  color: AppTheme.textMedium, fontSize: 15)),
+          Text(
+            message,
+            style: const TextStyle(color: AppTheme.textMedium, fontSize: 15),
+          ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: onAction,
             icon: const Icon(Icons.add, size: 18),
             label: Text(actionLabel),
-            style: FilledButton.styleFrom(
-                minimumSize: const Size(160, 44)),
+            style: FilledButton.styleFrom(minimumSize: const Size(160, 44)),
           ),
         ],
       ),

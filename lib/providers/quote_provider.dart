@@ -36,4 +36,18 @@ class QuoteProvider extends ChangeNotifier {
     _items.removeWhere((e) => e.id == id);
     notifyListeners();
   }
+
+  Future<void> sendEmail(
+    int id, {
+    required String email,
+    String? subject,
+    String? message,
+  }) async {
+    await _service.sendEmail(
+      id,
+      email: email,
+      subject: subject,
+      message: message,
+    );
+  }
 }

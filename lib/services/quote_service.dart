@@ -20,4 +20,20 @@ class QuoteService {
   Future<void> delete(int id) async {
     await ApiClient.instance.delete('/quotes/$id');
   }
+
+  Future<void> sendEmail(
+    int id, {
+    required String email,
+    String? subject,
+    String? message,
+  }) async {
+    await ApiClient.instance.post(
+      '/quotes/$id/send',
+      data: {
+        'email': email,
+        if (subject != null && subject.trim().isNotEmpty) 'subject': subject,
+        if (message != null && message.trim().isNotEmpty) 'message': message,
+      },
+    );
+  }
 }

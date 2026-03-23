@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/visit.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/visit_provider.dart';
 import '../widgets/app_shell.dart';
@@ -18,15 +19,32 @@ class VisitFormScreen extends StatefulWidget {
 
 class _VisitFormScreenState extends State<VisitFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _complaintCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   final _techNotesCtrl = TextEditingController();
+  final _technicianCtrl = TextEditingController();
+  final _laborCtrl = TextEditingController(text: '0');
+  final _vatCtrl = TextEditingController(text: '20');
+  final List<_MaterialRow> _items = [];
+
   int? _customerId;
   DateTime? _scheduledDate;
+  DateTime? _actualDate;
   String _status = 'scheduled';
   bool _saving = false;
+  ServiceVisit? _loadedVisit;
+  final _fmt = NumberFormat('#,##0.00', 'tr_TR');
 
   bool get _isEdit => widget.visitId != null;
-  final _fmt = DateFormat('dd.MM.yyyy HH:mm');
+
+  double get _materialTotal =>
+      _items.fold(0, (sum, item) => sum + item.totalPrice);
+  double get _laborAmount =>
+      double.tryParse(_laborCtrl.text.replaceAll(',', '.')) ?? 0;
+  double get _vatRate =>
+      double.tryParse(_vatCtrl.text.replaceAll(',', '.')) ?? 20;
+  double get _vatTotal => (_materialTotal + _laborAmount) * _vatRate / 100;
+  double get _grandTotal => _materialTotal + _laborAmount + _vatTotal;
 
   @override
   void initState() {
@@ -39,57 +57,107 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             .where((item) => item.id == widget.visitId)
             .firstOrNull;
         if (visit != null) {
-          setState(() {
-            _customerId = visit.customerId;
-            _scheduledDate = visit.scheduledDate;
-            _status = visit.status;
-            _notesCtrl.text = visit.notes ?? '';
-            _techNotesCtrl.text = visit.technicianNotes ?? '';
-          });
+          _bindVisit(visit);
         }
       });
+    } else {
+      _items.add(_MaterialRow.empty());
     }
+  }
+
+  void _bindVisit(ServiceVisit visit) {
+    setState(() {
+      _loadedVisit = visit;
+      _customerId = visit.customerId;
+      _scheduledDate = visit.scheduledDate;
+      _actualDate = visit.actualDate;
+      _status = visit.status;
+      _complaintCtrl.text = visit.complaint ?? '';
+      _notesCtrl.text = visit.notes ?? '';
+      _techNotesCtrl.text = visit.technicianNotes ?? '';
+      _technicianCtrl.text = visit.technicianName ?? '';
+      _laborCtrl.text = visit.laborAmount.toString();
+      _vatCtrl.text = visit.vatRate.toString();
+      _items
+        ..clear()
+        ..addAll(
+          visit.items.map(
+            (item) => _MaterialRow(
+              codeCtrl: TextEditingController(text: item.productCode ?? ''),
+              nameCtrl: TextEditingController(text: item.materialName),
+              qtyCtrl: TextEditingController(text: item.quantity.toString()),
+              priceCtrl: TextEditingController(text: item.unitPrice.toString()),
+            ),
+          ),
+        );
+      if (_items.isEmpty) {
+        _items.add(_MaterialRow.empty());
+      }
+    });
   }
 
   @override
   void dispose() {
+    _complaintCtrl.dispose();
     _notesCtrl.dispose();
     _techNotesCtrl.dispose();
+    _technicianCtrl.dispose();
+    _laborCtrl.dispose();
+    _vatCtrl.dispose();
+    for (final row in _items) {
+      row.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _pickDateTime() async {
+  Future<DateTime?> _pickDateTime(DateTime? initial) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: _scheduledDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initial ?? DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
     );
-    if (date == null || !mounted) return;
+    if (date == null || !mounted) return null;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_scheduledDate ?? DateTime.now()),
+      initialTime: TimeOfDay.fromDateTime(initial ?? DateTime.now()),
     );
-    if (time == null) return;
+    if (time == null) return null;
 
-    setState(
-      () => _scheduledDate = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      ),
-    );
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  Future<void> _selectScheduledDate() async {
+    final picked = await _pickDateTime(_scheduledDate);
+    if (picked != null) {
+      setState(() => _scheduledDate = picked);
+    }
+  }
+
+  Future<void> _selectActualDate() async {
+    final picked = await _pickDateTime(_actualDate ?? _scheduledDate);
+    if (picked != null) {
+      setState(() => _actualDate = picked);
+    }
+  }
+
+  void _addItem() {
+    setState(() => _items.add(_MaterialRow.empty()));
+  }
+
+  void _removeItem(int index) {
+    final row = _items.removeAt(index);
+    row.dispose();
+    setState(() {});
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_scheduledDate == null) {
+    if (_scheduledDate == null || _customerId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(buildErrorSnackBar('Lütfen tarih ve saat seçin'));
+      ).showSnackBar(buildErrorSnackBar('Firma ve planlanan tarih zorunludur'));
       return;
     }
 
@@ -97,11 +165,29 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final data = {
       'customer_id': _customerId,
       'scheduled_date': _scheduledDate!.toIso8601String(),
+      if (_actualDate != null) 'actual_date': _actualDate!.toIso8601String(),
       'status': _status,
+      'complaint':
+          _complaintCtrl.text.trim().isEmpty ? null : _complaintCtrl.text.trim(),
+      'technician_name': _technicianCtrl.text.trim().isEmpty
+          ? null
+          : _technicianCtrl.text.trim(),
       'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       'technician_notes': _techNotesCtrl.text.trim().isEmpty
           ? null
           : _techNotesCtrl.text.trim(),
+      'labor_amount': _laborAmount,
+      'vat_rate': _vatRate,
+      'items': _items
+          .map(
+            (row) => {
+              if (row.productCode.isNotEmpty) 'product_code': row.productCode,
+              'material_name': row.materialName,
+              'quantity': row.quantity,
+              'unit_price': row.unitPrice,
+            },
+          )
+          .toList(),
     };
 
     try {
@@ -119,7 +205,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(buildErrorSnackBar('Ziyaret kaydedilemedi'));
+        ).showSnackBar(buildErrorSnackBar('Servis formu kaydedilemedi'));
       }
     } finally {
       if (mounted) {
@@ -131,128 +217,224 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   @override
   Widget build(BuildContext context) {
     final customers = context.watch<CustomerProvider>().items;
+    final dateFormatter = DateFormat('dd.MM.yyyy HH:mm');
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Ziyareti Düzenle' : 'Yeni Ziyaret'),
+        title: Text(_isEdit ? 'Servis Formunu Duzenle' : 'Yeni Servis Formu'),
       ),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
-          maxWidth: 980,
+          maxWidth: 1080,
           children: [
             AppPageIntro(
-              badge: _isEdit ? 'Düzenleme Modu' : 'Yeni Ziyaret',
-              icon: _isEdit ? Icons.calendar_month_outlined : Icons.event_note,
+              badge: _loadedVisit?.serviceCode ?? 'Servis Belgesi',
+              icon: Icons.build_circle_outlined,
               title: _isEdit
-                  ? 'Ziyaret detaylarını güncelleyin'
-                  : 'Yeni ziyaret planlayın',
+                  ? 'Servis formunu guncelleyin'
+                  : 'Yeni servis formu olusturun',
               subtitle:
-                  'Müşteri seçimi, randevu tarihi ve teknisyen notları aynı ekranda okunabilir şekilde düzenlenir.',
+                  'Musteri sikayeti, kullanilan malzemeler, iscilik ve toplamlar tek form yapisinda toplanir.',
             ),
             const SizedBox(height: 20),
             AppSectionCard(
-              icon: Icons.schedule_outlined,
-              title: 'Ziyaret Planı',
+              icon: Icons.event_note_outlined,
+              title: 'Musteri ve Ziyaret Bilgileri',
               description:
-                  'Randevu zamanı ve ilgili müşteri bilgisini ekleyerek saha akışını kesinleştirin.',
+                  'Belge ust bolumunde yer alan firma, tarih ve durum bilgileri burada tutulur.',
               children: [
                 AdaptiveFieldRow(
+                  maxColumns: 3,
+                  minItemWidth: 220,
                   children: [
                     DropdownButtonFormField<int>(
                       key: ValueKey(_customerId),
                       initialValue: _customerId,
                       isExpanded: true,
                       decoration: const InputDecoration(
-                        labelText: 'Müşteri',
-                        prefixIcon: Icon(Icons.person_outline),
+                        labelText: 'Firma',
+                        prefixIcon: Icon(Icons.business_outlined),
                       ),
                       items: customers
                           .map(
                             (customer) => DropdownMenuItem(
                               value: customer.id,
                               child: Text(
-                                customer.fullName,
+                                [
+                                  customer.customerCode,
+                                  customer.companyName,
+                                ].whereType<String>().join('  •  '),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           )
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
-                      validator: (value) =>
-                          value == null ? 'Müşteri seçin' : null,
+                      validator: (value) => value == null ? 'Firma secin' : null,
                     ),
                     AppDatePickerField(
-                      label: 'Tarih ve Saat',
+                      label: 'Planlanan Tarih',
                       icon: Icons.schedule_outlined,
                       value: _scheduledDate == null
                           ? null
-                          : _fmt.format(_scheduledDate!),
-                      onTap: _pickDateTime,
-                      placeholder: 'Tarih ve saat seçin',
+                          : dateFormatter.format(_scheduledDate!),
+                      onTap: _selectScheduledDate,
+                      placeholder: 'Tarih secin',
                       hasError: _scheduledDate == null,
+                    ),
+                    AppDatePickerField(
+                      label: 'Gerceklesen Tarih',
+                      icon: Icons.access_time_outlined,
+                      value: _actualDate == null
+                          ? null
+                          : dateFormatter.format(_actualDate!),
+                      onTap: _selectActualDate,
+                      placeholder: 'Opsiyonel',
                     ),
                   ],
                 ),
-                if (_isEdit)
-                  DropdownButtonFormField<String>(
-                    key: ValueKey(_status),
-                    initialValue: _status,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Durum',
-                      prefixIcon: Icon(Icons.info_outline),
+                AdaptiveFieldRow(
+                  maxColumns: 2,
+                  minItemWidth: 260,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      key: ValueKey(_status),
+                      initialValue: _status,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Durum',
+                        prefixIcon: Icon(Icons.flag_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'scheduled',
+                          child: Text('Planlandi'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'in_progress',
+                          child: Text('Devam Ediyor'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'completed',
+                          child: Text('Tamamlandi'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'cancelled',
+                          child: Text('Iptal'),
+                        ),
+                      ],
+                      onChanged: (value) => setState(() => _status = value!),
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'scheduled',
-                        child: Text('Planlandı'),
+                    TextFormField(
+                      controller: _technicianCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Teknik Personel',
+                        prefixIcon: Icon(Icons.engineering_outlined),
                       ),
-                      DropdownMenuItem(
-                        value: 'in_progress',
-                        child: Text('Devam Ediyor'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'completed',
-                        child: Text('Tamamlandı'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'cancelled',
-                        child: Text('İptal'),
-                      ),
-                    ],
-                    onChanged: (value) => setState(() => _status = value!),
+                    ),
+                  ],
+                ),
+                TextFormField(
+                  controller: _complaintCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Sikayet / Talep',
+                    alignLabelWithHint: true,
+                    prefixIcon: Icon(Icons.report_problem_outlined),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.inventory_2_outlined,
+              title: 'Malzeme ve Hizmet Kalemleri',
+              description:
+                  'Kod, malzeme adi, adet ve birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
+              trailing: TextButton.icon(
+                onPressed: _addItem,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Kalem Ekle'),
+              ),
+              children: [
+                for (final entry in _items.asMap().entries)
+                  _MaterialCard(
+                    row: entry.value,
+                    canDelete: _items.length > 1,
+                    fmt: _fmt,
+                    onDelete: () => _removeItem(entry.key),
+                    onChanged: () => setState(() {}),
                   ),
               ],
             ),
             const SizedBox(height: 20),
             AppSectionCard(
-              icon: Icons.notes_outlined,
-              title: 'Ziyaret Notları',
+              icon: Icons.calculate_outlined,
+              title: 'Toplamlar',
               description:
-                  'Müşteri bilgilendirmeleri ve teknik ekip notlarını ayrı alanlarda yönetin.',
+                  'Malzeme, iscilik ve KDV toplamlari servis formunun alt bloklarinda kullanilir.',
+              children: [
+                AdaptiveFieldRow(
+                  maxColumns: 2,
+                  minItemWidth: 260,
+                  children: [
+                    TextFormField(
+                      controller: _laborCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Iscilik Toplami',
+                        prefixIcon: Icon(Icons.handyman_outlined),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    TextFormField(
+                      controller: _vatCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'KDV Orani (%)',
+                        prefixIcon: Icon(Icons.percent_outlined),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ],
+                ),
+                _VisitSummaryCard(
+                  fmt: _fmt,
+                  materialTotal: _materialTotal,
+                  laborAmount: _laborAmount,
+                  vatTotal: _vatTotal,
+                  grandTotal: _grandTotal,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.notes_outlined,
+              title: 'Aciklamalar',
+              description:
+                  'Musteri notu ve teknisyen degerlendirmesi ayri alanlarda tutulur.',
               children: [
                 TextFormField(
                   controller: _notesCtrl,
                   maxLines: 4,
-                  textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Müşteri Notları',
-                    hintText:
-                        'Ziyaret öncesi veya sonrası görünmesi gereken notlar',
-                    prefixIcon: Icon(Icons.edit_note_outlined),
+                    labelText: 'Musteri Notlari',
                     alignLabelWithHint: true,
+                    prefixIcon: Icon(Icons.edit_note_outlined),
                   ),
                 ),
                 TextFormField(
                   controller: _techNotesCtrl,
                   maxLines: 4,
-                  textCapitalization: TextCapitalization.sentences,
                   decoration: const InputDecoration(
-                    labelText: 'Teknisyen Notları',
-                    hintText: 'Teknik değerlendirme veya ekip içi açıklamalar',
-                    prefixIcon: Icon(Icons.engineering_outlined),
+                    labelText: 'Teknisyen Notlari',
                     alignLabelWithHint: true,
+                    prefixIcon: Icon(Icons.fact_check_outlined),
                   ),
                 ),
               ],
@@ -269,12 +451,251 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Icon(_isEdit ? Icons.save_outlined : Icons.event_available),
-              label: Text(_isEdit ? 'Ziyareti Güncelle' : 'Ziyareti Kaydet'),
+                  : Icon(_isEdit ? Icons.save_outlined : Icons.build_outlined),
+              label: Text(
+                _isEdit ? 'Servis Formunu Guncelle' : 'Servis Formunu Kaydet',
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+class _MaterialCard extends StatelessWidget {
+  final _MaterialRow row;
+  final bool canDelete;
+  final NumberFormat fmt;
+  final VoidCallback onDelete;
+  final VoidCallback onChanged;
+
+  const _MaterialCard({
+    required this.row,
+    required this.canDelete,
+    required this.fmt,
+    required this.onDelete,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFD),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFD8E3EE)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: row.codeCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Kod No',
+                        prefixIcon: Icon(Icons.qr_code_2_outlined),
+                      ),
+                    ),
+                  ),
+                  if (canDelete) ...[
+                    const SizedBox(width: 12),
+                    IconButton.filledTonal(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: row.nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Malzemenin Adi',
+                  prefixIcon: Icon(Icons.widgets_outlined),
+                ),
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? 'Zorunlu alan' : null,
+                onChanged: (_) => onChanged(),
+              ),
+              const SizedBox(height: 12),
+              if (compact)
+                Column(children: _compactValueFields(row, onChanged))
+              else
+                Row(children: _wideValueFields(row, onChanged)),
+              const SizedBox(height: 14),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F0FA),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Toplam: ${fmt.format(row.totalPrice)} ₺',
+                    style: const TextStyle(
+                      color: Color(0xFF1F5EA8),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  List<Widget> _compactValueFields(_MaterialRow row, VoidCallback onChanged) => [
+        TextFormField(
+          controller: row.qtyCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Adet',
+            prefixIcon: Icon(Icons.format_list_numbered_outlined),
+          ),
+          onChanged: (_) => onChanged(),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: row.priceCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Birim Fiyati',
+            prefixIcon: Icon(Icons.payments_outlined),
+          ),
+          onChanged: (_) => onChanged(),
+        ),
+      ];
+
+  List<Widget> _wideValueFields(_MaterialRow row, VoidCallback onChanged) => [
+        Expanded(
+          child: TextFormField(
+            controller: row.qtyCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Adet',
+              prefixIcon: Icon(Icons.format_list_numbered_outlined),
+            ),
+            onChanged: (_) => onChanged(),
+          ),
+        ),
+        const SizedBox(width: 12, height: 12),
+        Expanded(
+          child: TextFormField(
+            controller: row.priceCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Birim Fiyati',
+              prefixIcon: Icon(Icons.payments_outlined),
+            ),
+            onChanged: (_) => onChanged(),
+          ),
+        ),
+      ];
+}
+
+class _VisitSummaryCard extends StatelessWidget {
+  final NumberFormat fmt;
+  final double materialTotal;
+  final double laborAmount;
+  final double vatTotal;
+  final double grandTotal;
+
+  const _VisitSummaryCard({
+    required this.fmt,
+    required this.materialTotal,
+    required this.laborAmount,
+    required this.vatTotal,
+    required this.grandTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF5FB),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          _row('Malzeme Toplami', materialTotal),
+          const SizedBox(height: 8),
+          _row('Iscilik Toplami', laborAmount),
+          const SizedBox(height: 8),
+          _row('KDV', vatTotal),
+          const Divider(height: 24),
+          _row('Genel Toplam', grandTotal, highlighted: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(String label, double value, {bool highlighted = false}) => Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
+                color: highlighted ? const Color(0xFF17304C) : const Color(0xFF5A6B7F),
+              ),
+            ),
+          ),
+          Text(
+            '${fmt.format(value)} ₺',
+            style: TextStyle(
+              fontSize: highlighted ? 18 : 14,
+              fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
+              color: highlighted ? const Color(0xFF1F5EA8) : const Color(0xFF17304C),
+            ),
+          ),
+        ],
+      );
+}
+
+class _MaterialRow {
+  final TextEditingController codeCtrl;
+  final TextEditingController nameCtrl;
+  final TextEditingController qtyCtrl;
+  final TextEditingController priceCtrl;
+
+  _MaterialRow({
+    required this.codeCtrl,
+    required this.nameCtrl,
+    required this.qtyCtrl,
+    required this.priceCtrl,
+  });
+
+  factory _MaterialRow.empty() => _MaterialRow(
+        codeCtrl: TextEditingController(),
+        nameCtrl: TextEditingController(),
+        qtyCtrl: TextEditingController(text: '1'),
+        priceCtrl: TextEditingController(),
+      );
+
+  String get productCode => codeCtrl.text.trim();
+  String get materialName => nameCtrl.text.trim();
+  double get quantity => double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
+  double get unitPrice =>
+      double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
+  double get totalPrice => quantity * unitPrice;
+
+  void dispose() {
+    codeCtrl.dispose();
+    nameCtrl.dispose();
+    qtyCtrl.dispose();
+    priceCtrl.dispose();
   }
 }

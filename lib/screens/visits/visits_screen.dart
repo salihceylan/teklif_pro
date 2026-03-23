@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../core/app_theme.dart';
-import '../../providers/visit_provider.dart';
 import '../../providers/customer_provider.dart';
+import '../../providers/visit_provider.dart';
 import '../widgets/app_drawer.dart';
 
 class VisitsScreen extends StatefulWidget {
@@ -15,7 +16,8 @@ class VisitsScreen extends StatefulWidget {
 }
 
 class _VisitsScreenState extends State<VisitsScreen> {
-  final _timeFmt = DateFormat('HH:mm');
+  final _date = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
+  final _currency = NumberFormat('#,##0.00', 'tr_TR');
 
   @override
   void initState() {
@@ -28,135 +30,117 @@ class _VisitsScreenState extends State<VisitsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<VisitProvider>();
-    final customers = context.watch<CustomerProvider>().items;
-
-    String customerName(int id) =>
-        customers.where((c) => c.id == id).firstOrNull?.fullName ?? '#$id';
+    final visits = context.watch<VisitProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Servis Ziyaretleri')),
+      appBar: AppBar(title: const Text('Servis Formlari')),
       drawer: const AppDrawer(currentRoute: '/visits'),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/visits/new'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.build_circle_outlined),
+        label: const Text('Yeni Form'),
       ),
-      body: prov.loading
+      body: visits.loading
           ? const Center(child: CircularProgressIndicator())
-          : prov.items.isEmpty
+          : visits.items.isEmpty
               ? _EmptyState(
-                  icon: Icons.calendar_month_outlined,
-                  message: 'Henüz ziyaret planlanmadı',
-                  actionLabel: 'Ziyaret Ekle',
+                  icon: Icons.build_circle_outlined,
+                  message: 'Henuz servis formu olusturulmadi',
+                  actionLabel: 'Form Ekle',
                   onAction: () => context.go('/visits/new'),
                 )
               : RefreshIndicator(
-                  onRefresh: prov.load,
+                  onRefresh: visits.load,
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
-                    itemCount: prov.items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) {
-                      final v = prov.items[i];
-                      final color = AppTheme.statusColor(v.status);
+                    itemCount: visits.items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final visit = visits.items[index];
+                      final color = AppTheme.statusColor(visit.status);
+
                       return Card(
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () =>
-                              context.go('/visits/${v.id}/edit'),
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => context.go('/visits/${visit.id}/edit'),
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Tarih kutusu
                                 Container(
-                                  width: 48,
-                                  height: 52,
+                                  width: 54,
+                                  height: 54,
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary
-                                        .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
+                                  child: Icon(
+                                    Icons.assignment_turned_in_outlined,
+                                    color: color,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
                                   child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: [
+                                          Text(
+                                            visit.customerCompanyName ?? 'Servis Formu',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.textDark,
+                                            ),
+                                          ),
+                                          if ((visit.serviceCode ?? '').isNotEmpty)
+                                            _Chip(label: visit.serviceCode!),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
                                       Text(
-                                        DateFormat('dd')
-                                            .format(v.scheduledDate),
+                                        _date.format(visit.scheduledDate),
                                         style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.primary,
-                                          height: 1,
+                                          fontSize: 12,
+                                          color: AppTheme.textMedium,
                                         ),
                                       ),
-                                      Text(
-                                        DateFormat('MMM', 'tr_TR')
-                                            .format(v.scheduledDate),
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.primary,
+                                      if ((visit.complaint ?? '').isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 6),
+                                          child: Text(
+                                            visit.complaint!,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppTheme.textLight,
+                                            ),
+                                          ),
                                         ),
-                                      ),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        customerName(v.customerId),
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textDark,
-                                        ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    _StatusBadge(label: visit.statusLabel, color: color),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      '${_currency.format(visit.grandTotal)} ₺',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.primary,
                                       ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                              Icons.access_time_outlined,
-                                              size: 12,
-                                              color: AppTheme.textLight),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            _timeFmt.format(v.scheduledDate),
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: AppTheme.textMedium),
-                                          ),
-                                          if (v.notes != null) ...[
-                                            const Text('  •  ',
-                                                style: TextStyle(
-                                                    color:
-                                                        AppTheme.textLight)),
-                                            Expanded(
-                                              child: Text(
-                                                v.notes!,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color:
-                                                        AppTheme.textMedium),
-                                                maxLines: 1,
-                                                overflow:
-                                                    TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                _StatusBadge(
-                                    label: v.statusLabel, color: color),
                               ],
                             ),
                           ),
@@ -169,9 +153,35 @@ class _VisitsScreenState extends State<VisitsScreen> {
   }
 }
 
+class _Chip extends StatelessWidget {
+  final String label;
+
+  const _Chip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
 class _StatusBadge extends StatelessWidget {
   final String label;
   final Color color;
+
   const _StatusBadge({required this.label, required this.color});
 
   @override
@@ -186,7 +196,10 @@ class _StatusBadge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w600, color: color),
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -221,9 +234,10 @@ class _EmptyState extends StatelessWidget {
             child: Icon(icon, size: 32, color: AppTheme.primary),
           ),
           const SizedBox(height: 16),
-          Text(message,
-              style: const TextStyle(
-                  color: AppTheme.textMedium, fontSize: 15)),
+          Text(
+            message,
+            style: const TextStyle(color: AppTheme.textMedium, fontSize: 15),
+          ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: onAction,
