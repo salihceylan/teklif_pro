@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/browser_push_manager.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
 import '../core/storage.dart';
@@ -19,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
     if (token == null) return;
     try {
       _user = await _service.me();
+      await BrowserPushManager.instance.syncCurrentUser();
       notifyListeners();
     } catch (_) {
       await Storage.clear();
@@ -31,6 +33,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _user = await _service.login(email, password);
+      await BrowserPushManager.instance.syncCurrentUser();
       _loading = false;
       notifyListeners();
       return true;
@@ -60,6 +63,7 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
         companyName: companyName,
       );
+      await BrowserPushManager.instance.syncCurrentUser();
       _loading = false;
       notifyListeners();
       return true;
@@ -72,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await BrowserPushManager.instance.unsubscribeCurrentUser();
     await _service.logout();
     _user = null;
     notifyListeners();

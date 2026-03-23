@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_notifications.dart';
+import '../../core/browser_push_manager.dart';
 import '../../core/app_theme.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/app_shell.dart';
@@ -18,23 +20,38 @@ class _NotificationSettingsScreenState
   bool _loading = true;
   bool _requestingPermission = false;
   bool _permissionGranted = false;
+  String _permissionLabel = 'Kapali';
   late final bool _supported;
   Map<AppNotificationTopic, bool> _topicStates = {};
+
+  bool get _isWebPush => kIsWeb;
 
   @override
   void initState() {
     super.initState();
-    _supported = AppNotifications.instance.isSupportedOnCurrentPlatform;
+    _supported = _isWebPush
+        ? BrowserPushManager.instance.isSupported
+        : AppNotifications.instance.isSupportedOnCurrentPlatform;
     _loadState();
   }
 
   Future<void> _loadState() async {
     final prefs = await AppNotifications.instance.topicPreferences();
-    final granted = await AppNotifications.instance.permissionGranted();
+    final granted = _isWebPush
+        ? await BrowserPushManager.instance.permissionStatus() == 'granted'
+        : await AppNotifications.instance.permissionGranted();
+    final label = _isWebPush
+        ? _browserPermissionLabel(
+            await BrowserPushManager.instance.permissionStatus(),
+          )
+        : granted
+        ? 'Acik'
+        : 'Kapali';
     if (!mounted) return;
     setState(() {
       _topicStates = prefs;
       _permissionGranted = granted;
+      _permissionLabel = label;
       _loading = false;
     });
   }
@@ -42,14 +59,22 @@ class _NotificationSettingsScreenState
   Future<void> _toggleTopic(AppNotificationTopic topic, bool value) async {
     setState(() => _topicStates[topic] = value);
     await AppNotifications.instance.setTopicEnabled(topic, value);
+    if (_isWebPush && _permissionGranted) {
+      await BrowserPushManager.instance.syncTopicPreferences();
+    }
   }
 
   Future<void> _requestPermission() async {
     setState(() => _requestingPermission = true);
-    final granted = await AppNotifications.instance.requestPermission();
+    final granted = _isWebPush
+        ? await BrowserPushManager.instance.requestPermissionAndSync()
+        : await AppNotifications.instance.requestPermission();
     if (!mounted) return;
     setState(() {
       _permissionGranted = granted;
+      _permissionLabel = granted
+          ? 'Acik'
+          : (_isWebPush ? 'Bekliyor / Kapali' : 'Kapali');
       _requestingPermission = false;
     });
   }
@@ -61,13 +86,17 @@ class _NotificationSettingsScreenState
             .map((entry) => entry.key)
             .firstOrNull ??
         AppNotificationTopic.quoteLifecycle;
-    final shown = await AppNotifications.instance.sendPreview(topic);
+    final shown = _isWebPush
+        ? await BrowserPushManager.instance.sendTestPush()
+        : await AppNotifications.instance.sendPreview(topic);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           shown
-              ? 'Test bildirimi gonderildi'
+              ? _isWebPush
+                    ? 'Tarayici push test bildirimi gonderildi'
+                    : 'Test bildirimi gonderildi'
               : 'Bildirim gosterilemedi. Izin durumunu kontrol edin.',
         ),
       ),
@@ -98,12 +127,11 @@ class _NotificationSettingsScreenState
                     children: [
                       _HeroMetric(
                         label: 'Platform',
-                        value: _supported ? 'Destekli' : 'Web / Destek Yok',
+                        value: _supported
+                            ? (_isWebPush ? 'Tarayici Push' : 'Cihaz Bildirimi')
+                            : 'Destek Yok',
                       ),
-                      _HeroMetric(
-                        label: 'Izin',
-                        value: _permissionGranted ? 'Acik' : 'Kapali',
-                      ),
+                      _HeroMetric(label: 'Izin', value: _permissionLabel),
                     ],
                   ),
                 ),
@@ -112,10 +140,16 @@ class _NotificationSettingsScreenState
                   icon: _permissionGranted
                       ? Icons.notifications_on_outlined
                       : Icons.notifications_off_outlined,
-                  title: 'Cihaz Bildirim Durumu',
+                  title: _isWebPush
+                      ? 'Tarayici Push Durumu'
+                      : 'Cihaz Bildirim Durumu',
                   description: _supported
-                      ? 'Android ve masaustu uygulamalarda bildirimler bu izin ile goruntulenir.'
-                      : 'Bu web surumunde tarayici bildirimi ayarlanmadi. Mobil veya masaustu uygulamada cihaz bildirimi kullanilabilir.',
+                      ? _isWebPush
+                            ? 'Web surumunde browser push servis worker ve abonelik ile yonetilir.'
+                            : 'Android ve masaustu uygulamalarda bildirimler bu izin ile goruntulenir.'
+                      : _isWebPush
+                      ? 'Bu tarayicida push API desteklenmiyor veya guvenli baglanti yok.'
+                      : 'Bu platformda cihaz bildirimi desteklenmiyor.',
                   children: [
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -146,9 +180,15 @@ class _NotificationSettingsScreenState
                             child: Text(
                               _supported
                                   ? _permissionGranted
-                                        ? 'Cihaz bildirimi aktif. Secili konular gerceklestiginde aninda bildirim gorunur.'
+                                        ? _isWebPush
+                                              ? 'Tarayici push aktif. Site kapali olsa bile secili konular gerceklestiginde browser bildirimi gelebilir.'
+                                              : 'Cihaz bildirimi aktif. Secili konular gerceklestiginde aninda bildirim gorunur.'
+                                        : _isWebPush
+                                        ? 'Tarayici bildirimi icin izin vermeniz gerekiyor. Izin acildiginda abonelik backend ile eslenir.'
                                         : 'Bildirim izni kapali. Acar ve test bildirimi gonderirseniz cihaz ekraninda gorebilirsiniz.'
-                                  : 'Web dagitiminda bildirimler pasif tutuldu. Yine de konu tercihlerinizi kaydedebilirsiniz.',
+                                  : _isWebPush
+                                  ? 'Bu tarayicida push kullanilamiyor. Yine de konu tercihlerini kaydedebilirsiniz.'
+                                  : 'Bu platformda bildirim destegi yok.',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.textDark,
@@ -183,6 +223,8 @@ class _NotificationSettingsScreenState
                             label: Text(
                               _permissionGranted
                                   ? 'Izni Yeniden Kontrol Et'
+                                  : _isWebPush
+                                  ? 'Tarayici Push Iznini Ac'
                                   : 'Bildirim Iznini Ac',
                             ),
                           ),
@@ -215,6 +257,19 @@ class _NotificationSettingsScreenState
               ],
             ),
     );
+  }
+
+  String _browserPermissionLabel(String permission) {
+    switch (permission) {
+      case 'granted':
+        return 'Acik';
+      case 'default':
+        return 'Bekliyor';
+      case 'denied':
+        return 'Engelli';
+      default:
+        return 'Destek Yok';
+    }
   }
 }
 
