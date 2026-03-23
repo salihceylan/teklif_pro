@@ -111,7 +111,9 @@ class _QuotesScreenState extends State<QuotesScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: sending ? null : () => Navigator.pop(dialogContext),
+                  onPressed: sending
+                      ? null
+                      : () => Navigator.pop(dialogContext),
                   child: const Text('Iptal'),
                 ),
                 FilledButton.icon(
@@ -130,16 +132,18 @@ class _QuotesScreenState extends State<QuotesScreen> {
                           setState(() => sending = true);
                           try {
                             await context.read<QuoteProvider>().sendEmail(
-                                  quote.id,
-                                  email: email,
-                                  subject: subjectCtrl.text.trim(),
-                                  message: messageCtrl.text.trim(),
-                                );
+                              quote.id,
+                              email: email,
+                              subject: subjectCtrl.text.trim(),
+                              message: messageCtrl.text.trim(),
+                            );
                             if (context.mounted) {
                               Navigator.pop(dialogContext);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Teklif $email adresine gonderildi'),
+                                  content: Text(
+                                    'Teklif $email adresine gonderildi',
+                                  ),
                                 ),
                               );
                             }
@@ -147,7 +151,9 @@ class _QuotesScreenState extends State<QuotesScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Mail gonderimi basarisiz oldu'),
+                                  content: Text(
+                                    'Mail gonderimi basarisiz oldu',
+                                  ),
                                 ),
                               );
                             }
@@ -174,11 +180,98 @@ class _QuotesScreenState extends State<QuotesScreen> {
     );
   }
 
+  Future<void> _handleMenuAction(
+    BuildContext context, {
+    required String value,
+    required Quote quote,
+    required Customer? customer,
+  }) async {
+    final quotes = context.read<QuoteProvider>();
+    final invoices = context.read<InvoiceProvider>();
+
+    if (value == 'print') {
+      await _printQuote(context, quote, customer);
+    } else if (value == 'mail') {
+      await _showSendEmailDialog(context, quote, customer);
+    } else if (value == 'edit') {
+      if (context.mounted) {
+        context.go('/quotes/${quote.id}/edit');
+      }
+    } else if (value == 'invoice') {
+      await invoices.createFromQuote(quote.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Fatura olusturuldu')));
+      }
+    } else if (value == 'delete') {
+      await quotes.delete(quote.id);
+    }
+  }
+
+  Future<void> _showQuoteMenu(
+    BuildContext context, {
+    required TapDownDetails details,
+    required Quote quote,
+    required Customer? customer,
+  }) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(
+          details.globalPosition.dx,
+          details.globalPosition.dy,
+          0,
+          0,
+        ),
+        Offset.zero & overlay.size,
+      ),
+      items: const [
+        PopupMenuItem(
+          value: 'print',
+          child: _MenuRow(icon: Icons.print_outlined, label: 'Teklif Ciktisi'),
+        ),
+        PopupMenuItem(
+          value: 'mail',
+          child: _MenuRow(icon: Icons.email_outlined, label: 'Mail Gonder'),
+        ),
+        PopupMenuItem(
+          value: 'edit',
+          child: _MenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+        ),
+        PopupMenuItem(
+          value: 'invoice',
+          child: _MenuRow(
+            icon: Icons.receipt_long_outlined,
+            label: 'Fatura Olustur',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: _MenuRow(
+            icon: Icons.delete_outline,
+            label: 'Sil',
+            color: Color(0xFFEF4444),
+          ),
+        ),
+      ],
+    );
+
+    if (selected != null && context.mounted) {
+      await _handleMenuAction(
+        context,
+        value: selected,
+        quote: quote,
+        customer: customer,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final quotes = context.watch<QuoteProvider>();
     final customers = context.watch<CustomerProvider>().items;
-    final invoices = context.read<InvoiceProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Teklifler')),
@@ -191,187 +284,132 @@ class _QuotesScreenState extends State<QuotesScreen> {
       body: quotes.loading
           ? const Center(child: CircularProgressIndicator())
           : quotes.items.isEmpty
-              ? _EmptyState(
-                  icon: Icons.request_quote_outlined,
-                  message: 'Henuz teklif olusturulmadi',
-                  actionLabel: 'Teklif Ekle',
-                  onAction: () => context.go('/quotes/new'),
-                )
-              : RefreshIndicator(
-                  onRefresh: quotes.load,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: quotes.items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final quote = quotes.items[index];
-                      final customer = _customerFor(customers, quote.customerId);
-                      final color = AppTheme.statusColor(quote.status);
+          ? _EmptyState(
+              icon: Icons.request_quote_outlined,
+              message: 'Henuz teklif olusturulmadi',
+              actionLabel: 'Teklif Ekle',
+              onAction: () => context.go('/quotes/new'),
+            )
+          : RefreshIndicator(
+              onRefresh: quotes.load,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: quotes.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final quote = quotes.items[index];
+                  final customer = _customerFor(customers, quote.customerId);
+                  final color = AppTheme.statusColor(quote.status);
 
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 54,
-                                height: 54,
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  Icons.request_quote_outlined,
-                                  color: color,
-                                ),
+                  return Card(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTapDown: (details) => _showQuoteMenu(
+                        context,
+                        details: details,
+                        quote: quote,
+                        customer: customer,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        Text(
-                                          quote.title,
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppTheme.textDark,
-                                          ),
-                                        ),
-                                        if ((quote.quoteCode ?? '').isNotEmpty)
-                                          _Chip(label: quote.quoteCode!),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      quote.customerCompanyName ??
-                                          customer?.companyName ??
-                                          'Firma secilmedi',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.textMedium,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 10,
-                                      runSpacing: 6,
-                                      children: [
-                                        _meta(
-                                          Icons.event_outlined,
-                                          _date.format(quote.issuedAt ?? quote.createdAt),
-                                        ),
-                                        if (quote.validUntil != null)
-                                          _meta(
-                                            Icons.event_available_outlined,
-                                            'Gecerlilik: ${_date.format(quote.validUntil!)}',
-                                          ),
-                                        _meta(
-                                          Icons.payments_outlined,
-                                          '${_currency.format(quote.totalAmount)} ₺',
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              child: Icon(
+                                Icons.request_quote_outlined,
+                                color: color,
                               ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _StatusBadge(label: quote.statusLabel, color: color),
-                                  PopupMenuButton<String>(
-                                    itemBuilder: (_) => const [
-                                      PopupMenuItem(
-                                        value: 'print',
-                                        child: _MenuRow(
-                                          icon: Icons.print_outlined,
-                                          label: 'Teklif Ciktisi',
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      Text(
+                                        quote.title,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textDark,
                                         ),
                                       ),
-                                      PopupMenuItem(
-                                        value: 'mail',
-                                        child: _MenuRow(
-                                          icon: Icons.email_outlined,
-                                          label: 'Mail Gonder',
+                                      if ((quote.quoteCode ?? '').isNotEmpty)
+                                        _Chip(label: quote.quoteCode!),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    quote.customerCompanyName ??
+                                        customer?.companyName ??
+                                        'Firma secilmedi',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.textMedium,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 10,
+                                    runSpacing: 6,
+                                    children: [
+                                      _meta(
+                                        Icons.event_outlined,
+                                        _date.format(
+                                          quote.issuedAt ?? quote.createdAt,
                                         ),
                                       ),
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: _MenuRow(
-                                          icon: Icons.edit_outlined,
-                                          label: 'Duzenle',
+                                      if (quote.validUntil != null)
+                                        _meta(
+                                          Icons.event_available_outlined,
+                                          'Gecerlilik: ${_date.format(quote.validUntil!)}',
                                         ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'invoice',
-                                        child: _MenuRow(
-                                          icon: Icons.receipt_long_outlined,
-                                          label: 'Fatura Olustur',
-                                        ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: _MenuRow(
-                                          icon: Icons.delete_outline,
-                                          label: 'Sil',
-                                          color: Color(0xFFEF4444),
-                                        ),
+                                      _meta(
+                                        Icons.payments_outlined,
+                                        '${_currency.format(quote.totalAmount)} ₺',
                                       ),
                                     ],
-                                    onSelected: (value) async {
-                                      if (value == 'print') {
-                                        await _printQuote(context, quote, customer);
-                                      } else if (value == 'mail') {
-                                        await _showSendEmailDialog(
-                                          context,
-                                          quote,
-                                          customer,
-                                        );
-                                      } else if (value == 'edit') {
-                                        context.go('/quotes/${quote.id}/edit');
-                                      } else if (value == 'invoice') {
-                                        await invoices.createFromQuote(quote.id);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Fatura olusturuldu'),
-                                            ),
-                                          );
-                                        }
-                                      } else if (value == 'delete') {
-                                        await quotes.delete(quote.id);
-                                      }
-                                    },
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 12),
+                            _StatusBadge(
+                              label: quote.statusLabel,
+                              color: color,
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 
   Widget _meta(IconData icon, String text) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppTheme.textLight),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textMedium),
-          ),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 14, color: AppTheme.textLight),
+      const SizedBox(width: 4),
+      Text(
+        text,
+        style: const TextStyle(fontSize: 12, color: AppTheme.textMedium),
+      ),
+    ],
+  );
 }
 
 class _Chip extends StatelessWidget {
@@ -404,11 +442,7 @@ class _MenuRow extends StatelessWidget {
   final String label;
   final Color? color;
 
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    this.color,
-  });
+  const _MenuRow({required this.icon, required this.label, this.color});
 
   @override
   Widget build(BuildContext context) {

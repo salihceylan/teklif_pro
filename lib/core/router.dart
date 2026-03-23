@@ -41,12 +41,15 @@ GoRouter buildRouter(BuildContext context) {
       GoRoute(path: '/customers', builder: (_, _) => const CustomersScreen()),
       GoRoute(
         path: '/customers/new',
-        builder: (_, _) => const CustomerFormScreen(),
+        builder: (_, s) =>
+            CustomerFormScreen(returnTo: s.uri.queryParameters['returnTo']),
       ),
       GoRoute(
         path: '/customers/:id/edit',
-        builder: (_, s) =>
-            CustomerFormScreen(customerId: int.parse(s.pathParameters['id']!)),
+        builder: (_, s) => CustomerFormScreen(
+          customerId: int.parse(s.pathParameters['id']!),
+          returnTo: s.uri.queryParameters['returnTo'],
+        ),
       ),
       GoRoute(
         path: '/service-requests',

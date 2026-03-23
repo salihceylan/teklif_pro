@@ -49,20 +49,32 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   @override
   void initState() {
     super.initState();
-    if (_isEdit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final visit = context
-            .read<VisitProvider>()
-            .items
+    if (!_isEdit) {
+      _items.add(_MaterialRow.empty());
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final customerProvider = context.read<CustomerProvider>();
+      if (customerProvider.items.isEmpty) {
+        await customerProvider.load();
+      }
+      if (!mounted) return;
+
+      if (_isEdit) {
+        final visitProvider = context.read<VisitProvider>();
+        if (visitProvider.items.isEmpty) {
+          await visitProvider.load();
+        }
+        if (!mounted) return;
+
+        final visit = visitProvider.items
             .where((item) => item.id == widget.visitId)
             .firstOrNull;
         if (visit != null) {
           _bindVisit(visit);
         }
-      });
-    } else {
-      _items.add(_MaterialRow.empty());
-    }
+      }
+    });
   }
 
   void _bindVisit(ServiceVisit visit) {
@@ -152,6 +164,13 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     setState(() {});
   }
 
+  String get _customerCreateRoute {
+    final destination = _isEdit
+        ? '/visits/${widget.visitId}/edit'
+        : '/visits/new';
+    return '/customers/new?returnTo=${Uri.encodeComponent(destination)}';
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_scheduledDate == null || _customerId == null) {
@@ -167,8 +186,9 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       'scheduled_date': _scheduledDate!.toIso8601String(),
       if (_actualDate != null) 'actual_date': _actualDate!.toIso8601String(),
       'status': _status,
-      'complaint':
-          _complaintCtrl.text.trim().isEmpty ? null : _complaintCtrl.text.trim(),
+      'complaint': _complaintCtrl.text.trim().isEmpty
+          ? null
+          : _complaintCtrl.text.trim(),
       'technician_name': _technicianCtrl.text.trim().isEmpty
           ? null
           : _technicianCtrl.text.trim(),
@@ -216,8 +236,50 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = context.watch<CustomerProvider>().items;
+    final customerProvider = context.watch<CustomerProvider>();
+    final customers = customerProvider.items;
     final dateFormatter = DateFormat('dd.MM.yyyy HH:mm');
+
+    if (customerProvider.loading && customers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_isEdit ? 'Servis Formunu Duzenle' : 'Yeni Servis Formu'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_isEdit && customers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Yeni Servis Formu')),
+        body: AppScrollableBody(
+          maxWidth: 920,
+          children: [
+            AppPageIntro(
+              badge: 'Servis Formu',
+              icon: Icons.build_circle_outlined,
+              title: 'Servis formu icin once firma ekleyin',
+              subtitle:
+                  'Servis kaydi bir firma ile baslar. Sadece sirket unvani ile hizli kayit acabilirsiniz.',
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.add_business_outlined,
+              title: 'Gerekli ilk adim',
+              description:
+                  'Firma kaydini actiktan sonra servis formuna otomatik olarak geri donebilirsiniz.',
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.go(_customerCreateRoute),
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const Text('Firma Ekle ve Servis Formuna Don'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -236,6 +298,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   : 'Yeni servis formu olusturun',
               subtitle:
                   'Musteri sikayeti, kullanilan malzemeler, iscilik ve toplamlar tek form yapisinda toplanir.',
+              trailing: FilledButton.tonalIcon(
+                onPressed: () => context.go(_customerCreateRoute),
+                icon: const Icon(Icons.add_business_outlined),
+                label: const Text('Yeni Firma'),
+              ),
             ),
             const SizedBox(height: 20),
             AppSectionCard(
@@ -243,6 +310,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               title: 'Musteri ve Ziyaret Bilgileri',
               description:
                   'Belge ust bolumunde yer alan firma, tarih ve durum bilgileri burada tutulur.',
+              trailing: TextButton.icon(
+                onPressed: () => context.go(_customerCreateRoute),
+                icon: const Icon(Icons.add_business_outlined, size: 18),
+                label: const Text('Firma Ekle'),
+              ),
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -271,7 +343,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                           )
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
-                      validator: (value) => value == null ? 'Firma secin' : null,
+                      validator: (value) =>
+                          value == null ? 'Firma secin' : null,
                     ),
                     AppDatePickerField(
                       label: 'Planlanan Tarih',
@@ -521,8 +594,9 @@ class _MaterialCard extends StatelessWidget {
                   labelText: 'Malzemenin Adi',
                   prefixIcon: Icon(Icons.widgets_outlined),
                 ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Zorunlu alan' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Zorunlu alan'
+                    : null,
                 onChanged: (_) => onChanged(),
               ),
               const SizedBox(height: 12),
@@ -534,7 +608,10 @@ class _MaterialCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F0FA),
                     borderRadius: BorderRadius.circular(999),
@@ -556,7 +633,8 @@ class _MaterialCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _compactValueFields(_MaterialRow row, VoidCallback onChanged) => [
+  List<Widget> _compactValueFields(_MaterialRow row, VoidCallback onChanged) =>
+      [
         TextFormField(
           controller: row.qtyCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -579,30 +657,30 @@ class _MaterialCard extends StatelessWidget {
       ];
 
   List<Widget> _wideValueFields(_MaterialRow row, VoidCallback onChanged) => [
-        Expanded(
-          child: TextFormField(
-            controller: row.qtyCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Adet',
-              prefixIcon: Icon(Icons.format_list_numbered_outlined),
-            ),
-            onChanged: (_) => onChanged(),
-          ),
+    Expanded(
+      child: TextFormField(
+        controller: row.qtyCtrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          labelText: 'Adet',
+          prefixIcon: Icon(Icons.format_list_numbered_outlined),
         ),
-        const SizedBox(width: 12, height: 12),
-        Expanded(
-          child: TextFormField(
-            controller: row.priceCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Birim Fiyati',
-              prefixIcon: Icon(Icons.payments_outlined),
-            ),
-            onChanged: (_) => onChanged(),
-          ),
+        onChanged: (_) => onChanged(),
+      ),
+    ),
+    const SizedBox(width: 12, height: 12),
+    Expanded(
+      child: TextFormField(
+        controller: row.priceCtrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          labelText: 'Birim Fiyati',
+          prefixIcon: Icon(Icons.payments_outlined),
         ),
-      ];
+        onChanged: (_) => onChanged(),
+      ),
+    ),
+  ];
 }
 
 class _VisitSummaryCard extends StatelessWidget {
@@ -643,26 +721,30 @@ class _VisitSummaryCard extends StatelessWidget {
   }
 
   Widget _row(String label, double value, {bool highlighted = false}) => Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
-                color: highlighted ? const Color(0xFF17304C) : const Color(0xFF5A6B7F),
-              ),
-            ),
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
+            color: highlighted
+                ? const Color(0xFF17304C)
+                : const Color(0xFF5A6B7F),
           ),
-          Text(
-            '${fmt.format(value)} ₺',
-            style: TextStyle(
-              fontSize: highlighted ? 18 : 14,
-              fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
-              color: highlighted ? const Color(0xFF1F5EA8) : const Color(0xFF17304C),
-            ),
-          ),
-        ],
-      );
+        ),
+      ),
+      Text(
+        '${fmt.format(value)} ₺',
+        style: TextStyle(
+          fontSize: highlighted ? 18 : 14,
+          fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
+          color: highlighted
+              ? const Color(0xFF1F5EA8)
+              : const Color(0xFF17304C),
+        ),
+      ),
+    ],
+  );
 }
 
 class _MaterialRow {
@@ -679,15 +761,16 @@ class _MaterialRow {
   });
 
   factory _MaterialRow.empty() => _MaterialRow(
-        codeCtrl: TextEditingController(),
-        nameCtrl: TextEditingController(),
-        qtyCtrl: TextEditingController(text: '1'),
-        priceCtrl: TextEditingController(),
-      );
+    codeCtrl: TextEditingController(),
+    nameCtrl: TextEditingController(),
+    qtyCtrl: TextEditingController(text: '1'),
+    priceCtrl: TextEditingController(),
+  );
 
   String get productCode => codeCtrl.text.trim();
   String get materialName => nameCtrl.text.trim();
-  double get quantity => double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
+  double get quantity =>
+      double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
   double get unitPrice =>
       double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
   double get totalPrice => quantity * unitPrice;

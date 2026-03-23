@@ -130,6 +130,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 20),
             AppSectionCard(
+              icon: Icons.rocket_launch_outlined,
+              title: 'Hizli Baslangic',
+              description:
+                  'En sik kullanilan uc kayit akisini tek dokunusla baslatin.',
+              children: [
+                AdaptiveFieldRow(
+                  maxColumns: 3,
+                  minItemWidth: 230,
+                  children: [
+                    _LaunchPadCard(
+                      icon: Icons.add_business_outlined,
+                      title: 'Sirket Ekle',
+                      description:
+                          'Sadece sirket unvani ile hizli kayit acin, diger bilgileri sonra duzenleyin.',
+                      buttonLabel: 'Yeni Firma',
+                      color: AppTheme.primary,
+                      onTap: () => context.go('/customers/new'),
+                    ),
+                    _LaunchPadCard(
+                      icon: Icons.request_quote_outlined,
+                      title: 'Teklif Hazirla',
+                      description:
+                          'Kalemler, KDV, belge numarasi ve ciktiyi tek formda yonetin.',
+                      buttonLabel: 'Teklif Olustur',
+                      color: const Color(0xFF1F7A8C),
+                      onTap: () => context.go('/quotes/new'),
+                    ),
+                    _LaunchPadCard(
+                      icon: Icons.build_circle_outlined,
+                      title: 'Servis Formu Hazirla',
+                      description:
+                          'Servis kaydi, malzeme ve iscilik toplamlarini tek ekranda toplayin.',
+                      buttonLabel: 'Servis Formu',
+                      color: const Color(0xFF0F766E),
+                      onTap: () => context.go('/visits/new'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
               icon: Icons.account_balance_wallet_outlined,
               title: 'Finansal Görünüm',
               description:
@@ -219,25 +261,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               children: [
                 if (upcomingVisits.isEmpty)
-                  _InlineEmptyState(
+                  _ActivityEmptyCard(
                     icon: Icons.event_busy_outlined,
                     message: 'Bu hafta planlanmış ziyaret yok.',
                     actionLabel: 'Ziyaret Ekle',
                     onAction: () => context.go('/visits/new'),
                   )
                 else
-                  for (final visit in upcomingVisits.take(4))
-                    _VisitTile(
-                      visit: visit,
-                      customerName:
-                          customers
-                              .where(
-                                (customer) => customer.id == visit.customerId,
-                              )
-                              .firstOrNull
-                              ?.fullName ??
-                          'Müşteri #${visit.customerId}',
-                    ),
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 250,
+                    children: [
+                      for (final visit in upcomingVisits.take(4))
+                        _VisitOverviewCard(
+                          visit: visit,
+                          customerName:
+                              customers
+                                  .where(
+                                    (customer) =>
+                                        customer.id == visit.customerId,
+                                  )
+                                  .firstOrNull
+                                  ?.fullName ??
+                              'Müşteri #${visit.customerId}',
+                        ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 20),
@@ -252,29 +301,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               children: [
                 if (recentRequests.isEmpty)
-                  _InlineEmptyState(
+                  _ActivityEmptyCard(
                     icon: Icons.build_outlined,
                     message: 'Henüz servis talebi bulunmuyor.',
                     actionLabel: 'Talep Ekle',
                     onAction: () => context.go('/service-requests/new'),
                   )
                 else
-                  for (final request in recentRequests.take(5))
-                    _RequestTile(
-                      title: request.title,
-                      customerName:
-                          customers
-                              .where(
-                                (customer) => customer.id == request.customerId,
-                              )
-                              .firstOrNull
-                              ?.fullName ??
-                          'Müşteri #${request.customerId}',
-                      status: request.status,
-                      statusLabel: request.statusLabel,
-                      onTap: () =>
-                          context.go('/service-requests/${request.id}/edit'),
-                    ),
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 250,
+                    children: [
+                      for (final request in recentRequests.take(4))
+                        _RequestOverviewCard(
+                          title: request.title,
+                          customerName:
+                              customers
+                                  .where(
+                                    (customer) =>
+                                        customer.id == request.customerId,
+                                  )
+                                  .firstOrNull
+                                  ?.fullName ??
+                              'Müşteri #${request.customerId}',
+                          status: request.status,
+                          statusLabel: request.statusLabel,
+                          createdAt: request.createdAt,
+                          onTap: () => context.go(
+                            '/service-requests/${request.id}/edit',
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ),
             const SizedBox(height: 20),
@@ -523,99 +581,82 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-class _VisitTile extends StatelessWidget {
+class _VisitOverviewCard extends StatelessWidget {
   final dynamic visit;
   final String customerName;
 
-  const _VisitTile({required this.visit, required this.customerName});
+  const _VisitOverviewCard({required this.visit, required this.customerName});
 
   @override
   Widget build(BuildContext context) {
     final color = AppTheme.primary;
+    final dateText = DateFormat('dd MMM', 'tr_TR').format(visit.scheduledDate);
+    final timeText = DateFormat('HH:mm', 'tr_TR').format(visit.scheduledDate);
+
     return InkWell(
       onTap: () => context.go('/visits/${visit.id}/edit'),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.border),
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    DateFormat('dd').format(visit.scheduledDate),
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    DateFormat('MMM', 'tr').format(visit.scheduledDate),
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              child: Icon(
+                Icons.event_available_outlined,
+                color: color,
+                size: 22,
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    customerName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat(
-                      'dd MMMM yyyy, HH:mm',
-                      'tr_TR',
-                    ).format(visit.scheduledDate),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textMedium,
-                    ),
-                  ),
-                  if (visit.notes != null && visit.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      visit.notes!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textMedium,
-                      ),
-                    ),
-                  ],
-                ],
+            const SizedBox(height: 14),
+            Text(
+              dateText,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: color,
               ),
             ),
-            const SizedBox(width: 10),
-            const Icon(Icons.chevron_right, color: AppTheme.textLight),
+            const SizedBox(height: 4),
+            Text(
+              customerName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textDark,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Saat $timeText',
+              style: const TextStyle(fontSize: 12, color: AppTheme.textMedium),
+            ),
+            if (visit.notes != null && visit.notes!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                visit.notes!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMedium,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -623,88 +664,101 @@ class _VisitTile extends StatelessWidget {
   }
 }
 
-class _RequestTile extends StatelessWidget {
+class _RequestOverviewCard extends StatelessWidget {
   final String title;
   final String customerName;
   final String status;
   final String statusLabel;
+  final DateTime createdAt;
   final VoidCallback onTap;
 
-  const _RequestTile({
+  const _RequestOverviewCard({
     required this.title,
     required this.customerName,
     required this.status,
     required this.statusLabel,
+    required this.createdAt,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final color = AppTheme.statusColor(status);
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.border),
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(Icons.handyman_outlined, color: color),
+              child: Icon(Icons.handyman_outlined, color: color, size: 22),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
+            const SizedBox(height: 14),
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textDark,
+                height: 1.25,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              customerName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: AppTheme.textMedium),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textDark,
+                      color: color,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    customerName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    DateFormat('dd.MM.yyyy', 'tr_TR').format(createdAt),
+                    textAlign: TextAlign.right,
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textMedium,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                statusLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: color,
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -713,13 +767,13 @@ class _RequestTile extends StatelessWidget {
   }
 }
 
-class _InlineEmptyState extends StatelessWidget {
+class _ActivityEmptyCard extends StatelessWidget {
   final IconData icon;
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
 
-  const _InlineEmptyState({
+  const _ActivityEmptyCard({
     required this.icon,
     required this.message,
     required this.actionLabel,
@@ -728,41 +782,44 @@ class _InlineEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = AppTheme.primary;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FBFD),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.border),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: AppTheme.primary),
+            child: Icon(icon, color: color),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textMedium,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextButton(onPressed: onAction, child: Text(actionLabel)),
-              ],
+          const SizedBox(height: 14),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppTheme.textMedium,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.tonalIcon(
+            onPressed: onAction,
+            icon: const Icon(Icons.arrow_forward_outlined, size: 18),
+            label: Text(actionLabel),
+            style: FilledButton.styleFrom(
+              foregroundColor: color,
+              backgroundColor: color.withValues(alpha: 0.12),
             ),
           ),
         ],
@@ -795,6 +852,82 @@ class _QuickAction extends StatelessWidget {
         fontWeight: FontWeight.w700,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    );
+  }
+}
+
+class _LaunchPadCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final String buttonLabel;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _LaunchPadCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.buttonLabel,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(22),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: color.withValues(alpha: 0.16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.textMedium,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 18),
+            FilledButton.tonalIcon(
+              onPressed: onTap,
+              icon: const Icon(Icons.arrow_forward_outlined, size: 18),
+              label: Text(buttonLabel),
+              style: FilledButton.styleFrom(
+                foregroundColor: color,
+                backgroundColor: color.withValues(alpha: 0.12),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

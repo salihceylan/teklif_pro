@@ -9,8 +9,9 @@ import '../widgets/app_shell.dart';
 
 class CustomerFormScreen extends StatefulWidget {
   final int? customerId;
+  final String? returnTo;
 
-  const CustomerFormScreen({super.key, this.customerId});
+  const CustomerFormScreen({super.key, this.customerId, this.returnTo});
 
   @override
   State<CustomerFormScreen> createState() => _CustomerFormScreenState();
@@ -44,18 +45,26 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
   DateTime? _foundationDate;
   bool _saving = false;
+  bool _showAdvancedSections = false;
   Customer? _currentCustomer;
 
   bool get _isEdit => widget.customerId != null;
+  bool get _hasReturnRoute =>
+      widget.returnTo != null && widget.returnTo!.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
+    _showAdvancedSections = _isEdit;
+
     if (_isEdit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final customer = context
-            .read<CustomerProvider>()
-            .items
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final provider = context.read<CustomerProvider>();
+        if (provider.items.isEmpty) {
+          await provider.load();
+        }
+
+        final customer = provider.items
             .where((item) => item.id == widget.customerId)
             .firstOrNull;
         if (customer != null) {
@@ -92,6 +101,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       _salesChannelCtrl.text = customer.salesChannel ?? '';
       _notesCtrl.text = customer.notes ?? '';
       _foundationDate = customer.foundationDate;
+      _showAdvancedSections = true;
     });
   }
 
@@ -185,7 +195,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       }
 
       if (mounted) {
-        context.go('/customers');
+        context.go(widget.returnTo ?? '/customers');
       }
     } catch (_) {
       if (mounted) {
@@ -200,6 +210,86 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     }
   }
 
+  Widget _buildBasicHint() {
+    final text = _hasReturnRoute
+        ? 'Sadece firma unvani ile kaydi acin. Kaydet dediginizde ilgili forma geri doneceksiniz.'
+        : 'Sadece firma unvani zorunlu. Diger alanlari daha sonra duzenleyebilirsiniz.';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F8FC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD9E5F0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F5EA8).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.bolt_outlined, color: Color(0xFF1F5EA8)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Hizli kayit modu',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF607085),
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedToggle() {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () {
+            setState(() => _showAdvancedSections = !_showAdvancedSections);
+          },
+          icon: Icon(
+            _showAdvancedSections
+                ? Icons.unfold_less_outlined
+                : Icons.tune_outlined,
+          ),
+          label: Text(
+            _showAdvancedSections
+                ? 'Detayli alanlari gizle'
+                : 'Daha fazla bilgi ekle',
+          ),
+        ),
+        if (!_isEdit)
+          const Text(
+            'Isterseniz simdilik sadece sirket adini kaydedebilirsiniz.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF607085)),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final dateLabel = _foundationDate == null
@@ -207,24 +297,23 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         : DateFormat('dd.MM.yyyy').format(_foundationDate!);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEdit ? 'Firmayi Duzenle' : 'Yeni Firma'),
-      ),
+      appBar: AppBar(title: Text(_isEdit ? 'Firmayi Duzenle' : 'Yeni Firma')),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
           maxWidth: 1080,
           children: [
             AppPageIntro(
-              badge: _isEdit ? 'Firma Profili' : 'Yeni Firma',
+              badge: _isEdit ? 'Firma Profili' : 'Hizli Sirket Kaydi',
               icon: _isEdit
                   ? Icons.apartment_outlined
                   : Icons.add_business_outlined,
               title: _isEdit
-                  ? 'Firma künyesini güncelleyin'
-                  : 'Yeni firma kaydı oluşturun',
-              subtitle:
-                  'Şirket kimliği, vergi bilgileri, faaliyet alanı ve satış kanalı aynı profilde toplanır.',
+                  ? 'Sirket profilini guncelleyin'
+                  : 'Sadece sirket adiyla kayit acin',
+              subtitle: _isEdit
+                  ? 'Iletisim, vergi ve sektor bilgilerini istediginiz zaman guncelleyebilirsiniz.'
+                  : 'Ilk adimda sadece sirket unvani zorunlu. Diger bilgileri ister simdi, ister daha sonra duzenleyin.',
               trailing: _currentCustomer?.customerCode == null
                   ? null
                   : _CodeBadge(
@@ -234,281 +323,287 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
             ),
             const SizedBox(height: 20),
             AppSectionCard(
-              icon: Icons.business_outlined,
-              title: 'Kurumsal Kimlik',
+              icon: Icons.apartment_outlined,
+              title: 'Temel Kayit',
               description:
-                  'Firma adı, yetkili kişi ve temel iletişim bilgileri teklif ve servis belgelerinde kullanılır.',
-              children: [
-                AdaptiveFieldRow(
-                  children: [
-                    TextFormField(
-                      controller: _companyCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Firma Unvani',
-                        hintText: 'Orn. Gude Teknoloji',
-                        prefixIcon: Icon(Icons.apartment_outlined),
-                      ),
-                      validator: (value) =>
-                          value == null || value.trim().isEmpty
-                              ? 'Zorunlu alan'
-                              : null,
-                    ),
-                    TextFormField(
-                      controller: _contactCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Irtibat Kurulacak Kisi',
-                        hintText: 'Yetkili adi soyadi',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                    ),
-                  ],
-                ),
-                AdaptiveFieldRow(
-                  maxColumns: 3,
-                  minItemWidth: 220,
-                  children: [
-                    TextFormField(
-                      controller: _phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Telefon',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'E-posta',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _websiteCtrl,
-                      keyboardType: TextInputType.url,
-                      decoration: const InputDecoration(
-                        labelText: 'Web Adresi',
-                        prefixIcon: Icon(Icons.language_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppSectionCard(
-              icon: Icons.badge_outlined,
-              title: 'Vergi ve Resmi Bilgiler',
-              description:
-                  'MERSIS, vergi dairesi ve kurulus tarihi gibi alanlar sirket bilgi formuna uygun tutulur.',
-              children: [
-                AdaptiveFieldRow(
-                  maxColumns: 4,
-                  minItemWidth: 180,
-                  children: [
-                    TextFormField(
-                      controller: _mersisCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'MERSIS No',
-                        prefixIcon: Icon(Icons.numbers_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _taxNumberCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Vergi No',
-                        prefixIcon: Icon(Icons.receipt_long_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _taxOfficeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Vergi Dairesi',
-                        prefixIcon: Icon(Icons.account_balance_outlined),
-                      ),
-                    ),
-                    AppDatePickerField(
-                      label: 'Kurulus Tarihi',
-                      icon: Icons.event_outlined,
-                      value: dateLabel,
-                      onTap: _pickFoundationDate,
-                      placeholder: 'Tarih secin',
-                    ),
-                  ],
-                ),
-                AdaptiveFieldRow(
-                  maxColumns: 3,
-                  minItemWidth: 220,
-                  children: [
-                    TextFormField(
-                      controller: _employeeCountCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Personel Sayisi',
-                        prefixIcon: Icon(Icons.groups_2_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _ibanCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'IBAN',
-                        prefixIcon: Icon(Icons.account_balance_wallet_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _kepCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'KEP Adresi',
-                        prefixIcon: Icon(Icons.mark_email_read_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppSectionCard(
-              icon: Icons.pin_drop_outlined,
-              title: 'Adres ve Üyelik Bilgileri',
-              description:
-                  'Merkez adresi, ihracatçı birlikleri ve HiB üyelik bilgileri tek blokta toplanir.',
-              children: [
-                AdaptiveFieldRow(
-                  maxColumns: 2,
-                  minItemWidth: 260,
-                  children: [
-                    TextFormField(
-                      controller: _cityCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Sehir',
-                        prefixIcon: Icon(Icons.location_city_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _addressCtrl,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Merkez Adresi',
-                        alignLabelWithHint: true,
-                        prefixIcon: Icon(Icons.home_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-                AdaptiveFieldRow(
-                  maxColumns: 2,
-                  minItemWidth: 260,
-                  children: [
-                    TextFormField(
-                      controller: _exporterCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Ihracatci Birlikleri',
-                        prefixIcon: Icon(Icons.public_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _hibCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'HiB Uye No',
-                        prefixIcon: Icon(Icons.verified_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppSectionCard(
-              icon: Icons.category_outlined,
-              title: 'Sektor ve Marka Bilgileri',
-              description:
-                  'NACE kodu, alt sektor ve teklif edilen cozum bilgisi firma profilini tamamlar.',
-              children: [
-                AdaptiveFieldRow(
-                  maxColumns: 3,
-                  minItemWidth: 220,
-                  children: [
-                    TextFormField(
-                      controller: _naceCodeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: '4lu NACE Kodu',
-                        prefixIcon: Icon(Icons.qr_code_2_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _naceNameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'NACE Adi',
-                        prefixIcon: Icon(Icons.schema_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _brandCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Marka',
-                        prefixIcon: Icon(Icons.workspace_premium_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-                AdaptiveFieldRow(
-                  maxColumns: 3,
-                  minItemWidth: 220,
-                  children: [
-                    TextFormField(
-                      controller: _subSectorCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Bilisim Alt Sektoru',
-                        prefixIcon: Icon(Icons.hub_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _solutionCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Sunulan Cozum / Hizmet',
-                        prefixIcon: Icon(Icons.inventory_2_outlined),
-                      ),
-                    ),
-                    TextFormField(
-                      controller: _targetCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Potansiyel Musteri Grubu',
-                        prefixIcon: Icon(Icons.groups_outlined),
-                      ),
-                    ),
-                  ],
-                ),
-                TextFormField(
-                  controller: _salesChannelCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Satis Kanali / Platform',
-                    prefixIcon: Icon(Icons.storefront_outlined),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppSectionCard(
-              icon: Icons.note_alt_outlined,
-              title: 'Ek Notlar',
-              description:
-                  'Operasyonel notlar, belge talepleri veya firma ile ilgili serbest aciklamalar.',
+                  'Teklif ve servis formlarinda kullanilacak firma adini kaydedin.',
               children: [
                 TextFormField(
-                  controller: _notesCtrl,
-                  maxLines: 5,
+                  controller: _companyCtrl,
+                  textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
-                    labelText: 'Notlar',
-                    alignLabelWithHint: true,
-                    prefixIcon: Icon(Icons.edit_note_outlined),
+                    labelText: 'Sirket Unvani',
+                    hintText: 'Orn. Gude Teknoloji',
+                    prefixIcon: Icon(Icons.business_outlined),
                   ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Sirket unvani zorunlu'
+                      : null,
                 ),
+                if (!_showAdvancedSections) _buildBasicHint(),
+                _buildAdvancedToggle(),
               ],
             ),
+            if (_showAdvancedSections) ...[
+              const SizedBox(height: 20),
+              AppSectionCard(
+                icon: Icons.contact_phone_outlined,
+                title: 'Iletisim Bilgileri',
+                description:
+                    'Yetkili kisi ve iletisim alanlari opsiyoneldir. Sonradan da guncellenebilir.',
+                children: [
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 260,
+                    children: [
+                      TextFormField(
+                        controller: _contactCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Yetkili Kisi',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Telefon',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 260,
+                    children: [
+                      TextFormField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'E-posta',
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _websiteCtrl,
+                        keyboardType: TextInputType.url,
+                        decoration: const InputDecoration(
+                          labelText: 'Web Adresi',
+                          prefixIcon: Icon(Icons.language_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              AppSectionCard(
+                icon: Icons.badge_outlined,
+                title: 'Resmi ve Finansal Bilgiler',
+                description:
+                    'Vergi, MERSIS, KEP ve banka bilgileri sirket kurnyesini tamamlar.',
+                children: [
+                  AdaptiveFieldRow(
+                    maxColumns: 4,
+                    minItemWidth: 180,
+                    children: [
+                      TextFormField(
+                        controller: _mersisCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'MERSIS No',
+                          prefixIcon: Icon(Icons.numbers_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _taxNumberCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Vergi No',
+                          prefixIcon: Icon(Icons.receipt_long_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _taxOfficeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Vergi Dairesi',
+                          prefixIcon: Icon(Icons.account_balance_outlined),
+                        ),
+                      ),
+                      AppDatePickerField(
+                        label: 'Kurulus Tarihi',
+                        icon: Icons.event_outlined,
+                        value: dateLabel,
+                        onTap: _pickFoundationDate,
+                        placeholder: 'Tarih secin',
+                      ),
+                    ],
+                  ),
+                  AdaptiveFieldRow(
+                    maxColumns: 4,
+                    minItemWidth: 180,
+                    children: [
+                      TextFormField(
+                        controller: _employeeCountCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Personel Sayisi',
+                          prefixIcon: Icon(Icons.groups_2_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _ibanCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'IBAN',
+                          prefixIcon: Icon(
+                            Icons.account_balance_wallet_outlined,
+                          ),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _kepCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'KEP Adresi',
+                          prefixIcon: Icon(Icons.mark_email_read_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _hibCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'HiB Uye No',
+                          prefixIcon: Icon(Icons.verified_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              AppSectionCard(
+                icon: Icons.location_on_outlined,
+                title: 'Adres ve Sektor Bilgileri',
+                description:
+                    'Adres, faaliyet alani ve sektor verilerini dilediginizde ekleyin.',
+                children: [
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 260,
+                    children: [
+                      TextFormField(
+                        controller: _cityCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Sehir',
+                          prefixIcon: Icon(Icons.location_city_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _addressCtrl,
+                        maxLines: 2,
+                        decoration: const InputDecoration(
+                          labelText: 'Merkez Adresi',
+                          alignLabelWithHint: true,
+                          prefixIcon: Icon(Icons.home_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AdaptiveFieldRow(
+                    maxColumns: 3,
+                    minItemWidth: 220,
+                    children: [
+                      TextFormField(
+                        controller: _exporterCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Ihracatci Birlikleri',
+                          prefixIcon: Icon(Icons.public_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _naceCodeCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'NACE Kodu',
+                          prefixIcon: Icon(Icons.qr_code_2_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _naceNameCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'NACE Adi',
+                          prefixIcon: Icon(Icons.schema_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AdaptiveFieldRow(
+                    maxColumns: 3,
+                    minItemWidth: 220,
+                    children: [
+                      TextFormField(
+                        controller: _brandCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Marka',
+                          prefixIcon: Icon(Icons.workspace_premium_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _subSectorCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Alt Sektor',
+                          prefixIcon: Icon(Icons.hub_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _solutionCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Sunulan Cozum',
+                          prefixIcon: Icon(Icons.inventory_2_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              AppSectionCard(
+                icon: Icons.tips_and_updates_outlined,
+                title: 'Ticari Notlar',
+                description:
+                    'Hedef musteri grubu, satis kanali ve serbest notlar burada tutulur.',
+                children: [
+                  AdaptiveFieldRow(
+                    maxColumns: 2,
+                    minItemWidth: 260,
+                    children: [
+                      TextFormField(
+                        controller: _targetCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Hedef Musteri Grubu',
+                          prefixIcon: Icon(Icons.groups_outlined),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _salesChannelCtrl,
+                        decoration: const InputDecoration(
+                          labelText: 'Satis Kanali / Platform',
+                          prefixIcon: Icon(Icons.storefront_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                  TextFormField(
+                    controller: _notesCtrl,
+                    maxLines: 5,
+                    decoration: const InputDecoration(
+                      labelText: 'Notlar',
+                      alignLabelWithHint: true,
+                      prefixIcon: Icon(Icons.edit_note_outlined),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: _saving ? null : _submit,
@@ -522,7 +617,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       ),
                     )
                   : Icon(
-                      _isEdit ? Icons.save_outlined : Icons.add_business_outlined,
+                      _isEdit
+                          ? Icons.save_outlined
+                          : Icons.add_business_outlined,
                     ),
               label: Text(_isEdit ? 'Firmayi Guncelle' : 'Firmayi Kaydet'),
             ),

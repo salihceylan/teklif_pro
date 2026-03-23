@@ -44,28 +44,41 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
   double get _subtotal =>
       _items.fold(0, (sum, item) => sum + (item.quantity * item.unitPrice));
   double get _vatTotal => _items.fold(
-        0,
-        (sum, item) => sum + ((item.quantity * item.unitPrice) * item.vatRate / 100),
-      );
+    0,
+    (sum, item) =>
+        sum + ((item.quantity * item.unitPrice) * item.vatRate / 100),
+  );
   double get _grandTotal => _subtotal + _vatTotal;
 
   @override
   void initState() {
     super.initState();
-    if (_isEdit) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final quote = context
-            .read<QuoteProvider>()
-            .items
+    if (!_isEdit) {
+      _items.add(_ItemRow.empty());
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final customerProvider = context.read<CustomerProvider>();
+      if (customerProvider.items.isEmpty) {
+        await customerProvider.load();
+      }
+      if (!mounted) return;
+
+      if (_isEdit) {
+        final quoteProvider = context.read<QuoteProvider>();
+        if (quoteProvider.items.isEmpty) {
+          await quoteProvider.load();
+        }
+        if (!mounted) return;
+
+        final quote = quoteProvider.items
             .where((item) => item.id == widget.quoteId)
             .firstOrNull;
         if (quote != null) {
           _bindQuote(quote);
         }
-      });
-    } else {
-      _items.add(_ItemRow.empty());
-    }
+      }
+    });
   }
 
   void _bindQuote(Quote quote) {
@@ -155,6 +168,13 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     return customers.where((item) => item.id == _customerId).firstOrNull;
   }
 
+  String get _customerCreateRoute {
+    final destination = _isEdit
+        ? '/quotes/${widget.quoteId}/edit'
+        : '/quotes/new';
+    return '/customers/new?returnTo=${Uri.encodeComponent(destination)}';
+  }
+
   Quote _buildDraftQuote(Customer? customer) {
     final items = _items
         .where((item) => item.description.isNotEmpty)
@@ -188,12 +208,15 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
       status: _status,
       issuedAt: _issuedAt,
       validUntil: _validUntil,
-      deliveryTime:
-          _deliveryCtrl.text.trim().isEmpty ? null : _deliveryCtrl.text.trim(),
-      paymentTerms:
-          _paymentCtrl.text.trim().isEmpty ? null : _paymentCtrl.text.trim(),
-      termsAndConditions:
-          _termsCtrl.text.trim().isEmpty ? null : _termsCtrl.text.trim(),
+      deliveryTime: _deliveryCtrl.text.trim().isEmpty
+          ? null
+          : _deliveryCtrl.text.trim(),
+      paymentTerms: _paymentCtrl.text.trim().isEmpty
+          ? null
+          : _paymentCtrl.text.trim(),
+      termsAndConditions: _termsCtrl.text.trim().isEmpty
+          ? null
+          : _termsCtrl.text.trim(),
       pricesIncludeVat: _pricesIncludeVat,
       notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       createdAt: _loadedQuote?.createdAt ?? DateTime.now(),
@@ -236,15 +259,20 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     final data = {
       'customer_id': _customerId,
       'title': _titleCtrl.text.trim(),
-      'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      'description': _descCtrl.text.trim().isEmpty
+          ? null
+          : _descCtrl.text.trim(),
       'issued_at': _issuedAt.toIso8601String(),
       if (_validUntil != null) 'valid_until': _validUntil!.toIso8601String(),
-      'delivery_time':
-          _deliveryCtrl.text.trim().isEmpty ? null : _deliveryCtrl.text.trim(),
-      'payment_terms':
-          _paymentCtrl.text.trim().isEmpty ? null : _paymentCtrl.text.trim(),
-      'terms_and_conditions':
-          _termsCtrl.text.trim().isEmpty ? null : _termsCtrl.text.trim(),
+      'delivery_time': _deliveryCtrl.text.trim().isEmpty
+          ? null
+          : _deliveryCtrl.text.trim(),
+      'payment_terms': _paymentCtrl.text.trim().isEmpty
+          ? null
+          : _paymentCtrl.text.trim(),
+      'terms_and_conditions': _termsCtrl.text.trim().isEmpty
+          ? null
+          : _termsCtrl.text.trim(),
       'prices_include_vat': _pricesIncludeVat,
       'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       'status': _status,
@@ -288,13 +316,53 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = context.watch<CustomerProvider>().items;
+    final customerProvider = context.watch<CustomerProvider>();
+    final customers = customerProvider.items;
     final selectedCustomer = _selectedCustomer(customers);
 
+    if (customerProvider.loading && customers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(_isEdit ? 'Teklifi Duzenle' : 'Yeni Teklif'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_isEdit && customers.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Yeni Teklif')),
+        body: AppScrollableBody(
+          maxWidth: 920,
+          children: [
+            AppPageIntro(
+              badge: 'Teklif Hazirlama',
+              icon: Icons.request_quote_outlined,
+              title: 'Teklif icin once firma ekleyin',
+              subtitle:
+                  'Teklif belgesi bir firma kaydina bagli calisir. Sadece sirket unvani ile hizli kayit acabilirsiniz.',
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.add_business_outlined,
+              title: 'Gerekli ilk adim',
+              description:
+                  'Firma kaydi acildiktan sonra teklif formuna otomatik olarak geri donebilirsiniz.',
+              children: [
+                FilledButton.icon(
+                  onPressed: () => context.go(_customerCreateRoute),
+                  icon: const Icon(Icons.add_business_outlined),
+                  label: const Text('Firma Ekle ve Teklife Don'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEdit ? 'Teklifi Duzenle' : 'Yeni Teklif'),
-      ),
+      appBar: AppBar(title: Text(_isEdit ? 'Teklifi Duzenle' : 'Yeni Teklif')),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
@@ -308,10 +376,21 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                   : 'Yeni fiyat teklifi hazirlayin',
               subtitle:
                   'Belge numarasi, kalem listesi, KDV ve ticari kosullar tek akista yonetilir.',
-              trailing: FilledButton.icon(
-                onPressed: () => _printDraftQuote(customers),
-                icon: const Icon(Icons.print_outlined),
-                label: const Text('Teklif Ciktisi'),
+              trailing: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go(_customerCreateRoute),
+                    icon: const Icon(Icons.add_business_outlined),
+                    label: const Text('Yeni Firma'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => _printDraftQuote(customers),
+                    icon: const Icon(Icons.print_outlined),
+                    label: const Text('Teklif Ciktisi'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -320,6 +399,11 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               title: 'Belge Bilgileri',
               description:
                   'Firma secimi, belge tarihi ve gecerlilik bilgileri teklif ust bilgisini olusturur.',
+              trailing: TextButton.icon(
+                onPressed: () => context.go(_customerCreateRoute),
+                icon: const Icon(Icons.add_business_outlined, size: 18),
+                label: const Text('Firma Ekle'),
+              ),
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -348,7 +432,8 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                           )
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
-                      validator: (value) => value == null ? 'Firma secin' : null,
+                      validator: (value) =>
+                          value == null ? 'Firma secin' : null,
                     ),
                     AppDatePickerField(
                       label: 'Teklif Tarihi',
@@ -379,8 +464,8 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                       ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                              ? 'Zorunlu alan'
-                              : null,
+                          ? 'Zorunlu alan'
+                          : null,
                     ),
                     DropdownButtonFormField<String>(
                       key: ValueKey(_status),
@@ -392,7 +477,10 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'draft', child: Text('Taslak')),
-                        DropdownMenuItem(value: 'sent', child: Text('Gonderildi')),
+                        DropdownMenuItem(
+                          value: 'sent',
+                          child: Text('Gonderildi'),
+                        ),
                         DropdownMenuItem(
                           value: 'accepted',
                           child: Text('Kabul Edildi'),
@@ -486,7 +574,8 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                 ),
                 SwitchListTile.adaptive(
                   value: _pricesIncludeVat,
-                  onChanged: (value) => setState(() => _pricesIncludeVat = value),
+                  onChanged: (value) =>
+                      setState(() => _pricesIncludeVat = value),
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Fiyatlara KDV dahildir'),
                   subtitle: const Text(
@@ -636,8 +725,9 @@ class _QuoteItemCard extends StatelessWidget {
                   alignLabelWithHint: true,
                   prefixIcon: Icon(Icons.inventory_2_outlined),
                 ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'Zorunlu alan' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Zorunlu alan'
+                    : null,
                 onChanged: (_) => onChanged(),
               ),
               const SizedBox(height: 12),
@@ -649,7 +739,10 @@ class _QuoteItemCard extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F0FA),
                     borderRadius: BorderRadius.circular(999),
@@ -672,45 +765,45 @@ class _QuoteItemCard extends StatelessWidget {
   }
 
   List<Widget> _compactValueFields(_ItemRow row, VoidCallback onChanged) => [
-        TextFormField(
-          controller: row.qtyCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Miktar',
-            prefixIcon: Icon(Icons.tag_outlined),
-          ),
-          onChanged: (_) => onChanged(),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: row.unitCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Birim',
-            prefixIcon: Icon(Icons.straighten_outlined),
-          ),
-          onChanged: (_) => onChanged(),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: row.priceCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Birim Fiyat',
-            prefixIcon: Icon(Icons.payments_outlined),
-          ),
-          onChanged: (_) => onChanged(),
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: row.vatCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'KDV %',
-            prefixIcon: Icon(Icons.percent_outlined),
-          ),
-          onChanged: (_) => onChanged(),
-        ),
-      ];
+    TextFormField(
+      controller: row.qtyCtrl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        labelText: 'Miktar',
+        prefixIcon: Icon(Icons.tag_outlined),
+      ),
+      onChanged: (_) => onChanged(),
+    ),
+    const SizedBox(height: 12),
+    TextFormField(
+      controller: row.unitCtrl,
+      decoration: const InputDecoration(
+        labelText: 'Birim',
+        prefixIcon: Icon(Icons.straighten_outlined),
+      ),
+      onChanged: (_) => onChanged(),
+    ),
+    const SizedBox(height: 12),
+    TextFormField(
+      controller: row.priceCtrl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        labelText: 'Birim Fiyat',
+        prefixIcon: Icon(Icons.payments_outlined),
+      ),
+      onChanged: (_) => onChanged(),
+    ),
+    const SizedBox(height: 12),
+    TextFormField(
+      controller: row.vatCtrl,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        labelText: 'KDV %',
+        prefixIcon: Icon(Icons.percent_outlined),
+      ),
+      onChanged: (_) => onChanged(),
+    ),
+  ];
 
   List<Widget> _wideValueFields(_ItemRow row, VoidCallback onChanged) {
     final children = <Widget>[
@@ -807,7 +900,9 @@ class _SummaryPanel extends StatelessWidget {
             label,
             style: TextStyle(
               fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
-              color: highlighted ? const Color(0xFF17304C) : const Color(0xFF5A6B7F),
+              color: highlighted
+                  ? const Color(0xFF17304C)
+                  : const Color(0xFF5A6B7F),
             ),
           ),
         ),
@@ -816,7 +911,9 @@ class _SummaryPanel extends StatelessWidget {
           style: TextStyle(
             fontSize: highlighted ? 18 : 14,
             fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
-            color: highlighted ? const Color(0xFF1F5EA8) : const Color(0xFF17304C),
+            color: highlighted
+                ? const Color(0xFF1F5EA8)
+                : const Color(0xFF17304C),
           ),
         ),
       ],
@@ -842,21 +939,23 @@ class _ItemRow {
   });
 
   factory _ItemRow.empty() => _ItemRow(
-        codeCtrl: TextEditingController(),
-        descCtrl: TextEditingController(),
-        qtyCtrl: TextEditingController(text: '1'),
-        unitCtrl: TextEditingController(text: 'Adet'),
-        priceCtrl: TextEditingController(),
-        vatCtrl: TextEditingController(text: '20'),
-      );
+    codeCtrl: TextEditingController(),
+    descCtrl: TextEditingController(),
+    qtyCtrl: TextEditingController(text: '1'),
+    unitCtrl: TextEditingController(text: 'Adet'),
+    priceCtrl: TextEditingController(),
+    vatCtrl: TextEditingController(text: '20'),
+  );
 
   String get productCode => codeCtrl.text.trim();
   String get description => descCtrl.text.trim();
-  double get quantity => double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
+  double get quantity =>
+      double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
   String get unit => unitCtrl.text.trim();
   double get unitPrice =>
       double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
-  double get vatRate => double.tryParse(vatCtrl.text.replaceAll(',', '.')) ?? 20;
+  double get vatRate =>
+      double.tryParse(vatCtrl.text.replaceAll(',', '.')) ?? 20;
   double get totalPrice => quantity * unitPrice * (1 + (vatRate / 100));
 
   void dispose() {
