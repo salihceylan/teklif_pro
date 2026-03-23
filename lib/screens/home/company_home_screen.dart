@@ -1388,7 +1388,7 @@ class _ProductShowcase extends StatelessWidget {
                           ),
                           const SizedBox(height: 18),
                           AdaptiveFieldRow(
-                            maxColumns: 2,
+                            maxColumns: 4,
                             minItemWidth: metricMinWidth,
                             children: const [
                               _ProductMetric(title: 'Müşteri', value: '128'),
@@ -1792,13 +1792,16 @@ class _PanelLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        softWrap: false,
         style: const TextStyle(
           color: AppTheme.primary,
           fontSize: 12,

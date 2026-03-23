@@ -41,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final loading = context.watch<AuthProvider>().loading;
 
     return AuthScaffold(
+      showIntro: false,
       eyebrow: 'Saha ekibi için tek panel',
       title: 'Teklif, servis ve tahsilat sürecini aynı merkezden yönetin.',
       subtitle:

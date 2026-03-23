@@ -402,6 +402,7 @@ class AuthScaffold extends StatelessWidget {
   final List<AuthHighlight> highlights;
   final Widget child;
   final Widget footer;
+  final bool showIntro;
 
   const AuthScaffold({
     super.key,
@@ -413,33 +414,36 @@ class AuthScaffold extends StatelessWidget {
     required this.highlights,
     required this.child,
     required this.footer,
+    this.showIntro = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppTheme.primaryDark,
-              AppTheme.primary,
-              AppTheme.secondary,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -120,
-              right: -70,
-              child: _GlowBlob(
-                size: 280,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
+      backgroundColor: AppTheme.primaryDark,
+      body: SizedBox.expand(
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primaryDark,
+                AppTheme.primary,
+                AppTheme.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -120,
+                right: -70,
+                child: _GlowBlob(
+                  size: 280,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
             Positioned(
               bottom: -100,
               left: -80,
@@ -448,46 +452,18 @@ class AuthScaffold extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.06),
               ),
             ),
+            const Positioned.fill(child: _AuthWatermarkPattern()),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 980;
-                  final padding = constraints.maxWidth >= 720 ? 28.0 : 18.0;
-                  final content = wide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: _AuthIntro(
-                                eyebrow: eyebrow,
-                                title: title,
-                                subtitle: subtitle,
-                                highlights: highlights,
-                              ),
-                            ),
-                            const SizedBox(width: 32),
-                            SizedBox(
-                              width: 440,
-                              child: _AuthCard(
-                                title: formTitle,
-                                subtitle: formSubtitle,
-                                footer: footer,
-                                child: child,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            _AuthIntro(
-                              eyebrow: eyebrow,
-                              title: title,
-                              subtitle: subtitle,
-                              highlights: highlights,
-                              compact: true,
-                            ),
-                            const SizedBox(height: 20),
-                            ConstrainedBox(
+                    final wide = constraints.maxWidth >= 980;
+                    final padding = constraints.maxWidth >= 720 ? 28.0 : 18.0;
+                    final minHeight = (constraints.maxHeight - (padding * 2))
+                        .clamp(0.0, double.infinity);
+
+                    final content = !showIntro
+                        ? Center(
+                            child: ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 460),
                               child: _AuthCard(
                                 title: formTitle,
@@ -496,22 +472,82 @@ class AuthScaffold extends StatelessWidget {
                                 child: child,
                               ),
                             ),
-                          ],
-                        );
+                          )
+                        : wide
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: _AuthIntro(
+                                  eyebrow: eyebrow,
+                                  title: title,
+                                  subtitle: subtitle,
+                                  highlights: highlights,
+                                ),
+                              ),
+                              const SizedBox(width: 32),
+                              SizedBox(
+                                width: 440,
+                                child: _AuthCard(
+                                  title: formTitle,
+                                  subtitle: formSubtitle,
+                                  footer: footer,
+                                  child: child,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              _AuthIntro(
+                                eyebrow: eyebrow,
+                                title: title,
+                                subtitle: subtitle,
+                                highlights: highlights,
+                                compact: true,
+                              ),
+                              const SizedBox(height: 20),
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 460),
+                                child: _AuthCard(
+                                  title: formTitle,
+                                  subtitle: formSubtitle,
+                                  footer: footer,
+                                  child: child,
+                                ),
+                              ),
+                            ],
+                          );
 
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.all(padding),
-                    child: Center(
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.all(padding),
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1180),
-                        child: content,
+                        constraints: BoxConstraints(minHeight: minHeight),
+                        child: showIntro
+                            ? Align(
+                                alignment: Alignment.topCenter,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 1180,
+                                  ),
+                                  child: content,
+                                ),
+                              )
+                            : Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 460,
+                                  ),
+                                  child: content,
+                                ),
+                              ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -738,4 +774,83 @@ class _GlowBlob extends StatelessWidget {
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
+}
+
+class _AuthWatermarkPattern extends StatelessWidget {
+  const _AuthWatermarkPattern();
+
+  static const _specs = <_WatermarkSpec>[
+    _WatermarkSpec(x: -0.1, y: 0.02, scale: 0.28, angle: -0.22, opacity: 0.18),
+    _WatermarkSpec(x: 0.1, y: 0.14, scale: 0.18, angle: 0.1, opacity: 0.14),
+    _WatermarkSpec(x: 0.28, y: 0.06, scale: 0.16, angle: -0.18, opacity: 0.12),
+    _WatermarkSpec(x: 0.5, y: 0.14, scale: 0.22, angle: 0.22, opacity: 0.16),
+    _WatermarkSpec(x: 0.76, y: 0.02, scale: 0.26, angle: -0.14, opacity: 0.17),
+    _WatermarkSpec(x: 0.84, y: 0.24, scale: 0.18, angle: 0.26, opacity: 0.13),
+    _WatermarkSpec(x: -0.02, y: 0.34, scale: 0.22, angle: 0.14, opacity: 0.15),
+    _WatermarkSpec(x: 0.2, y: 0.3, scale: 0.16, angle: -0.1, opacity: 0.12),
+    _WatermarkSpec(x: 0.46, y: 0.38, scale: 0.28, angle: -0.2, opacity: 0.18),
+    _WatermarkSpec(x: 0.7, y: 0.36, scale: 0.2, angle: 0.16, opacity: 0.14),
+    _WatermarkSpec(x: 0.06, y: 0.58, scale: 0.24, angle: -0.16, opacity: 0.16),
+    _WatermarkSpec(x: 0.34, y: 0.6, scale: 0.18, angle: 0.12, opacity: 0.13),
+    _WatermarkSpec(x: 0.58, y: 0.56, scale: 0.3, angle: -0.18, opacity: 0.19),
+    _WatermarkSpec(x: 0.8, y: 0.64, scale: 0.2, angle: -0.08, opacity: 0.14),
+    _WatermarkSpec(x: -0.04, y: 0.8, scale: 0.28, angle: 0.18, opacity: 0.18),
+    _WatermarkSpec(x: 0.24, y: 0.82, scale: 0.16, angle: -0.14, opacity: 0.12),
+    _WatermarkSpec(x: 0.5, y: 0.8, scale: 0.22, angle: 0.2, opacity: 0.15),
+    _WatermarkSpec(x: 0.76, y: 0.86, scale: 0.24, angle: -0.12, opacity: 0.16),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final base = math.min(constraints.maxWidth, constraints.maxHeight);
+            return Stack(
+              children: [
+                for (final spec in _specs)
+                  Positioned(
+                    left: constraints.maxWidth * spec.x,
+                    top: constraints.maxHeight * spec.y,
+                    child: Opacity(
+                      opacity: spec.opacity,
+                      child: Transform.rotate(
+                        angle: spec.angle,
+                        child: SizedBox(
+                          width: base * spec.scale,
+                          height: base * spec.scale,
+                          child: ClipOval(
+                            child: Image.asset(
+                              Branding.logoAsset,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _WatermarkSpec {
+  final double x;
+  final double y;
+  final double scale;
+  final double angle;
+  final double opacity;
+
+  const _WatermarkSpec({
+    required this.x,
+    required this.y,
+    required this.scale,
+    required this.angle,
+    required this.opacity,
+  });
 }
