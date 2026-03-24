@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
 import '../../core/app_theme.dart';
+import '../../core/browser_file_download.dart';
 import '../../models/customer.dart';
 import '../../models/quote.dart';
 import '../../models/user.dart';
@@ -79,7 +80,10 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
     setState(() => _downloading = true);
     try {
       final bytes = await _pdfFuture;
-      await Printing.sharePdf(bytes: bytes, filename: _fileName);
+      final downloaded = await downloadPdfFile(bytes, _fileName);
+      if (!downloaded) {
+        await Printing.sharePdf(bytes: bytes, filename: _fileName);
+      }
     } catch (_) {
       if (!mounted) {
         return;

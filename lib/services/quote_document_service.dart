@@ -39,8 +39,10 @@ class QuoteDocumentService {
 
     document.addPage(
       pw.MultiPage(
-        margin: const pw.EdgeInsets.all(28),
-        pageTheme: pw.PageTheme(theme: theme),
+        pageTheme: pw.PageTheme(
+          theme: theme,
+          margin: const pw.EdgeInsets.all(28),
+        ),
         build: (context) => [
           pw.Container(
             padding: const pw.EdgeInsets.all(18),
