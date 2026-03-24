@@ -2,7 +2,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 import '../core/branding.dart';
 import '../models/customer.dart';
@@ -14,7 +13,7 @@ class QuoteDocumentService {
   static final NumberFormat _currency = NumberFormat('#,##0.00', 'tr_TR');
   static Future<pw.ThemeData>? _themeFuture;
 
-  static Future<void> printQuote({
+  static Future<Uint8List> buildQuotePdf({
     required Quote quote,
     required Customer? customer,
     required User? user,
@@ -265,7 +264,7 @@ class QuoteDocumentService {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (_) async => document.save());
+    return document.save();
   }
 
   static Future<pw.ThemeData> _loadTheme() {

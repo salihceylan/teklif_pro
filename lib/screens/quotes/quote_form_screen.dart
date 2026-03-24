@@ -8,14 +8,13 @@ import '../../models/customer.dart';
 import '../../models/exchange_rate_snapshot.dart';
 import '../../models/product.dart';
 import '../../models/quote.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../../services/exchange_rate_service.dart';
-import '../../services/quote_document_service.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/destructive_confirm_dialog.dart';
+import 'quote_ui_actions.dart';
 
 class QuoteFormScreen extends StatefulWidget {
   final int? quoteId;
@@ -356,10 +355,10 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     }
 
     try {
-      await QuoteDocumentService.printQuote(
+      await QuoteUiActions.printQuote(
+        context,
         quote: quote,
         customer: _selectedCustomer(customers),
-        user: context.read<AuthProvider>().user,
       );
     } catch (_) {
       if (!mounted) return;

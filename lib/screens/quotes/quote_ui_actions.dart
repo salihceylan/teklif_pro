@@ -5,7 +5,7 @@ import '../../models/customer.dart';
 import '../../models/quote.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/quote_provider.dart';
-import '../../services/quote_document_service.dart';
+import 'quote_pdf_preview_screen.dart';
 
 class QuoteUiActions {
   static Future<void> printQuote(
@@ -14,10 +14,18 @@ class QuoteUiActions {
     required Customer? customer,
   }) async {
     try {
-      await QuoteDocumentService.printQuote(
-        quote: quote,
-        customer: customer,
-        user: context.read<AuthProvider>().user,
+      final user = context.read<AuthProvider>().user;
+      if (!context.mounted) {
+        return;
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => QuotePdfPreviewScreen(
+            quote: quote,
+            customer: customer,
+            user: user,
+          ),
+        ),
       );
     } catch (_) {
       if (context.mounted) {
