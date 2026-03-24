@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../core/app_notifications.dart';
 import '../models/customer.dart';
+import '../services/customer_delete_service.dart';
 import '../services/customer_service.dart';
 
 class CustomerProvider extends ChangeNotifier {
   final _service = CustomerService();
+  final _deleteService = CustomerDeleteService();
   List<Customer> _items = [];
   bool _loading = false;
 
@@ -20,33 +23,47 @@ class CustomerProvider extends ChangeNotifier {
   }
 
   Future<void> create(Map<String, dynamic> data) async {
-    final c = await _service.create(data);
-    _items.insert(0, c);
+    final customer = await _service.create(data);
+    _items.insert(0, customer);
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.companyRecords,
       title: 'Yeni firma kaydedildi',
-      body: '${c.companyName} için firma kartı oluşturuldu.',
+      body: '${customer.companyName} için firma kartı oluşturuldu.',
     );
   }
 
   Future<void> update(int id, Map<String, dynamic> data) async {
-    final previous = _items.where((e) => e.id == id).firstOrNull;
-    final c = await _service.update(id, data);
-    final idx = _items.indexWhere((e) => e.id == id);
-    if (idx != -1) _items[idx] = c;
+    final previous = _items.where((item) => item.id == id).firstOrNull;
+    final customer = await _service.update(id, data);
+    final index = _items.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      _items[index] = customer;
+    }
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.companyRecords,
       title: 'Firma profili güncellendi',
       body:
-          '${previous?.companyName ?? c.companyName} firma kaydı güncellendi.',
+          '${previous?.companyName ?? customer.companyName} firma kaydı güncellendi.',
     );
   }
 
-  Future<void> delete(int id) async {
-    await _service.delete(id);
-    _items.removeWhere((e) => e.id == id);
+  Future<CustomerDeleteImpact> inspectDeleteImpact(int id) async {
+    return _deleteService.inspect(id);
+  }
+
+  Future<CustomerDeleteImpact> delete(int id) async {
+    final impact = await _deleteService.deleteCascade(id);
+    _items.removeWhere((item) => item.id == id);
     notifyListeners();
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.companyRecords,
+      title: 'Firma ve bağlı kayıtlar silindi',
+      body: impact.hasDependencies
+          ? 'Firma kaydı ile birlikte bağlı teklif, servis ve fatura kayıtları kaldırıldı.'
+          : 'Firma kaydı silindi.',
+    );
+    return impact;
   }
 }

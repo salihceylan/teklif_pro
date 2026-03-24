@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/app_theme.dart';
+import '../../models/customer.dart';
 import '../../providers/customer_provider.dart';
+import '../../services/customer_delete_service.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/destructive_confirm_dialog.dart';
@@ -24,16 +26,57 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, int id) async {
+  String _buildDeleteMessage(String companyName, CustomerDeleteImpact impact) {
+    if (!impact.hasDependencies) {
+      return '$companyName firma kaydını silmek istediğinizden emin misiniz?';
+    }
+
+    final parts = <String>[
+      if (impact.quoteCount > 0) '${impact.quoteCount} teklif',
+      if (impact.invoiceCount > 0) '${impact.invoiceCount} fatura',
+      if (impact.serviceRequestCount > 0)
+        '${impact.serviceRequestCount} servis talebi',
+      if (impact.visitCount > 0) '${impact.visitCount} servis formu',
+    ];
+
+    return '$companyName firmasını silerseniz bu firmaya bağlı ${parts.join(', ')} kayıtları da kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  }
+
+  Future<void> _confirmDelete(Customer customer) async {
+    final provider = context.read<CustomerProvider>();
+    final impact = await provider.inspectDeleteImpact(customer.id);
+    if (!mounted) {
+      return;
+    }
+
     final confirmed = await showDestructiveConfirmDialog(
       context,
       title: 'Firmayı Sil',
-      message: 'Bu firma kaydını silmek istediğinizden emin misiniz?',
+      message: _buildDeleteMessage(customer.companyName, impact),
     );
-    if (!confirmed || !context.mounted) {
+    if (!confirmed || !mounted) {
       return;
     }
-    await context.read<CustomerProvider>().delete(id);
+
+    try {
+      final result = await provider.delete(customer.id);
+      if (!mounted) {
+        return;
+      }
+      final message = result.hasDependencies
+          ? 'Firma ve bağlı kayıtlar silindi'
+          : 'Firma silindi';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Firma silinemedi')));
+    }
   }
 
   @override
@@ -164,7 +207,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                 } else if (selected == 'edit') {
                                   context.go('/customers/${customer.id}/edit');
                                 } else if (selected == 'delete') {
-                                  _confirmDelete(context, customer.id);
+                                  _confirmDelete(customer);
                                 }
                               },
                               itemBuilder: (_) => const [

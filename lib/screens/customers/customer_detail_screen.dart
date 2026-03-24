@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../models/customer.dart';
 import '../../providers/customer_provider.dart';
+import '../../services/customer_delete_service.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/destructive_confirm_dialog.dart';
@@ -42,23 +43,69 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
   }
 
+  String _buildDeleteMessage(Customer customer, CustomerDeleteImpact impact) {
+    if (!impact.hasDependencies) {
+      return '${customer.companyName} firma kaydını silmek istediğinizden emin misiniz?';
+    }
+
+    final parts = <String>[
+      if (impact.quoteCount > 0) '${impact.quoteCount} teklif',
+      if (impact.invoiceCount > 0) '${impact.invoiceCount} fatura',
+      if (impact.serviceRequestCount > 0)
+        '${impact.serviceRequestCount} servis talebi',
+      if (impact.visitCount > 0) '${impact.visitCount} servis formu',
+    ];
+
+    return '${customer.companyName} firmasını silerseniz bu firmaya bağlı ${parts.join(', ')} kayıtları da kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  }
+
   Future<void> _handleMenuAction(String value, Customer customer) async {
     if (value == 'edit') {
       context.push('/customers/${customer.id}/edit');
-    } else if (value == 'delete') {
-      final confirmed = await showDestructiveConfirmDialog(
-        context,
-        title: 'Firmayı Sil',
-        message:
-            '${customer.companyName} firma kaydını silmek istediğinizden emin misiniz?',
-      );
-      if (!confirmed || !mounted) {
+      return;
+    }
+
+    if (value != 'delete') {
+      return;
+    }
+
+    final provider = context.read<CustomerProvider>();
+    final impact = await provider.inspectDeleteImpact(customer.id);
+    if (!mounted) {
+      return;
+    }
+
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Firmayı Sil',
+      message: _buildDeleteMessage(customer, impact),
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    try {
+      final result = await provider.delete(customer.id);
+      if (!mounted) {
         return;
       }
-      await context.read<CustomerProvider>().delete(customer.id);
-      if (mounted) {
-        _goBack();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.hasDependencies
+                ? 'Firma ve bağlı kayıtlar silindi'
+                : 'Firma silindi',
+          ),
+        ),
+      );
+      _goBack();
+    } catch (_) {
+      if (!mounted) {
+        return;
       }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Firma silinemedi')));
     }
   }
 
