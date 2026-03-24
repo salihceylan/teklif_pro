@@ -15,6 +15,7 @@ class AppTheme {
 
   static ThemeData get light => ThemeData(
     useMaterial3: true,
+    fontFamily: 'SegoeUI',
     colorScheme:
         ColorScheme.fromSeed(
           seedColor: primary,

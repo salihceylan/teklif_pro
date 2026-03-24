@@ -69,6 +69,13 @@ flutter:
   assets:
     - assets/branding/gude_logo.png
 
+  fonts:
+    - family: SegoeUI
+      fonts:
+        - asset: assets/fonts/SegoeUI-Regular.ttf
+        - asset: assets/fonts/SegoeUI-Bold.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
