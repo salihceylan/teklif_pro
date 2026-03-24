@@ -126,18 +126,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             trailing: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _HeroBadge(
-                  label: product.isActive ? 'Aktif Kayıt' : 'Pasif Kayıt',
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroActionButton(
+                      icon: Icons.edit_outlined,
+                      label: 'Düzenle',
+                      onPressed: () => _handleMenuAction('edit', product),
+                      emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Sil',
+                      onPressed: () => _handleMenuAction('delete', product),
+                      destructive: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                if (product.trackInventory)
-                  _HeroBadge(
-                    label: product.isLowStock
-                        ? 'Kritik Stok'
-                        : 'Stok: ${_qty.format(product.stockQuantity)} ${product.unit}',
-                  )
-                else
-                  const _HeroBadge(label: 'Stok Takibi Kapalı'),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _HeroBadge(
+                      label: product.isActive ? 'Aktif Kayıt' : 'Pasif Kayıt',
+                    ),
+                    if (product.trackInventory)
+                      _HeroBadge(
+                        label: product.isLowStock
+                            ? 'Kritik Stok'
+                            : 'Stok: ${_qty.format(product.stockQuantity)} ${product.unit}',
+                      )
+                    else
+                      const _HeroBadge(label: 'Stok Takibi Kapalı'),
+                  ],
+                ),
               ],
             ),
           ),
@@ -163,7 +187,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           const SizedBox(height: 20),
           AppSectionCard(
             icon: Icons.payments_outlined,
-            title: 'Fiyatlandirma',
+            title: 'Fiyatlandırma',
             children: [
               AdaptiveFieldRow(
                 maxColumns: 3,

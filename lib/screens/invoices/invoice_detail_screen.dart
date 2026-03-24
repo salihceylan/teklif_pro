@@ -109,6 +109,8 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
         title: Text(invoice.title),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Fatura işlemleri',
             onSelected: (value) => _handleMenuAction(value, invoice),
             itemBuilder: (_) => const [
               PopupMenuItem(
@@ -147,14 +149,43 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             title: invoice.title,
             subtitle:
                 '${customer?.companyName ?? 'Firma seçilmedi'} için hazırlanan fatura dökümü.',
-            trailing: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _MetricPill(label: 'Durum', value: invoice.statusLabel),
-                _MetricPill(
-                  label: 'Toplam',
-                  value: '${_currency.format(invoice.totalAmount)} ₺',
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroActionButton(
+                      icon: Icons.edit_outlined,
+                      label: 'Düzenle',
+                      onPressed: () => _handleMenuAction('edit', invoice),
+                      emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.check_circle_outlined,
+                      label: 'Ödendi',
+                      onPressed: () => _handleMenuAction('paid', invoice),
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Sil',
+                      onPressed: () => _handleMenuAction('delete', invoice),
+                      destructive: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _MetricPill(label: 'Durum', value: invoice.statusLabel),
+                    _MetricPill(
+                      label: 'Toplam',
+                      value: '${_currency.format(invoice.totalAmount)} ₺',
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -197,7 +228,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                     value: invoice.quoteId?.toString() ?? '-',
                   ),
                   _InfoPanel(
-                    label: 'Kalem Sayisi',
+                    label: 'Kalem Sayısı',
                     value: invoice.items.length.toString(),
                   ),
                 ],
@@ -366,6 +397,7 @@ class _InfoLine extends StatelessWidget {
     if (text.isEmpty) {
       return const SizedBox.shrink();
     }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

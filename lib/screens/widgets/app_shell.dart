@@ -177,6 +177,69 @@ class AppPageIntro extends StatelessWidget {
   }
 }
 
+class AppIntroActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool destructive;
+  final bool emphasized;
+
+  const AppIntroActionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.destructive = false,
+    this.emphasized = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = destructive ? const Color(0xFFFFE2E2) : Colors.white;
+    final background = destructive
+        ? const Color(0xFF7F1D1D).withValues(alpha: 0.42)
+        : emphasized
+        ? Colors.white.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.12);
+    final border = destructive
+        ? const Color(0xFFFCA5A5).withValues(alpha: 0.42)
+        : Colors.white.withValues(alpha: 0.16);
+
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border),
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: foreground),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AppSectionCard extends StatelessWidget {
   final String title;
   final String? description;
@@ -195,6 +258,24 @@ class AppSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themedTrailing = trailing == null
+        ? null
+        : Theme(
+            data: Theme.of(context).copyWith(
+              filledButtonTheme: FilledButtonThemeData(
+                style:
+                    (Theme.of(context).filledButtonTheme.style ??
+                            const ButtonStyle())
+                        .copyWith(
+                          minimumSize: const WidgetStatePropertyAll(
+                            Size(0, 48),
+                          ),
+                        ),
+              ),
+            ),
+            child: trailing!,
+          );
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -212,10 +293,11 @@ class AppSectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stackedHeader =
+                  themedTrailing != null && constraints.maxWidth < 860;
+              final headerIcon = Container(
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
@@ -223,36 +305,73 @@ class AppSectionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: AppTheme.primary, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              );
+
+              final headerText = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  if (description != null) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      title,
+                      description!,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textDark,
+                        fontSize: 13,
+                        color: AppTheme.textMedium,
+                        height: 1.45,
                       ),
                     ),
-                    if (description != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        description!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textMedium,
-                          height: 1.45,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
-              ),
-              if (trailing != null) ...[const SizedBox(width: 12), trailing!],
-            ],
+                ],
+              );
+
+              if (stackedHeader) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        headerIcon,
+                        const SizedBox(width: 14),
+                        Expanded(child: headerText),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: themedTrailing,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  headerIcon,
+                  const SizedBox(width: 14),
+                  Expanded(child: headerText),
+                  if (themedTrailing != null) ...[
+                    const SizedBox(width: 12),
+                    Flexible(
+                      fit: FlexFit.loose,
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: themedTrailing,
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           ..._withSpacing(children),

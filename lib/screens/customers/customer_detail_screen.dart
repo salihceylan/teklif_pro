@@ -88,6 +88,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         title: Text(customer.companyName),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Firma işlemleri',
             onSelected: (value) => _handleMenuAction(value, customer),
             itemBuilder: (_) => const [
               PopupMenuItem(
@@ -117,8 +119,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             icon: Icons.apartment_outlined,
             title: customer.companyName,
             subtitle: customer.contactName?.isNotEmpty == true
-                ? '${customer.contactName} ile kayitli firma profili'
+                ? '${customer.contactName} ile kayıtlı firma profili'
                 : 'Şirket profili ve resmi bilgiler',
+            trailing: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                AppIntroActionButton(
+                  icon: Icons.edit_outlined,
+                  label: 'Düzenle',
+                  onPressed: () => _handleMenuAction('edit', customer),
+                  emphasized: true,
+                ),
+                AppIntroActionButton(
+                  icon: Icons.delete_outline,
+                  label: 'Sil',
+                  onPressed: () => _handleMenuAction('delete', customer),
+                  destructive: true,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           AppSectionCard(
@@ -130,7 +150,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               _DetailLine('E-posta', customer.email),
               _DetailLine('Web Sitesi', customer.website),
               _DetailLine('Adres', customer.address),
-              _DetailLine('Sehir', customer.city),
+              _DetailLine('Şehir', customer.city),
             ],
           ),
           const SizedBox(height: 20),
@@ -142,7 +162,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 maxColumns: 3,
                 minItemWidth: 220,
                 children: [
-                  _InfoPanel(label: 'MERSIS', value: customer.mersisNo ?? '-'),
+                  _InfoPanel(label: 'MERSİS', value: customer.mersisNo ?? '-'),
                   _InfoPanel(
                     label: 'Vergi No',
                     value: customer.taxNumber ?? '-',
@@ -157,6 +177,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         ? '-'
                         : DateFormat(
                             'dd.MM.yyyy',
+                            'tr_TR',
                           ).format(customer.foundationDate!),
                   ),
                   _InfoPanel(
@@ -262,6 +283,7 @@ class _DetailLine extends StatelessWidget {
     if (text.isEmpty) {
       return const SizedBox.shrink();
     }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

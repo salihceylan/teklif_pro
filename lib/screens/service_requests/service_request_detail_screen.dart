@@ -101,6 +101,8 @@ class _ServiceRequestDetailScreenState
         title: Text(request.title),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Talep işlemleri',
             onSelected: (value) => _handleMenuAction(value, request),
             itemBuilder: (_) => const [
               PopupMenuItem(
@@ -131,6 +133,24 @@ class _ServiceRequestDetailScreenState
             title: request.title,
             subtitle:
                 '${_customerName(customerProvider.items, request.customerId)} için açılan servis talebi',
+            trailing: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                AppIntroActionButton(
+                  icon: Icons.edit_outlined,
+                  label: 'Düzenle',
+                  onPressed: () => _handleMenuAction('edit', request),
+                  emphasized: true,
+                ),
+                AppIntroActionButton(
+                  icon: Icons.delete_outline,
+                  label: 'Sil',
+                  onPressed: () => _handleMenuAction('delete', request),
+                  destructive: true,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           AppSectionCard(
@@ -231,6 +251,7 @@ class _DetailLine extends StatelessWidget {
     if (text.isEmpty) {
       return const SizedBox.shrink();
     }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

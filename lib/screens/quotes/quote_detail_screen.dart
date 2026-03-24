@@ -124,7 +124,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
       );
     }
 
-    final color = AppTheme.statusColor(quote.status);
+    final statusColor = AppTheme.statusColor(quote.status);
 
     return Scaffold(
       appBar: AppBar(
@@ -135,6 +135,8 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
         title: Text(quote.title),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Teklif işlemleri',
             onSelected: (value) =>
                 _handleMenuAction(value, quote: quote, customer: customer),
             itemBuilder: (_) => const [
@@ -187,24 +189,83 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             title: quote.title,
             subtitle:
                 '${customer?.companyName ?? quote.customerCompanyName ?? 'Firma seçilmedi'} için hazırlanan teklif belgesi.',
-            trailing: Wrap(
-              spacing: 10,
-              runSpacing: 10,
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _MetricPill(
-                  label: 'Durum',
-                  value: quote.statusLabel,
-                  color: color,
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroActionButton(
+                      icon: Icons.print_outlined,
+                      label: 'Çıktı',
+                      onPressed: () => _handleMenuAction(
+                        'print',
+                        quote: quote,
+                        customer: customer,
+                      ),
+                      emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.email_outlined,
+                      label: 'Mail',
+                      onPressed: () => _handleMenuAction(
+                        'mail',
+                        quote: quote,
+                        customer: customer,
+                      ),
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.edit_outlined,
+                      label: 'Düzenle',
+                      onPressed: () => _handleMenuAction(
+                        'edit',
+                        quote: quote,
+                        customer: customer,
+                      ),
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.receipt_long_outlined,
+                      label: 'Fatura',
+                      onPressed: () => _handleMenuAction(
+                        'invoice',
+                        quote: quote,
+                        customer: customer,
+                      ),
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Sil',
+                      onPressed: () => _handleMenuAction(
+                        'delete',
+                        quote: quote,
+                        customer: customer,
+                      ),
+                      destructive: true,
+                    ),
+                  ],
                 ),
-                _MetricPill(
-                  label: 'Toplam TL',
-                  value: '${_currency.format(quote.totalAmount)} ₺',
-                  color: Colors.white,
-                ),
-                _MetricPill(
-                  label: 'Toplam USD',
-                  value: '${_currency.format(quote.totalAmountUsd)} USD',
-                  color: Colors.white,
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _MetricPill(
+                      label: 'Durum',
+                      value: quote.statusLabel,
+                      color: statusColor,
+                    ),
+                    _MetricPill(
+                      label: 'Toplam TL',
+                      value: '${_currency.format(quote.totalAmount)} ₺',
+                      color: Colors.white,
+                    ),
+                    _MetricPill(
+                      label: 'Toplam USD',
+                      value: '${_currency.format(quote.totalAmountUsd)} USD',
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -483,6 +544,7 @@ class _InfoLine extends StatelessWidget {
     if (visibleValue.isEmpty) {
       return const SizedBox.shrink();
     }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

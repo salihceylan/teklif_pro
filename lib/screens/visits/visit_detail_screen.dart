@@ -101,6 +101,8 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
         title: Text(visit.serviceCode ?? 'Servis Formu'),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Servis formu işlemleri',
             onSelected: (value) => _handleMenuAction(value, visit),
             itemBuilder: (_) => const [
               PopupMenuItem(
@@ -131,6 +133,44 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             title: _customerName(customerProvider.items, visit.customerId),
             subtitle:
                 '${visit.serviceCode ?? 'Servis belgesi'} için operasyon ve maliyet özeti',
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroActionButton(
+                      icon: Icons.edit_outlined,
+                      label: 'Düzenle',
+                      onPressed: () => _handleMenuAction('edit', visit),
+                      emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Sil',
+                      onPressed: () => _handleMenuAction('delete', visit),
+                      destructive: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _MetricPill(
+                      label: 'Toplam TL',
+                      value: '${_currency.format(visit.grandTotal)} ₺',
+                    ),
+                    _MetricPill(
+                      label: 'Toplam USD',
+                      value: '${_currency.format(visit.grandTotalUsd)} USD',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           AppSectionCard(
@@ -307,6 +347,47 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
   }
 }
 
+class _MetricPill extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MetricPill({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withValues(alpha: 0.74),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _InfoPanel extends StatelessWidget {
   final String label;
   final String value;
@@ -360,6 +441,7 @@ class _DetailLine extends StatelessWidget {
     if (text.isEmpty) {
       return const SizedBox.shrink();
     }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
