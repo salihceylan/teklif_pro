@@ -10,6 +10,7 @@ import '../../models/quote.dart';
 import '../../models/user.dart';
 import '../../services/quote_document_service.dart';
 import 'quote_ui_actions.dart';
+import 'widgets/quote_pdf_web_viewer.dart';
 
 class QuotePdfPreviewScreen extends StatefulWidget {
   final Quote quote;
@@ -62,9 +63,9 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Teklif PDF yazdırılamadı')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Teklif PDF yazdirilamadi')),
+      );
     } finally {
       if (mounted) {
         setState(() => _printing = false);
@@ -88,9 +89,9 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Teklif PDF indirilemedi')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Teklif PDF indirilemedi')),
+      );
     } finally {
       if (mounted) {
         setState(() => _downloading = false);
@@ -103,6 +104,52 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
       context,
       quote: widget.quote,
       customer: widget.customer,
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppTheme.danger.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.picture_as_pdf_outlined,
+                color: AppTheme.danger,
+                size: 34,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Teklif PDF onizlemesi acilamadi',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textDark,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              error.toString(),
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: AppTheme.textMedium,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -128,7 +175,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.print_outlined),
-            label: const Text('Yazdır'),
+            label: const Text('Yazdir'),
             style: actionStyle,
           ),
           FilledButton.tonalIcon(
@@ -140,17 +187,52 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.download_rounded),
-            label: const Text('İndir'),
+            label: const Text('Indir'),
             style: actionStyle,
           ),
           FilledButton.icon(
             onPressed: _printing || _downloading ? null : _sendByEmail,
             icon: const Icon(Icons.email_outlined),
-            label: const Text('Firmaya Mail Gönder'),
+            label: const Text('Firmaya Mail Gonder'),
             style: actionStyle,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPreviewBody() {
+    if (supportsQuotePdfWebViewer) {
+      return FutureBuilder<Uint8List>(
+        future: _pdfFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _buildErrorState(snapshot.error!);
+          }
+          final bytes = snapshot.data;
+          if (bytes == null || bytes.isEmpty) {
+            return _buildErrorState('PDF verisi olusturulamadi');
+          }
+          return QuotePdfWebViewer(bytes: bytes, fileName: _fileName);
+        },
+      );
+    }
+
+    return PdfPreview(
+      build: (_) => _pdfFuture,
+      pdfFileName: _fileName,
+      allowPrinting: false,
+      allowSharing: false,
+      useActions: false,
+      canChangeOrientation: false,
+      canChangePageFormat: false,
+      canDebug: false,
+      maxPageWidth: 900,
+      loadingWidget: const Center(child: CircularProgressIndicator()),
+      onError: (context, error) => _buildErrorState(error),
     );
   }
 
@@ -162,63 +244,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
         children: [
           _buildActionBar(),
           const Divider(height: 1),
-          Expanded(
-            child: PdfPreview(
-              build: (_) => _pdfFuture,
-              pdfFileName: _fileName,
-              allowPrinting: false,
-              allowSharing: false,
-              useActions: false,
-              canChangeOrientation: false,
-              canChangePageFormat: false,
-              canDebug: false,
-              maxPageWidth: 900,
-              loadingWidget: const Center(child: CircularProgressIndicator()),
-              onError: (context, error) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: AppTheme.danger.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.picture_as_pdf_outlined,
-                          color: AppTheme.danger,
-                          size: 34,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Teklif PDF önizlemesi açılamadı',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textDark,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        error.toString(),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: AppTheme.textMedium,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          Expanded(child: _buildPreviewBody()),
         ],
       ),
     );
