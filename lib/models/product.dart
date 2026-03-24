@@ -43,7 +43,7 @@ class Product {
     'inventory': 'Stoklu Ürün',
     'service': 'Hizmet',
     'consumable': 'Sarf Malzeme',
-    'spare_part': 'Yedek Parca',
+    'spare_part': 'Yedek Parça',
   };
 
   String get typeLabel => typeLabels[productType] ?? productType;
