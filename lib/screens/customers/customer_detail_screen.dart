@@ -7,9 +7,11 @@ import '../../core/app_theme.dart';
 import '../../models/customer.dart';
 import '../../providers/customer_provider.dart';
 import '../../services/customer_delete_service.dart';
+import '../../services/customer_delete_verification_service.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/destructive_confirm_dialog.dart';
+import 'customer_delete_verification_dialog.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   final int customerId;
@@ -43,20 +45,22 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
   }
 
-  String _buildDeleteMessage(Customer customer, CustomerDeleteImpact impact) {
-    if (!impact.hasDependencies) {
-      return '${customer.companyName} firma kaydını silmek istediğinizden emin misiniz?';
-    }
-
-    final parts = <String>[
+  List<String> _dependencyParts(CustomerDeleteImpact impact) {
+    return [
       if (impact.quoteCount > 0) '${impact.quoteCount} teklif',
       if (impact.invoiceCount > 0) '${impact.invoiceCount} fatura',
       if (impact.serviceRequestCount > 0)
         '${impact.serviceRequestCount} servis talebi',
       if (impact.visitCount > 0) '${impact.visitCount} servis formu',
     ];
+  }
 
-    return '${customer.companyName} firmasını silerseniz bu firmaya bağlı ${parts.join(', ')} kayıtları da kalıcı olarak silinecek. Bu işlem geri alınamaz.';
+  String _buildDeleteMessage(Customer customer, CustomerDeleteImpact impact) {
+    final deletionMessage = impact.hasDependencies
+        ? '${customer.companyName} firmasını silerseniz bu firmaya bağlı ${_dependencyParts(impact).join(', ')} kayıtları da kalıcı olarak silinecek.'
+        : '${customer.companyName} firma kaydını silmek istediğinizden emin misiniz?';
+
+    return '$deletionMessage Bu işlem geri alınamaz.\n\nDevam ederseniz hesabınızın e-posta adresine 4 haneli doğrulama kodu gönderilecek.';
   }
 
   Future<void> _handleMenuAction(String value, Customer customer) async {
@@ -79,33 +83,58 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       context,
       title: 'Firmayı Sil',
       message: _buildDeleteMessage(customer, impact),
+      confirmLabel: 'Kodu Gönder',
     );
     if (!confirmed || !mounted) {
       return;
     }
 
+    final result = await _requestVerification(customer);
+    if (!mounted || result == null) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.hasDependencies
+              ? 'Firma ve bağlı kayıtlar silindi'
+              : 'Firma silindi',
+        ),
+      ),
+    );
+    _goBack();
+  }
+
+  Future<CustomerDeleteImpact?> _requestVerification(Customer customer) async {
+    final provider = context.read<CustomerProvider>();
     try {
-      final result = await provider.delete(customer.id);
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.hasDependencies
-                ? 'Firma ve bağlı kayıtlar silindi'
-                : 'Firma silindi',
-          ),
+      return await showCustomerDeleteVerificationDialog(
+        context,
+        customerId: customer.id,
+        companyName: customer.companyName,
+        onVerified: (requestId, code) => provider.deleteWithVerification(
+          id: customer.id,
+          requestId: requestId,
+          code: code,
         ),
       );
-      _goBack();
-    } catch (_) {
+    } on CustomerDeleteVerificationException catch (error) {
       if (!mounted) {
-        return;
+        return null;
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Firma silinemedi')));
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+      return null;
+    } catch (_) {
+      if (!mounted) {
+        return null;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Doğrulama kodu gönderilemedi')),
+      );
+      return null;
     }
   }
 

@@ -6,9 +6,11 @@ import '../../core/app_theme.dart';
 import '../../models/customer.dart';
 import '../../providers/customer_provider.dart';
 import '../../services/customer_delete_service.dart';
+import '../../services/customer_delete_verification_service.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/destructive_confirm_dialog.dart';
+import 'customer_delete_verification_dialog.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -27,19 +29,21 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   String _buildDeleteMessage(String companyName, CustomerDeleteImpact impact) {
-    if (!impact.hasDependencies) {
-      return '$companyName firma kaydını silmek istediğinizden emin misiniz?';
-    }
+    final deletionMessage = impact.hasDependencies
+        ? '$companyName firmasını silerseniz bu firmaya bağlı ${_dependencyParts(impact).join(', ')} kayıtları da kalıcı olarak silinecek.'
+        : '$companyName firma kaydını silmek istediğinizden emin misiniz?';
 
-    final parts = <String>[
+    return '$deletionMessage Bu işlem geri alınamaz.\n\nDevam ederseniz hesabınızın e-posta adresine 4 haneli doğrulama kodu gönderilecek.';
+  }
+
+  List<String> _dependencyParts(CustomerDeleteImpact impact) {
+    return [
       if (impact.quoteCount > 0) '${impact.quoteCount} teklif',
       if (impact.invoiceCount > 0) '${impact.invoiceCount} fatura',
       if (impact.serviceRequestCount > 0)
         '${impact.serviceRequestCount} servis talebi',
       if (impact.visitCount > 0) '${impact.visitCount} servis formu',
     ];
-
-    return '$companyName firmasını silerseniz bu firmaya bağlı ${parts.join(', ')} kayıtları da kalıcı olarak silinecek. Bu işlem geri alınamaz.';
   }
 
   Future<void> _confirmDelete(Customer customer) async {
@@ -53,29 +57,54 @@ class _CustomersScreenState extends State<CustomersScreen> {
       context,
       title: 'Firmayı Sil',
       message: _buildDeleteMessage(customer.companyName, impact),
+      confirmLabel: 'Kodu Gönder',
     );
     if (!confirmed || !mounted) {
       return;
     }
 
+    final result = await _requestVerification(customer);
+    if (!mounted || result == null) {
+      return;
+    }
+
+    final message = result.hasDependencies
+        ? 'Firma ve bağlı kayıtlar silindi'
+        : 'Firma silindi';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<CustomerDeleteImpact?> _requestVerification(Customer customer) async {
+    final provider = context.read<CustomerProvider>();
     try {
-      final result = await provider.delete(customer.id);
+      return await showCustomerDeleteVerificationDialog(
+        context,
+        customerId: customer.id,
+        companyName: customer.companyName,
+        onVerified: (requestId, code) => provider.deleteWithVerification(
+          id: customer.id,
+          requestId: requestId,
+          code: code,
+        ),
+      );
+    } on CustomerDeleteVerificationException catch (error) {
       if (!mounted) {
-        return;
+        return null;
       }
-      final message = result.hasDependencies
-          ? 'Firma ve bağlı kayıtlar silindi'
-          : 'Firma silindi';
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+      return null;
     } catch (_) {
       if (!mounted) {
-        return;
+        return null;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Firma silinemedi')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Doğrulama kodu gönderilemedi')),
+      );
+      return null;
     }
   }
 

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import '../core/app_notifications.dart';
 import '../models/customer.dart';
 import '../services/customer_delete_service.dart';
+import '../services/customer_delete_verification_service.dart';
 import '../services/customer_service.dart';
 
 class CustomerProvider extends ChangeNotifier {
   final _service = CustomerService();
   final _deleteService = CustomerDeleteService();
+  final _verificationService = CustomerDeleteVerificationService();
   List<Customer> _items = [];
   bool _loading = false;
 
@@ -53,8 +55,24 @@ class CustomerProvider extends ChangeNotifier {
     return _deleteService.inspect(id);
   }
 
-  Future<CustomerDeleteImpact> delete(int id) async {
-    final impact = await _deleteService.deleteCascade(id);
+  Future<CustomerDeleteVerificationChallenge> startDeleteVerification(
+    Customer customer,
+  ) async {
+    return _verificationService.sendCode(
+      customerId: customer.id,
+      companyName: customer.companyName,
+    );
+  }
+
+  Future<CustomerDeleteImpact> deleteWithVerification({
+    required int id,
+    required String requestId,
+    required String code,
+  }) async {
+    final impact = await _verificationService.verifyAndDelete(
+      requestId: requestId,
+      code: code,
+    );
     _items.removeWhere((item) => item.id == id);
     notifyListeners();
     await AppNotifications.instance.notify(

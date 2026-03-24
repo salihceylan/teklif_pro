@@ -9,24 +9,53 @@ import 'service_request_service.dart';
 import 'visit_service.dart';
 
 class CustomerDeleteImpact {
-  final List<Invoice> invoices;
-  final List<ServiceVisit> visits;
-  final List<Quote> quotes;
-  final List<ServiceRequest> serviceRequests;
+  final int invoiceCount;
+  final int visitCount;
+  final int quoteCount;
+  final int serviceRequestCount;
 
   const CustomerDeleteImpact({
-    required this.invoices,
-    required this.visits,
-    required this.quotes,
-    required this.serviceRequests,
+    required this.invoiceCount,
+    required this.visitCount,
+    required this.quoteCount,
+    required this.serviceRequestCount,
   });
 
-  int get invoiceCount => invoices.length;
-  int get visitCount => visits.length;
-  int get quoteCount => quotes.length;
-  int get serviceRequestCount => serviceRequests.length;
+  factory CustomerDeleteImpact.fromCounts({
+    required int invoiceCount,
+    required int visitCount,
+    required int quoteCount,
+    required int serviceRequestCount,
+  }) {
+    return CustomerDeleteImpact(
+      invoiceCount: invoiceCount,
+      visitCount: visitCount,
+      quoteCount: quoteCount,
+      serviceRequestCount: serviceRequestCount,
+    );
+  }
+
+  factory CustomerDeleteImpact.fromJson(Map<String, dynamic> json) {
+    return CustomerDeleteImpact(
+      invoiceCount: (json['invoice_count'] as num? ?? 0).toInt(),
+      visitCount: (json['visit_count'] as num? ?? 0).toInt(),
+      quoteCount: (json['quote_count'] as num? ?? 0).toInt(),
+      serviceRequestCount: (json['service_request_count'] as num? ?? 0).toInt(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'invoice_count': invoiceCount,
+      'visit_count': visitCount,
+      'quote_count': quoteCount,
+      'service_request_count': serviceRequestCount,
+    };
+  }
+
   int get totalDependencies =>
       invoiceCount + visitCount + quoteCount + serviceRequestCount;
+
   bool get hasDependencies => totalDependencies > 0;
 }
 
@@ -39,11 +68,11 @@ class CustomerDeleteService {
 
   Future<CustomerDeleteImpact> inspect(int customerId) async {
     final snapshot = await _loadSnapshot(customerId);
-    return CustomerDeleteImpact(
-      invoices: snapshot.invoices,
-      visits: snapshot.visits,
-      quotes: snapshot.quotes,
-      serviceRequests: snapshot.serviceRequests,
+    return CustomerDeleteImpact.fromCounts(
+      invoiceCount: snapshot.invoices.length,
+      visitCount: snapshot.visits.length,
+      quoteCount: snapshot.quotes.length,
+      serviceRequestCount: snapshot.serviceRequests.length,
     );
   }
 
@@ -65,11 +94,11 @@ class CustomerDeleteService {
 
     await _customerService.delete(customerId);
 
-    return CustomerDeleteImpact(
-      invoices: snapshot.invoices,
-      visits: snapshot.visits,
-      quotes: snapshot.quotes,
-      serviceRequests: snapshot.serviceRequests,
+    return CustomerDeleteImpact.fromCounts(
+      invoiceCount: snapshot.invoices.length,
+      visitCount: snapshot.visits.length,
+      quoteCount: snapshot.quotes.length,
+      serviceRequestCount: snapshot.serviceRequests.length,
     );
   }
 
