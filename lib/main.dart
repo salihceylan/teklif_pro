@@ -44,8 +44,29 @@ class TeklifProApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             routerConfig: router,
+            builder: (context, child) => Stack(
+              fit: StackFit.expand,
+              children: [if (child != null) child, const _WebFontBootstrap()],
+            ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _WebFontBootstrap extends StatelessWidget {
+  const _WebFontBootstrap();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Offstage(
+      offstage: true,
+      child: ExcludeSemantics(
+        child: Text(
+          ' ',
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 0, height: 0),
+        ),
       ),
     );
   }
