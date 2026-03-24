@@ -13,8 +13,7 @@ class InvoiceService {
   }
 
   Future<Invoice> createFromQuote(int quoteId) async {
-    final res =
-        await ApiClient.instance.post('/invoices/from-quote/$quoteId');
+    final res = await ApiClient.instance.post('/invoices/from-quote/$quoteId');
     return Invoice.fromJson(res.data);
   }
 

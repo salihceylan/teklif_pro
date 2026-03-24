@@ -20,7 +20,7 @@ class _NotificationSettingsScreenState
   bool _loading = true;
   bool _requestingPermission = false;
   bool _permissionGranted = false;
-  String _permissionLabel = 'Kapali';
+  String _permissionLabel = 'Kapalı';
   late final bool _supported;
   Map<AppNotificationTopic, bool> _topicStates = {};
 
@@ -45,8 +45,8 @@ class _NotificationSettingsScreenState
             await BrowserPushManager.instance.permissionStatus(),
           )
         : granted
-        ? 'Acik'
-        : 'Kapali';
+        ? 'Açık'
+        : 'Kapalı';
     if (!mounted) return;
     setState(() {
       _topicStates = prefs;
@@ -73,8 +73,8 @@ class _NotificationSettingsScreenState
     setState(() {
       _permissionGranted = granted;
       _permissionLabel = granted
-          ? 'Acik'
-          : (_isWebPush ? 'Bekliyor / Kapali' : 'Kapali');
+          ? 'Açık'
+          : (_isWebPush ? 'Bekliyor / Kapalı' : 'Kapalı');
       _requestingPermission = false;
     });
   }
@@ -95,9 +95,9 @@ class _NotificationSettingsScreenState
         content: Text(
           shown
               ? _isWebPush
-                    ? 'Tarayici push test bildirimi gonderildi'
-                    : 'Test bildirimi gonderildi'
-              : 'Bildirim gosterilemedi. Izin durumunu kontrol edin.',
+                    ? 'Tarayıcı push test bildirimi gönderildi'
+                    : 'Test bildirimi gönderildi'
+              : 'Bildirim gösterilemedi. İzin durumunu kontrol edin.',
         ),
       ),
     );
@@ -120,7 +120,7 @@ class _NotificationSettingsScreenState
                   icon: Icons.notifications_active_outlined,
                   title: 'Bildirim Tercihleri',
                   subtitle:
-                      'Olay gerceklestiginde cihazda hangi konu basliklarinin bildirim uretecegini buradan yonetebilirsiniz.',
+                      'Olay gerçekleştiğinde cihazda hangi konu başlıklarının bildirim üreteceğini buradan yönetebilirsiniz.',
                   trailing: Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -128,10 +128,10 @@ class _NotificationSettingsScreenState
                       _HeroMetric(
                         label: 'Platform',
                         value: _supported
-                            ? (_isWebPush ? 'Tarayici Push' : 'Cihaz Bildirimi')
+                            ? (_isWebPush ? 'Tarayıcı Push' : 'Cihaz Bildirimi')
                             : 'Destek Yok',
                       ),
-                      _HeroMetric(label: 'Izin', value: _permissionLabel),
+                      _HeroMetric(label: 'İzin', value: _permissionLabel),
                     ],
                   ),
                 ),
@@ -141,14 +141,14 @@ class _NotificationSettingsScreenState
                       ? Icons.notifications_on_outlined
                       : Icons.notifications_off_outlined,
                   title: _isWebPush
-                      ? 'Tarayici Push Durumu'
+                      ? 'Tarayıcı Push Durumu'
                       : 'Cihaz Bildirim Durumu',
                   description: _supported
                       ? _isWebPush
-                            ? 'Web surumunde browser push servis worker ve abonelik ile yonetilir.'
-                            : 'Android ve masaustu uygulamalarda bildirimler bu izin ile goruntulenir.'
+                            ? 'Web sürümünde browser push servis worker ve abonelik ile yönetilir.'
+                            : 'Android ve masaüstü uygulamalarda bildirimler bu izin ile görüntülenir.'
                       : _isWebPush
-                      ? 'Bu tarayicida push API desteklenmiyor veya guvenli baglanti yok.'
+                      ? 'Bu tarayıcıda push API desteklenmiyor veya güvenli bağlantı yok.'
                       : 'Bu platformda cihaz bildirimi desteklenmiyor.',
                   children: [
                     Container(
@@ -181,14 +181,14 @@ class _NotificationSettingsScreenState
                               _supported
                                   ? _permissionGranted
                                         ? _isWebPush
-                                              ? 'Tarayici push aktif. Site kapali olsa bile secili konular gerceklestiginde browser bildirimi gelebilir.'
-                                              : 'Cihaz bildirimi aktif. Secili konular gerceklestiginde aninda bildirim gorunur.'
+                                              ? 'Tarayıcı push aktif. Site kapalı olsa bile seçili konular gerçekleştiğinde browser bildirimi gelebilir.'
+                                              : 'Cihaz bildirimi aktif. Seçili konular gerçekleştiğinde anında bildirim görünür.'
                                         : _isWebPush
-                                        ? 'Tarayici bildirimi icin izin vermeniz gerekiyor. Izin acildiginda abonelik backend ile eslenir.'
-                                        : 'Bildirim izni kapali. Acar ve test bildirimi gonderirseniz cihaz ekraninda gorebilirsiniz.'
+                                        ? 'Tarayıcı bildirimi için izin vermeniz gerekiyor. İzin açıldığında abonelik backend ile eşlenir.'
+                                        : 'Bildirim izni kapalı. Açar ve test bildirimi gönderirseniz cihaz ekranında görebilirsiniz.'
                                   : _isWebPush
-                                  ? 'Bu tarayicida push kullanilamiyor. Yine de konu tercihlerini kaydedebilirsiniz.'
-                                  : 'Bu platformda bildirim destegi yok.',
+                                  ? 'Bu tarayıcıda push kullanılamıyor. Yine de konu tercihlerini kaydedebilirsiniz.'
+                                  : 'Bu platformda bildirim desteği yok.',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppTheme.textDark,
@@ -222,10 +222,10 @@ class _NotificationSettingsScreenState
                                   ),
                             label: Text(
                               _permissionGranted
-                                  ? 'Izni Yeniden Kontrol Et'
+                                  ? 'İzni Yeniden Kontrol Et'
                                   : _isWebPush
-                                  ? 'Tarayici Push Iznini Ac'
-                                  : 'Bildirim Iznini Ac',
+                                  ? 'Tarayıcı Push İznini Aç'
+                                  : 'Bildirim İznini Aç',
                             ),
                           ),
                         OutlinedButton.icon(
@@ -233,7 +233,7 @@ class _NotificationSettingsScreenState
                               ? null
                               : _sendPreview,
                           icon: const Icon(Icons.campaign_outlined),
-                          label: const Text('Test Bildirimi Gonder'),
+                          label: const Text('Test Bildirimi Gönder'),
                         ),
                       ],
                     ),
@@ -242,9 +242,9 @@ class _NotificationSettingsScreenState
                 const SizedBox(height: 20),
                 AppSectionCard(
                   icon: Icons.tune_outlined,
-                  title: 'Bildirim Konulari',
+                  title: 'Bildirim Konuları',
                   description:
-                      'Sadece aktif konular olay gerceklestiginde cihaz bildirimi uretir.',
+                      'Sadece aktif konular olay gerçekleştiğinde cihaz bildirimi üretir.',
                   children: [
                     for (final topic in AppNotificationTopic.values)
                       _TopicCard(
@@ -262,7 +262,7 @@ class _NotificationSettingsScreenState
   String _browserPermissionLabel(String permission) {
     switch (permission) {
       case 'granted':
-        return 'Acik';
+        return 'Açık';
       case 'default':
         return 'Bekliyor';
       case 'denied':

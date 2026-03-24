@@ -31,7 +31,7 @@ class QuoteUiActions {
     );
     final messageCtrl = TextEditingController(
       text:
-          'Merhaba,\n\nTeklifinizi ekte PDF olarak iletiyoruz. Inceleyip geri donus saglayabilirsiniz.',
+          'Merhaba,\n\nTeklifinizi ekte PDF olarak iletiyoruz. İnceleyip geri dönüş sağlayabilirsiniz.',
     );
     var sending = false;
 
@@ -44,7 +44,7 @@ class QuoteUiActions {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text('Teklifi Mail Gonder'),
+              title: const Text('Teklifi Mail Gönder'),
               content: SizedBox(
                 width: 460,
                 child: SingleChildScrollView(
@@ -55,7 +55,7 @@ class QuoteUiActions {
                         controller: emailCtrl,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
-                          labelText: 'Alici E-posta',
+                          labelText: 'Alıcı E-posta',
                           prefixIcon: Icon(Icons.alternate_email_outlined),
                         ),
                       ),
@@ -86,7 +86,7 @@ class QuoteUiActions {
                   onPressed: sending
                       ? null
                       : () => Navigator.pop(dialogContext),
-                  child: const Text('Iptal'),
+                  child: const Text('İptal'),
                 ),
                 FilledButton.icon(
                   onPressed: sending
@@ -96,7 +96,7 @@ class QuoteUiActions {
                           if (!email.contains('@')) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Gecerli bir e-posta girin'),
+                                content: Text('Geçerli bir e-posta girin'),
                               ),
                             );
                             return;
@@ -114,7 +114,7 @@ class QuoteUiActions {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Teklif $email adresine gonderildi',
+                                    'Teklif $email adresine gönderildi',
                                   ),
                                 ),
                               );
@@ -124,7 +124,7 @@ class QuoteUiActions {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    'Mail gonderimi basarisiz oldu',
+                                    'Mail gönderimi başarısız oldu',
                                   ),
                                 ),
                               );
@@ -142,7 +142,7 @@ class QuoteUiActions {
                           ),
                         )
                       : const Icon(Icons.send_outlined),
-                  label: const Text('Gonder'),
+                  label: const Text('Gönder'),
                 ),
               ],
             );

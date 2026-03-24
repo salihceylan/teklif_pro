@@ -25,7 +25,7 @@ class ServiceRequestProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.serviceRequests,
-      title: 'Yeni servis talebi acildi',
+      title: 'Yeni servis talebi açıldı',
       body: '${r.title} talebi kaydedildi.',
     );
   }
@@ -39,11 +39,11 @@ class ServiceRequestProvider extends ChangeNotifier {
     await AppNotifications.instance.notify(
       AppNotificationTopic.serviceRequests,
       title: previous?.status != r.status
-          ? 'Servis talebi durumu degisti'
-          : 'Servis talebi guncellendi',
+          ? 'Servis talebi durumu değişti'
+          : 'Servis talebi güncellendi',
       body: previous?.status != r.status
           ? '${r.title} durumu ${r.statusLabel} oldu.'
-          : '${r.title} kaydi guncellendi.',
+          : '${r.title} kaydı güncellendi.',
     );
   }
 

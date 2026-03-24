@@ -46,12 +46,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Urunu Goster',
+            label: 'Ürünü Göster',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'delete',
@@ -80,14 +80,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Urunu Sil'),
+        title: const Text('Ürünü Sil'),
         content: Text(
-          '${product.name} urun kaydini silmek istediginizden emin misiniz?',
+          '${product.name} ürün kaydını silmek istediğinizden emin misiniz?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Iptal'),
+            child: const Text('İptal'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -109,20 +109,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final provider = context.watch<ProductProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Urunler')),
+      appBar: AppBar(title: const Text('Ürünler')),
       drawer: const AppDrawer(currentRoute: '/products'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/products/new'),
         icon: const Icon(Icons.inventory_2_outlined),
-        label: const Text('Yeni Urun'),
+        label: const Text('Yeni Ürün'),
       ),
       body: provider.loading
           ? const Center(child: CircularProgressIndicator())
           : provider.items.isEmpty
           ? _EmptyState(
               icon: Icons.inventory_2_outlined,
-              message: 'Henuz urun eklenmedi',
-              actionLabel: 'Urun Ekle',
+              message: 'Henüz ürün eklenmedi',
+              actionLabel: 'Ürün Ekle',
               onAction: () => context.go('/products/new'),
             )
           : RefreshIndicator(
@@ -227,7 +227,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                       else
                                         _meta(
                                           Icons.inventory_2_outlined,
-                                          'Stok takibi kapali',
+                                          'Stok takibi kapalı',
                                         ),
                                     ],
                                   ),

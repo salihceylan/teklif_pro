@@ -68,11 +68,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Firma Bulunamadi'),
+          title: const Text('Firma Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Firma kaydi bulunamadi',
+            'Firma kaydı bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -94,7 +94,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
@@ -118,14 +118,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             title: customer.companyName,
             subtitle: customer.contactName?.isNotEmpty == true
                 ? '${customer.contactName} ile kayitli firma profili'
-                : 'Sirket profili ve resmi bilgiler',
+                : 'Şirket profili ve resmi bilgiler',
           ),
           const SizedBox(height: 20),
           AppSectionCard(
             icon: Icons.contact_phone_outlined,
-            title: 'Iletisim Bilgileri',
+            title: 'İletişim Bilgileri',
             children: [
-              _DetailLine('Yetkili Kisi', customer.contactName),
+              _DetailLine('Yetkili Kişi', customer.contactName),
               _DetailLine('Telefon', customer.phone),
               _DetailLine('E-posta', customer.email),
               _DetailLine('Web Sitesi', customer.website),
@@ -152,7 +152,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     value: customer.taxOffice ?? '-',
                   ),
                   _InfoPanel(
-                    label: 'Kurulus Tarihi',
+                    label: 'Kuruluş Tarihi',
                     value: customer.foundationDate == null
                         ? '-'
                         : DateFormat(
@@ -171,7 +171,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           const SizedBox(height: 20),
           AppSectionCard(
             icon: Icons.category_outlined,
-            title: 'Sektor ve Finans',
+            title: 'Sektör ve Finans',
             children: [
               AdaptiveFieldRow(
                 maxColumns: 3,
@@ -180,7 +180,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   _InfoPanel(label: 'IBAN', value: customer.iban ?? '-'),
                   _InfoPanel(label: 'Marka', value: customer.brandName ?? '-'),
                   _InfoPanel(
-                    label: 'Alt Sektor',
+                    label: 'Alt Sektör',
                     value: customer.subSector ?? '-',
                   ),
                   _InfoPanel(
@@ -188,18 +188,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     value: customer.naceCode ?? '-',
                   ),
                   _InfoPanel(
-                    label: 'NACE Adi',
+                    label: 'NACE Adı',
                     value: customer.naceName ?? '-',
                   ),
                   _InfoPanel(
-                    label: 'Satis Kanali',
+                    label: 'Satış Kanalı',
                     value: customer.salesChannel ?? '-',
                   ),
                 ],
               ),
-              _DetailLine('Sunulan Cozum', customer.offeredSolution),
-              _DetailLine('Hedef Musteri Grubu', customer.targetCustomerGroup),
-              _DetailLine('Ihracatci Birlikleri', customer.exporterUnions),
+              _DetailLine('Sunulan Çözüm', customer.offeredSolution),
+              _DetailLine('Hedef Müşteri Grubu', customer.targetCustomerGroup),
+              _DetailLine('İhracatçı Birlikleri', customer.exporterUnions),
               _DetailLine('Notlar', customer.notes),
             ],
           ),

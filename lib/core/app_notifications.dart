@@ -6,58 +6,58 @@ import 'storage.dart';
 
 enum AppNotificationTopic {
   companyRecords(
-    title: 'Firma kayitlari',
+    title: 'Firma kayıtları',
     description:
-        'Yeni firma kartlari ve firma profili guncellemeleri bildirilsin.',
+        'Yeni firma kartları ve firma profili güncellemeleri bildirilsin.',
     channelId: 'company_records',
     channelName: 'Firma Bildirimleri',
-    previewTitle: 'Firma bildirimi hazir',
-    previewBody: 'Yeni firma kartlari ve profil guncellemeleri burada gorunur.',
+    previewTitle: 'Firma bildirimi hazır',
+    previewBody: 'Yeni firma kartları ve profil güncellemeleri burada görünür.',
   ),
   serviceRequests(
     title: 'Servis talepleri',
     description:
-        'Yeni servis talebi acildiginda veya talep durumu degistiginde bildirilsin.',
+        'Yeni servis talebi açıldığında veya talep durumu değiştiğinde bildirilsin.',
     channelId: 'service_requests',
     channelName: 'Servis Talebi Bildirimleri',
-    previewTitle: 'Servis talebi guncellendi',
-    previewBody: 'Yeni talep acma ve durum gecisleri cihazda gorunur.',
+    previewTitle: 'Servis talebi güncellendi',
+    previewBody: 'Yeni talep açma ve durum geçişleri cihazda görünür.',
   ),
   quoteLifecycle(
-    title: 'Teklif sureci',
-    description: 'Teklif hazirlama ve teklif durum degisiklikleri bildirilsin.',
+    title: 'Teklif süreci',
+    description: 'Teklif hazırlama ve teklif durum değişiklikleri bildirilsin.',
     channelId: 'quote_lifecycle',
     channelName: 'Teklif Bildirimleri',
-    previewTitle: 'Yeni teklif hazirlandi',
-    previewBody: 'Teklif kaydi ve teklif durumu hareketleri burada gorunur.',
+    previewTitle: 'Yeni teklif hazırlandı',
+    previewBody: 'Teklif kaydı ve teklif durumu hareketleri burada görünür.',
   ),
   quoteDelivery(
-    title: 'Teklif teslimati',
+    title: 'Teklif teslimatı',
     description:
-        'Teklif e-posta ile gonderildiginde teslimat bildirimi gelsin.',
+        'Teklif e-posta ile gönderildiğinde teslimat bildirimi gelsin.',
     channelId: 'quote_delivery',
     channelName: 'Teklif Teslimat Bildirimleri',
-    previewTitle: 'Teklif mail ile gonderildi',
-    previewBody: 'Mail gonderimi tamamlandiginda cihaz bildirimi gorunur.',
+    previewTitle: 'Teklif mail ile gönderildi',
+    previewBody: 'Mail gönderimi tamamlandığında cihaz bildirimi görünür.',
   ),
   serviceForms(
-    title: 'Servis formlari',
+    title: 'Servis formları',
     description:
-        'Servis formu olusturma ve servis operasyonu tamamlanma bildirimleri gelsin.',
+        'Servis formu oluşturma ve servis operasyonu tamamlanma bildirimleri gelsin.',
     channelId: 'service_forms',
     channelName: 'Servis Formu Bildirimleri',
-    previewTitle: 'Servis formu hazir',
+    previewTitle: 'Servis formu hazır',
     previewBody:
-        'Operasyon formu kayitlari ve tamamlanma bilgileri burada gorunur.',
+        'Operasyon formu kayıtları ve tamamlanma bilgileri burada görünür.',
   ),
   invoiceLifecycle(
     title: 'Fatura takibi',
     description:
-        'Fatura olusturma ve odendi durumuna gecis bildirimleri gelsin.',
+        'Fatura oluşturma ve ödendi durumuna geçiş bildirimleri gelsin.',
     channelId: 'invoice_lifecycle',
     channelName: 'Fatura Bildirimleri',
-    previewTitle: 'Fatura hareketi olustu',
-    previewBody: 'Yeni fatura ve tahsilat hareketleri cihazda gorunur.',
+    previewTitle: 'Fatura hareketi oluştu',
+    previewBody: 'Yeni fatura ve tahsilat hareketleri cihazda görünür.',
   );
 
   const AppNotificationTopic({
@@ -125,7 +125,7 @@ class AppNotifications {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
-    const linux = LinuxInitializationSettings(defaultActionName: 'Ac');
+    const linux = LinuxInitializationSettings(defaultActionName: 'Aç');
     const windows = WindowsInitializationSettings(
       appName: 'Teklif Pro',
       appUserModelId: _windowsAppId,

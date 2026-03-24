@@ -22,10 +22,9 @@ class QuoteDocumentService {
     final logoBytes = await rootBundle.load(Branding.logoAsset);
     final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
 
-    final companyName =
-        (user?.companyName?.trim().isNotEmpty ?? false)
-            ? user!.companyName!.trim()
-            : Branding.companyName;
+    final companyName = (user?.companyName?.trim().isNotEmpty ?? false)
+        ? user!.companyName!.trim()
+        : Branding.companyName;
     final companyContact = user?.fullName ?? 'Firma Yetkilisi';
     final companyPhone = user?.phone ?? '';
     final companyEmail = user?.email ?? '';
@@ -125,7 +124,10 @@ class QuoteDocumentService {
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        _infoRow('Tarih', _formatDate(quote.issuedAt ?? quote.createdAt)),
+                        _infoRow(
+                          'Tarih',
+                          _formatDate(quote.issuedAt ?? quote.createdAt),
+                        ),
                         _infoRow('Teklif No', quote.quoteCode ?? '-'),
                         _infoRow(
                           'TCMB USD/TRY',
@@ -156,9 +158,7 @@ class QuoteDocumentService {
           _sectionTitle('Müşteri Bilgileri'),
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey600),
-            columnWidths: {
-              0: const pw.FixedColumnWidth(100),
-            },
+            columnWidths: {0: const pw.FixedColumnWidth(100)},
             children: [
               _tableTextRow('Firma Adı', customerCompany),
               _tableTextRow('Yetkili', customerContact),
@@ -188,26 +188,32 @@ class QuoteDocumentService {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           _conditionLine(
-                            'Kalem fiyatlari USD ve KDV haric girilir. TL karsiliklar TCMB USD/TRY kuru ile hesaplanir.',
+                            'Kalem fiyatları USD ve KDV hariç girilir. TL karşılıklar TCMB USD/TRY kuru ile hesaplanır.',
                           ),
                           _conditionLine(
                             quote.pricesIncludeVat
                                 ? 'Fiyatlara KDV dahildir.'
                                 : 'Fiyatlara KDV dahil değildir.',
                           ),
-                          if ((quote.exchangeRateSource ?? '').trim().isNotEmpty)
+                          if ((quote.exchangeRateSource ?? '')
+                              .trim()
+                              .isNotEmpty)
                             _conditionLine(
                               'Uygulanan kur kaynagi: ${quote.exchangeRateSource}.',
                             ),
                           if ((quote.deliveryTime ?? '').trim().isNotEmpty)
-                            _conditionLine('Teslimat süresi: ${quote.deliveryTime}.'),
+                            _conditionLine(
+                              'Teslimat süresi: ${quote.deliveryTime}.',
+                            ),
                           if ((quote.paymentTerms ?? '').trim().isNotEmpty)
                             _conditionLine('Ödeme: ${quote.paymentTerms}.'),
                           if (quote.validUntil != null)
                             _conditionLine(
                               'Teklif geçerlilik süresi: ${_formatDate(quote.validUntil!)}.',
                             ),
-                          if ((quote.termsAndConditions ?? '').trim().isNotEmpty)
+                          if ((quote.termsAndConditions ?? '')
+                              .trim()
+                              .isNotEmpty)
                             _conditionLine(quote.termsAndConditions!.trim()),
                           if ((quote.notes ?? '').trim().isNotEmpty)
                             _conditionLine(quote.notes!.trim()),
@@ -223,11 +229,23 @@ class QuoteDocumentService {
                 child: pw.Table(
                   border: pw.TableBorder.all(color: PdfColors.grey600),
                   children: [
-                    _summaryRow('Ara Toplam (USD)', quote.subtotalUsd, currency: 'USD'),
+                    _summaryRow(
+                      'Ara Toplam (USD)',
+                      quote.subtotalUsd,
+                      currency: 'USD',
+                    ),
                     _summaryRow('Ara Toplam (TL)', quote.subtotal),
-                    _summaryRow('Toplam KDV (USD)', quote.vatTotalUsd, currency: 'USD'),
+                    _summaryRow(
+                      'Toplam KDV (USD)',
+                      quote.vatTotalUsd,
+                      currency: 'USD',
+                    ),
                     _summaryRow('Toplam KDV (TL)', quote.vatTotal),
-                    _summaryRow('Genel Toplam (USD)', quote.totalAmountUsd, currency: 'USD'),
+                    _summaryRow(
+                      'Genel Toplam (USD)',
+                      quote.totalAmountUsd,
+                      currency: 'USD',
+                    ),
                     _summaryRow(
                       'Genel Toplam (TL)',
                       quote.totalAmount,
@@ -281,10 +299,22 @@ class QuoteDocumentService {
             _cell(item.description),
             _cell(_currency.format(item.quantity), align: pw.TextAlign.center),
             _cell(item.unit, align: pw.TextAlign.center),
-            _cell('${_currency.format(item.unitPriceUsd)} USD', align: pw.TextAlign.right),
-            _cell('${_currency.format(item.unitPrice)} ₺', align: pw.TextAlign.right),
-            _cell('%${item.vatRate.toStringAsFixed(0)}', align: pw.TextAlign.center),
-            _cell('${_currency.format(item.totalPrice)} ₺', align: pw.TextAlign.right),
+            _cell(
+              '${_currency.format(item.unitPriceUsd)} USD',
+              align: pw.TextAlign.right,
+            ),
+            _cell(
+              '${_currency.format(item.unitPrice)} ₺',
+              align: pw.TextAlign.right,
+            ),
+            _cell(
+              '%${item.vatRate.toStringAsFixed(0)}',
+              align: pw.TextAlign.center,
+            ),
+            _cell(
+              '${_currency.format(item.totalPrice)} ₺',
+              align: pw.TextAlign.right,
+            ),
           ],
         ),
       );
@@ -307,118 +337,110 @@ class QuoteDocumentService {
   }
 
   static pw.Widget _sectionTitle(String text) => pw.Container(
-        width: double.infinity,
-        padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: pw.BoxDecoration(color: const PdfColor.fromInt(0xFFECECEC)),
-        child: pw.Text(
-          text,
-          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-        ),
-      );
+    width: double.infinity,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: pw.BoxDecoration(color: const PdfColor.fromInt(0xFFECECEC)),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+    ),
+  );
 
-  static pw.TableRow _tableTextRow(String label, String value) => pw.TableRow(
-        children: [
-          _cell(label, bold: true),
-          _cell(value),
-        ],
-      );
+  static pw.TableRow _tableTextRow(String label, String value) =>
+      pw.TableRow(children: [_cell(label, bold: true), _cell(value)]);
 
   static pw.TableRow _summaryRow(
     String label,
     double value, {
     bool highlighted = false,
     String currency = 'TRY',
-  }) =>
-      pw.TableRow(
-        decoration: highlighted
-            ? pw.BoxDecoration(color: const PdfColor.fromInt(0xFF1F5EA8))
-            : null,
-        children: [
-          _cell(
-            label,
-            bold: true,
-            textColor: highlighted ? PdfColors.white : PdfColors.black,
-          ),
-          _cell(
-            '${_currency.format(value)} ${currency == 'USD' ? 'USD' : '₺'}',
-            align: pw.TextAlign.right,
-            bold: true,
-            textColor: highlighted ? PdfColors.white : PdfColors.black,
-          ),
-        ],
-      );
+  }) => pw.TableRow(
+    decoration: highlighted
+        ? pw.BoxDecoration(color: const PdfColor.fromInt(0xFF1F5EA8))
+        : null,
+    children: [
+      _cell(
+        label,
+        bold: true,
+        textColor: highlighted ? PdfColors.white : PdfColors.black,
+      ),
+      _cell(
+        '${_currency.format(value)} ${currency == 'USD' ? 'USD' : '₺'}',
+        align: pw.TextAlign.right,
+        bold: true,
+        textColor: highlighted ? PdfColors.white : PdfColors.black,
+      ),
+    ],
+  );
 
   static pw.Widget _signatureBlock(String title) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.Text(
-            title,
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-          ),
-          pw.SizedBox(height: 26),
-          pw.Container(
-            height: 1,
-            decoration: pw.BoxDecoration(color: PdfColors.grey600),
-          ),
-          pw.SizedBox(height: 4),
-          pw.Text('İmza / Kaşe', style: pw.TextStyle(fontSize: 9)),
-        ],
-      );
+    crossAxisAlignment: pw.CrossAxisAlignment.center,
+    children: [
+      pw.Text(
+        title,
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+      ),
+      pw.SizedBox(height: 26),
+      pw.Container(
+        height: 1,
+        decoration: pw.BoxDecoration(color: PdfColors.grey600),
+      ),
+      pw.SizedBox(height: 4),
+      pw.Text('İmza / Kaşe', style: pw.TextStyle(fontSize: 9)),
+    ],
+  );
 
   static pw.Widget _conditionLine(String value) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 6),
-        child: pw.Text(value, style: pw.TextStyle(fontSize: 10)),
-      );
+    padding: const pw.EdgeInsets.only(bottom: 6),
+    child: pw.Text(value, style: pw.TextStyle(fontSize: 10)),
+  );
 
   static pw.Widget _infoRow(String label, String value) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 6),
-        child: pw.Row(
-          children: [
-            pw.SizedBox(
-              width: 52,
-              child: pw.Text(
-                '$label:',
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-              ),
-            ),
-            pw.Expanded(
-              child: pw.Text(value, style: pw.TextStyle(fontSize: 10)),
-            ),
-          ],
+    padding: const pw.EdgeInsets.only(bottom: 6),
+    child: pw.Row(
+      children: [
+        pw.SizedBox(
+          width: 52,
+          child: pw.Text(
+            '$label:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+          ),
         ),
-      );
+        pw.Expanded(child: pw.Text(value, style: pw.TextStyle(fontSize: 10))),
+      ],
+    ),
+  );
 
   static pw.Widget _headerCell(String text) => pw.Padding(
-        padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(
-          text,
-          style: pw.TextStyle(
-            color: PdfColors.white,
-            fontSize: 9,
-            fontWeight: pw.FontWeight.bold,
-          ),
-          textAlign: pw.TextAlign.center,
-        ),
-      );
+    padding: const pw.EdgeInsets.all(6),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(
+        color: PdfColors.white,
+        fontSize: 9,
+        fontWeight: pw.FontWeight.bold,
+      ),
+      textAlign: pw.TextAlign.center,
+    ),
+  );
 
   static pw.Widget _cell(
     String text, {
     pw.TextAlign align = pw.TextAlign.left,
     bool bold = false,
     PdfColor textColor = PdfColors.black,
-  }) =>
-      pw.Padding(
-        padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(
-          text,
-          textAlign: align,
-          style: pw.TextStyle(
-            fontSize: 9,
-            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
-            color: textColor,
-          ),
-        ),
-      );
+  }) => pw.Padding(
+    padding: const pw.EdgeInsets.all(6),
+    child: pw.Text(
+      text,
+      textAlign: align,
+      style: pw.TextStyle(
+        fontSize: 9,
+        fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+        color: textColor,
+      ),
+    ),
+  );
 
   static String _formatDate(DateTime value) => _dateFormat.format(value);
 }

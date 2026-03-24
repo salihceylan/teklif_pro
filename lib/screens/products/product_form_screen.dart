@@ -39,7 +39,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Product? _currentProduct;
 
   static const _typeOptions = <DropdownMenuItem<String>>[
-    DropdownMenuItem(value: 'inventory', child: Text('Stoklu Urun')),
+    DropdownMenuItem(value: 'inventory', child: Text('Stoklu Ürün')),
     DropdownMenuItem(value: 'service', child: Text('Hizmet')),
     DropdownMenuItem(value: 'consumable', child: Text('Sarf Malzeme')),
     DropdownMenuItem(value: 'spare_part', child: Text('Yedek Parca')),
@@ -137,7 +137,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return null;
     }
     return double.tryParse(value.trim().replaceAll(',', '.')) == null
-        ? 'Gecerli bir sayi girin'
+        ? 'Geçerli bir sayı girin'
         : null;
   }
 
@@ -180,7 +180,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(buildErrorSnackBar('Urun kaydedilemedi'));
+        ).showSnackBar(buildErrorSnackBar('Ürün kaydedilemedi'));
       }
     } finally {
       if (mounted) {
@@ -192,24 +192,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Urunu Duzenle' : 'Yeni Urun')),
+      appBar: AppBar(title: Text(_isEdit ? 'Ürünü Düzenle' : 'Yeni Ürün')),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
           maxWidth: 1080,
           children: [
             AppPageIntro(
-              badge: _currentProduct?.sku ?? 'Urun Yonetimi',
+              badge: _currentProduct?.sku ?? 'Ürün Yönetimi',
               icon: Icons.inventory_2_outlined,
               title: _isEdit
-                  ? 'Urun kaydini guncelleyin'
-                  : 'Yeni urun veya hizmet tanimlayin',
+                  ? 'Ürün kaydını güncelleyin'
+                  : 'Yeni ürün veya hizmet tanımlayın',
               subtitle:
-                  'SKU, USD net fiyatlar, KDV, stok seviyesi ve kritik stok esigi tek bir kayitta toplanir.',
+                  'SKU, USD net fiyatlar, KDV, stok seviyesi ve kritik stok eşiği tek bir kayıtta toplanır.',
               trailing: _currentProduct == null
                   ? null
                   : _CodeBadge(
-                      label: 'Kayit Kodu',
+                      label: 'Kayıt Kodu',
                       value: _currentProduct!.sku,
                     ),
             ),
@@ -218,7 +218,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               icon: Icons.category_outlined,
               title: 'Temel Tanim',
               description:
-                  'Kayit icin sadece urun adi zorunlu. Diger alanlari ihtiyaca gore doldurabilirsiniz.',
+                  'Kayıt için sadece ürün adı zorunlu. Diğer alanları ihtiyaca göre doldurabilirsiniz.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 2,
@@ -228,19 +228,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       controller: _nameCtrl,
                       textCapitalization: TextCapitalization.words,
                       decoration: const InputDecoration(
-                        labelText: 'Urun / Hizmet Adi',
+                        labelText: 'Ürün / Hizmet Adı',
                         prefixIcon: Icon(Icons.inventory_2_outlined),
                       ),
                       validator: (value) =>
                           value == null || value.trim().isEmpty
-                          ? 'Urun adi zorunlu'
+                          ? 'Ürün adı zorunlu'
                           : null,
                     ),
                     DropdownButtonFormField<String>(
                       key: ValueKey(_productType),
                       initialValue: _productType,
                       decoration: const InputDecoration(
-                        labelText: 'Urun Tipi',
+                        labelText: 'Ürün Tipi',
                         prefixIcon: Icon(Icons.widgets_outlined),
                       ),
                       items: _typeOptions,
@@ -337,7 +337,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               icon: Icons.payments_outlined,
               title: 'Fiyat ve Vergi',
               description:
-                  'Her iki fiyat da USD ve KDV haric tutulur. Teklif ve servis formu kalemleri servis fiyatini, site satisi ise ikinci fiyati kullanir.',
+                  'Her iki fiyat da USD ve KDV hariç tutulur. Teklif ve servis formu kalemleri servis fiyatını, site satışı ise ikinci fiyatı kullanır.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -349,7 +349,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Servis Fiyati (USD, KDV Haric)',
+                        labelText: 'Servis Fiyatı (USD, KDV Hariç)',
                         prefixIcon: Icon(Icons.handyman_outlined),
                       ),
                       validator: _validateNumber,
@@ -360,7 +360,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Site Satis Fiyati (USD, KDV Haric)',
+                        labelText: 'Site Satış Fiyatı (USD, KDV Hariç)',
                         prefixIcon: Icon(Icons.storefront_outlined),
                       ),
                       validator: _validateNumber,
@@ -371,7 +371,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'KDV Orani (%)',
+                        labelText: 'KDV Oranı (%)',
                         prefixIcon: Icon(Icons.percent_outlined),
                       ),
                       validator: _validateNumber,
@@ -382,7 +382,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   value: _isActive,
                   onChanged: (value) => setState(() => _isActive = value),
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Urun aktif olarak kullanilsin'),
+                  title: const Text('Ürün aktif olarak kullanılsın'),
                   subtitle: const Text(
                     'Pasif urunler listede gorunur ancak yeni kayitlarda secilmez.',
                   ),
@@ -395,7 +395,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     border: Border.all(color: const Color(0xFFD9E5F0)),
                   ),
                   child: const Text(
-                    'USD fiyatlar kaydedilir. Teklif ve servis formlarinda TL karsiliklar TCMB USD/TRY kuru ile anlik hesaplanir ve belgeye snapshot olarak yazilir.',
+                    'USD fiyatlar kaydedilir. Teklif ve servis formlarında TL karşılıklar TCMB USD/TRY kuru ile anlık hesaplanır ve belgeye snapshot olarak yazılır.',
                     style: TextStyle(
                       fontSize: 13,
                       color: Color(0xFF607085),
@@ -410,7 +410,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               icon: Icons.inventory_outlined,
               title: 'Stok Yonetimi',
               description:
-                  'Stoklu urunlerde mevcut miktar ve kritik seviye tutulur. Hizmet kalemlerinde takip kapatabilirsiniz.',
+                  'Stoklu ürünlerde mevcut miktar ve kritik seviye tutulur. Hizmet kalemlerinde takip kapatabilirsiniz.',
               children: [
                 SwitchListTile.adaptive(
                   value: _trackInventory,
@@ -418,7 +418,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Stok takibi acik'),
                   subtitle: const Text(
-                    'Aciksa stok miktari ve kritik seviye panellerde takip edilir.',
+                    'Açıksa stok miktarı ve kritik seviye panellerde takip edilir.',
                   ),
                 ),
                 if (_trackInventory)
@@ -472,15 +472,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.notes_outlined,
-              title: 'Aciklama',
+              title: 'Açıklama',
               description:
-                  'Teklif kaleminde gorunsun istediginiz teknik notlari veya urun tanimini buraya ekleyin.',
+                  'Teklif kaleminde görünsün istediğiniz teknik notları veya ürün tanımını buraya ekleyin.',
               children: [
                 TextFormField(
                   controller: _descriptionCtrl,
                   maxLines: 5,
                   decoration: const InputDecoration(
-                    labelText: 'Aciklama',
+                    labelText: 'Açıklama',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.edit_note_outlined),
                   ),
@@ -504,7 +504,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           ? Icons.save_outlined
                           : Icons.inventory_2_outlined,
                     ),
-              label: Text(_isEdit ? 'Urunu Guncelle' : 'Urunu Kaydet'),
+              label: Text(_isEdit ? 'Ürünü Güncelle' : 'Ürünü Kaydet'),
             ),
           ],
         ),

@@ -43,7 +43,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
 
   String _customerName(List<dynamic> customers, int id) =>
       customers.where((item) => item.id == id).firstOrNull?.companyName ??
-      'Musteri #$id';
+      'Müşteri #$id';
 
   void _goBack() {
     if (Navigator.of(context).canPop()) {
@@ -81,11 +81,11 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Servis Formu Bulunamadi'),
+          title: const Text('Servis Formu Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Servis formu bulunamadi',
+            'Servis formu bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -107,7 +107,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
@@ -130,7 +130,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             icon: Icons.build_circle_outlined,
             title: _customerName(customerProvider.items, visit.customerId),
             subtitle:
-                '${visit.serviceCode ?? 'Servis belgesi'} icin operasyon ve maliyet ozeti',
+                '${visit.serviceCode ?? 'Servis belgesi'} için operasyon ve maliyet özeti',
           ),
           const SizedBox(height: 20),
           AppSectionCard(
@@ -149,7 +149,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ).format(visit.scheduledDate),
                   ),
                   _InfoPanel(
-                    label: 'Gerceklesen Tarih',
+                    label: 'Gerçekleşen Tarih',
                     value: visit.actualDate == null
                         ? '-'
                         : DateFormat(
@@ -166,7 +166,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     label: 'Toplam TL',
                     value: '${_currency.format(visit.grandTotal)} ₺',
                   ),
-                  _InfoPanel(label: 'KDV Orani', value: '%${visit.vatRate}'),
+                  _InfoPanel(label: 'KDV Oranı', value: '%${visit.vatRate}'),
                   _InfoPanel(
                     label: 'Toplam USD',
                     value: '${_currency.format(visit.grandTotalUsd)} USD',
@@ -188,7 +188,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   ),
                 ],
               ),
-              _DetailLine('Sikayet / Talep', visit.complaint),
+              _DetailLine('Şikayet / Talep', visit.complaint),
             ],
           ),
           const SizedBox(height: 20),
@@ -229,7 +229,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                             'Toplam ${_currency.format(item.totalPriceUsd)} USD',
                           ),
                           _MiniPill(
-                            'TL Karsilik ${_currency.format(item.totalPrice)} ₺',
+                            'TL Karşılık ${_currency.format(item.totalPrice)} ₺',
                           ),
                         ],
                       ),
@@ -255,12 +255,12 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'Iscilik (USD)',
+                      'İşçilik (USD)',
                       '${_currency.format(visit.laborAmountUsd)} USD',
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'Iscilik (TL)',
+                      'İşçilik (TL)',
                       '${_currency.format(visit.laborAmount)} ₺',
                     ),
                     const SizedBox(height: 8),
@@ -269,7 +269,10 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                       '${_currency.format(visit.vatTotalUsd)} USD',
                     ),
                     const SizedBox(height: 8),
-                    _SummaryRow('KDV (TL)', '${_currency.format(visit.vatTotal)} ₺'),
+                    _SummaryRow(
+                      'KDV (TL)',
+                      '${_currency.format(visit.vatTotal)} ₺',
+                    ),
                     const Divider(height: 24),
                     _SummaryRow(
                       'Genel Toplam (USD)',
@@ -293,8 +296,8 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
               icon: Icons.notes_outlined,
               title: 'Notlar',
               children: [
-                _DetailLine('Musteri Notlari', visit.notes),
-                _DetailLine('Teknisyen Notlari', visit.technicianNotes),
+                _DetailLine('Müşteri Notları', visit.notes),
+                _DetailLine('Teknisyen Notları', visit.technicianNotes),
               ],
             ),
           ],

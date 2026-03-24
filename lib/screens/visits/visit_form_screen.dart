@@ -53,8 +53,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       double.tryParse(_laborCtrl.text.replaceAll(',', '.')) ?? 0;
   double get _vatRate =>
       double.tryParse(_vatCtrl.text.replaceAll(',', '.')) ?? 20;
-  double get _vatTotalUsd => (_materialTotalUsd + _laborAmountUsd) * _vatRate / 100;
-  double get _grandTotalUsd => _materialTotalUsd + _laborAmountUsd + _vatTotalUsd;
+  double get _vatTotalUsd =>
+      (_materialTotalUsd + _laborAmountUsd) * _vatRate / 100;
+  double get _grandTotalUsd =>
+      _materialTotalUsd + _laborAmountUsd + _vatTotalUsd;
   double get _materialTotalTry => _materialTotalUsd * _activeRate;
   double get _laborAmountTry => _laborAmountUsd * _activeRate;
   double get _vatTotalTry => _vatTotalUsd * _activeRate;
@@ -160,7 +162,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _rateError = 'TCMB kuru alinamadi. Baglantiyi kontrol edip tekrar deneyin.';
+        _rateError =
+            'TCMB kuru alınamadı. Bağlantıyı kontrol edip tekrar deneyin.';
       });
     } finally {
       if (mounted) {
@@ -263,7 +266,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_exchangeRate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        buildErrorSnackBar('Servis formu icin TCMB USD/TRY kuru gerekli'),
+        buildErrorSnackBar('Servis formu için TCMB USD/TRY kuru gerekli'),
       );
       return;
     }
@@ -344,7 +347,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     if (customerProvider.loading && customers.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(_isEdit ? 'Servis Formunu Duzenle' : 'Yeni Servis Formu'),
+          title: Text(_isEdit ? 'Servis Formunu Düzenle' : 'Yeni Servis Formu'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -359,21 +362,21 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             AppPageIntro(
               badge: 'Servis Formu',
               icon: Icons.build_circle_outlined,
-              title: 'Servis formu icin once firma ekleyin',
+              title: 'Servis formu için önce firma ekleyin',
               subtitle:
-                  'Servis kaydi bir firma ile baslar. Sadece sirket unvani ile hizli kayit acabilirsiniz.',
+                  'Servis kaydı bir firma ile başlar. Sadece şirket unvanı ile hızlı kayıt açabilirsiniz.',
             ),
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.add_business_outlined,
-              title: 'Gerekli ilk adim',
+              title: 'Gerekli ilk adım',
               description:
-                  'Firma kaydini actiktan sonra servis formuna otomatik olarak geri donebilirsiniz.',
+                  'Firma kaydını açtıktan sonra servis formuna otomatik olarak geri dönebilirsiniz.',
               children: [
                 FilledButton.icon(
                   onPressed: () => context.go(_customerCreateRoute),
                   icon: const Icon(Icons.add_business_outlined),
-                  label: const Text('Firma Ekle ve Servis Formuna Don'),
+                  label: const Text('Firma Ekle ve Servis Formuna Dön'),
                 ),
               ],
             ),
@@ -384,7 +387,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Servis Formunu Duzenle' : 'Yeni Servis Formu'),
+        title: Text(_isEdit ? 'Servis Formunu Düzenle' : 'Yeni Servis Formu'),
       ),
       body: Form(
         key: _formKey,
@@ -395,10 +398,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               badge: _loadedVisit?.serviceCode ?? 'Servis Belgesi',
               icon: Icons.build_circle_outlined,
               title: _isEdit
-                  ? 'Servis formunu guncelleyin'
-                  : 'Yeni servis formu olusturun',
+                  ? 'Servis formunu güncelleyin'
+                  : 'Yeni servis formu oluşturun',
               subtitle:
-                  'Malzeme ve iscilik USD net tutulur; TL karsiliklar belgeye kullanilan TCMB kuru ile snapshot olarak yazilir.',
+                  'Malzeme ve işçilik USD net tutulur; TL karşılıklar belgeye kullanılan TCMB kuru ile snapshot olarak yazılır.',
               trailing: Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -411,7 +414,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   FilledButton.tonalIcon(
                     onPressed: () => context.go(_productCreateRoute),
                     icon: const Icon(Icons.inventory_2_outlined),
-                    label: const Text('Yeni Urun'),
+                    label: const Text('Yeni Ürün'),
                   ),
                 ],
               ),
@@ -421,7 +424,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               icon: Icons.currency_exchange_outlined,
               title: 'TCMB Kur Bilgisi',
               description:
-                  'Servis formundaki TL karsiliklar gosterilen TCMB USD doviz satis kuru ile hesaplanir.',
+                  'Servis formundaki TL karşılıklar gösterilen TCMB USD döviz satış kuru ile hesaplanır.',
               trailing: FilledButton.tonalIcon(
                 onPressed: _rateLoading ? null : _loadExchangeRate,
                 icon: _rateLoading
@@ -460,7 +463,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         value: _fmt.format(_exchangeRate!.rate),
                       ),
                       _VisitRateInfoPanel(
-                        label: 'Bulten Tarihi',
+                        label: 'Bülten Tarihi',
                         value: DateFormat(
                           'dd.MM.yyyy',
                           'tr_TR',
@@ -491,7 +494,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Kaydetmeden once kur degisirse serviste gorunen TL maliyetler de degisir. Kayıt anındaki TCMB kuru servis formuna sabit olarak yazilir.',
+                          'Kaydetmeden önce kur değişirse serviste görünen TL maliyetler de değişir. Kayıt anındaki TCMB kuru servis formuna sabit olarak yazılır.',
                           style: TextStyle(
                             color: Color(0xFF6F4B00),
                             fontSize: 13,
@@ -508,7 +511,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.event_note_outlined,
-              title: 'Musteri ve Ziyaret Bilgileri',
+              title: 'Müşteri ve Ziyaret Bilgileri',
               description:
                   'Belge ust bolumunde yer alan firma, tarih ve durum bilgileri burada tutulur.',
               trailing: TextButton.icon(
@@ -545,7 +548,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
                       validator: (value) =>
-                          value == null ? 'Firma secin' : null,
+                          value == null ? 'Firma seçin' : null,
                     ),
                     AppDatePickerField(
                       label: 'Planlanan Tarih',
@@ -554,11 +557,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                           ? null
                           : dateFormatter.format(_scheduledDate!),
                       onTap: _selectScheduledDate,
-                      placeholder: 'Tarih secin',
+                      placeholder: 'Tarih seçin',
                       hasError: _scheduledDate == null,
                     ),
                     AppDatePickerField(
-                      label: 'Gerceklesen Tarih',
+                      label: 'Gerçekleşen Tarih',
                       icon: Icons.access_time_outlined,
                       value: _actualDate == null
                           ? null
@@ -583,7 +586,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                       items: const [
                         DropdownMenuItem(
                           value: 'scheduled',
-                          child: Text('Planlandi'),
+                          child: Text('Planlandı'),
                         ),
                         DropdownMenuItem(
                           value: 'in_progress',
@@ -591,11 +594,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         ),
                         DropdownMenuItem(
                           value: 'completed',
-                          child: Text('Tamamlandi'),
+                          child: Text('Tamamlandı'),
                         ),
                         DropdownMenuItem(
                           value: 'cancelled',
-                          child: Text('Iptal'),
+                          child: Text('İptal'),
                         ),
                       ],
                       onChanged: (value) => setState(() => _status = value!),
@@ -613,7 +616,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   controller: _complaintCtrl,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    labelText: 'Sikayet / Talep',
+                    labelText: 'Şikayet / Talep',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.report_problem_outlined),
                   ),
@@ -625,7 +628,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               icon: Icons.inventory_2_outlined,
               title: 'Malzeme ve Hizmet Kalemleri',
               description:
-                  'Kod, malzeme adi, adet ve USD birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
+                  'Kod, malzeme adı, adet ve USD birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
               trailing: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -633,7 +636,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   TextButton.icon(
                     onPressed: () => context.go(_productCreateRoute),
                     icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                    label: const Text('Yeni Urun'),
+                    label: const Text('Yeni Ürün'),
                   ),
                   TextButton.icon(
                     onPressed: _addItem,
@@ -666,7 +669,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               icon: Icons.calculate_outlined,
               title: 'Toplamlar',
               description:
-                  'Malzeme ve iscilik USD net hesaplanir; belgeye yazilan TL toplamlari aktif TCMB kuru ile uretilir.',
+                  'Malzeme ve işçilik USD net hesaplanır; belgeye yazılan TL toplamları aktif TCMB kuru ile üretilir.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 2,
@@ -678,7 +681,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Iscilik Toplami (USD)',
+                        labelText: 'İşçilik Toplamı (USD)',
                         prefixIcon: Icon(Icons.handyman_outlined),
                       ),
                       onChanged: (_) => setState(() {}),
@@ -689,7 +692,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'KDV Orani (%)',
+                        labelText: 'KDV Oranı (%)',
                         prefixIcon: Icon(Icons.percent_outlined),
                       ),
                       onChanged: (_) => setState(() {}),
@@ -712,15 +715,15 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.notes_outlined,
-              title: 'Aciklamalar',
+              title: 'Açıklamalar',
               description:
-                  'Musteri notu ve teknisyen degerlendirmesi ayri alanlarda tutulur.',
+                  'Müşteri notu ve teknisyen değerlendirmesi ayrı alanlarda tutulur.',
               children: [
                 TextFormField(
                   controller: _notesCtrl,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                    labelText: 'Musteri Notlari',
+                    labelText: 'Müşteri Notları',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.edit_note_outlined),
                   ),
@@ -729,7 +732,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   controller: _techNotesCtrl,
                   maxLines: 4,
                   decoration: const InputDecoration(
-                    labelText: 'Teknisyen Notlari',
+                    labelText: 'Teknisyen Notları',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.fact_check_outlined),
                   ),
@@ -750,7 +753,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                     )
                   : Icon(_isEdit ? Icons.save_outlined : Icons.build_outlined),
               label: Text(
-                _isEdit ? 'Servis Formunu Guncelle' : 'Servis Formunu Kaydet',
+                _isEdit ? 'Servis Formunu Güncelle' : 'Servis Formunu Kaydet',
               ),
             ),
           ],
@@ -880,7 +883,7 @@ class _MaterialCard extends StatelessWidget {
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Kayitli urun yok. Kalemi manuel girebilir veya once urun ekleyebilirsiniz.',
+                'Kayıtlı ürün yok. Kalemi manuel girebilir veya önce ürün ekleyebilirsiniz.',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppTheme.textMedium,
@@ -898,7 +901,7 @@ class _MaterialCard extends StatelessWidget {
       initialValue: row.selectedProductId,
       isExpanded: true,
       decoration: const InputDecoration(
-        labelText: 'Kayitli Urun',
+        labelText: 'Kayıtlı Ürün',
         prefixIcon: Icon(Icons.inventory_2_outlined),
       ),
       items: [
@@ -936,7 +939,7 @@ class _MaterialCard extends StatelessWidget {
           controller: row.priceCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
-            labelText: 'Birim Fiyati (USD)',
+            labelText: 'Birim Fiyatı (USD)',
             prefixIcon: Icon(Icons.payments_outlined),
           ),
           onChanged: (_) => onChanged(),
@@ -961,7 +964,7 @@ class _MaterialCard extends StatelessWidget {
         controller: row.priceCtrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: const InputDecoration(
-          labelText: 'Birim Fiyati (USD)',
+          labelText: 'Birim Fiyatı (USD)',
           prefixIcon: Icon(Icons.payments_outlined),
         ),
         onChanged: (_) => onChanged(),
@@ -1003,13 +1006,13 @@ class _VisitSummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row('Malzeme Toplami (USD)', materialTotalUsd, currency: 'USD'),
+          _row('Malzeme Toplamı (USD)', materialTotalUsd, currency: 'USD'),
           const SizedBox(height: 8),
-          _row('Malzeme Toplami (TL)', materialTotalTry),
+          _row('Malzeme Toplamı (TL)', materialTotalTry),
           const SizedBox(height: 8),
-          _row('Iscilik Toplami (USD)', laborAmountUsd, currency: 'USD'),
+          _row('İşçilik Toplamı (USD)', laborAmountUsd, currency: 'USD'),
           const SizedBox(height: 8),
-          _row('Iscilik Toplami (TL)', laborAmountTry),
+          _row('İşçilik Toplamı (TL)', laborAmountTry),
           const SizedBox(height: 8),
           _row('KDV (USD)', vatTotalUsd, currency: 'USD'),
           const SizedBox(height: 8),
@@ -1085,8 +1088,7 @@ class _MaterialRow {
       double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
   double get totalPriceUsd => quantity * unitPriceUsd;
   double unitPriceTry(double exchangeRate) => unitPriceUsd * exchangeRate;
-  double totalPriceTry(double exchangeRate) =>
-      totalPriceUsd * exchangeRate;
+  double totalPriceTry(double exchangeRate) => totalPriceUsd * exchangeRate;
 
   void dispose() {
     codeCtrl.dispose();

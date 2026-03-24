@@ -89,11 +89,11 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Fatura Bulunamadi'),
+          title: const Text('Fatura Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Fatura kaydi bulunamadi',
+            'Fatura kaydı bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -115,14 +115,14 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
                 value: 'paid',
                 child: ActionMenuRow(
                   icon: Icons.check_circle_outlined,
-                  label: 'Odendi Isaretle',
+                  label: 'Ödendi İşaretle',
                   color: Color(0xFF10B981),
                 ),
               ),
@@ -146,7 +146,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             icon: Icons.receipt_long_outlined,
             title: invoice.title,
             subtitle:
-                '${customer?.companyName ?? 'Firma secilmedi'} icin hazirlanan fatura dokumu.',
+                '${customer?.companyName ?? 'Firma seçilmedi'} için hazırlanan fatura dökümü.',
             trailing: Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -174,7 +174,7 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
           const SizedBox(height: 20),
           AppSectionCard(
             icon: Icons.description_outlined,
-            title: 'Fatura Ozeti',
+            title: 'Fatura Özeti',
             children: [
               AdaptiveFieldRow(
                 maxColumns: 3,
@@ -183,17 +183,17 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                   _InfoPanel(label: 'Fatura No', value: invoice.invoiceNumber),
                   _InfoPanel(label: 'Durum', value: invoice.statusLabel),
                   _InfoPanel(
-                    label: 'Olusturma',
+                    label: 'Oluşturma',
                     value: _date.format(invoice.createdAt),
                   ),
                   _InfoPanel(
-                    label: 'Son Odeme',
+                    label: 'Son Ödeme',
                     value: invoice.dueDate == null
                         ? '-'
                         : _date.format(invoice.dueDate!),
                   ),
                   _InfoPanel(
-                    label: 'Ilgili Teklif',
+                    label: 'İlgili Teklif',
                     value: invoice.quoteId?.toString() ?? '-',
                   ),
                   _InfoPanel(

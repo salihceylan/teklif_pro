@@ -4,10 +4,10 @@ import '../models/user.dart';
 
 class AuthService {
   Future<User> login(String email, String password) async {
-    final res = await ApiClient.instance.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
+    final res = await ApiClient.instance.post(
+      '/auth/login',
+      data: {'email': email, 'password': password},
+    );
     await Storage.saveToken(res.data['access_token']);
     return User.fromJson(res.data['user']);
   }
@@ -19,13 +19,16 @@ class AuthService {
     String? phone,
     String? companyName,
   }) async {
-    final res = await ApiClient.instance.post('/auth/register', data: {
-      'email': email,
-      'password': password,
-      'full_name': fullName,
-      'phone': phone,
-      'company_name': companyName,
-    });
+    final res = await ApiClient.instance.post(
+      '/auth/register',
+      data: {
+        'email': email,
+        'password': password,
+        'full_name': fullName,
+        'phone': phone,
+        'company_name': companyName,
+      },
+    );
     await Storage.saveToken(res.data['access_token']);
     return User.fromJson(res.data['user']);
   }

@@ -19,35 +19,38 @@ class ServiceVisitItem {
     required this.totalPrice,
   });
 
-  factory ServiceVisitItem.fromJson(Map<String, dynamic> json) =>
-      ServiceVisitItem(
-        id: json['id'],
-        productCode: json['product_code'],
-        materialName: json['material_name'],
-        quantity: (json['quantity'] as num).toDouble(),
-        unitPriceUsd: ((json['unit_price_usd'] as num?) ??
-                (json['unit_price'] as num?) ??
-                0)
+  factory ServiceVisitItem.fromJson(
+    Map<String, dynamic> json,
+  ) => ServiceVisitItem(
+    id: json['id'],
+    productCode: json['product_code'],
+    materialName: json['material_name'],
+    quantity: (json['quantity'] as num).toDouble(),
+    unitPriceUsd:
+        ((json['unit_price_usd'] as num?) ?? (json['unit_price'] as num?) ?? 0)
             .toDouble(),
-        unitPrice:
-            ((json['unit_price'] as num?) ?? (json['unit_price_try'] as num?) ?? 0)
-                .toDouble(),
-        totalPriceUsd: ((json['total_price_usd'] as num?) ??
+    unitPrice:
+        ((json['unit_price'] as num?) ?? (json['unit_price_try'] as num?) ?? 0)
+            .toDouble(),
+    totalPriceUsd:
+        ((json['total_price_usd'] as num?) ??
                 (json['total_price'] as num?) ??
                 0)
             .toDouble(),
-        totalPrice:
-            ((json['total_price'] as num?) ?? (json['total_price_try'] as num?) ?? 0)
-                .toDouble(),
-      );
+    totalPrice:
+        ((json['total_price'] as num?) ??
+                (json['total_price_try'] as num?) ??
+                0)
+            .toDouble(),
+  );
 
   Map<String, dynamic> toJson() => {
-        if (productCode != null && productCode!.isNotEmpty)
-          'product_code': productCode,
-        'material_name': materialName,
-        'quantity': quantity,
-        'unit_price_usd': unitPriceUsd,
-      };
+    if (productCode != null && productCode!.isNotEmpty)
+      'product_code': productCode,
+    'material_name': materialName,
+    'quantity': quantity,
+    'unit_price_usd': unitPriceUsd,
+  };
 }
 
 class ServiceVisit {
@@ -120,66 +123,77 @@ class ServiceVisit {
   });
 
   factory ServiceVisit.fromJson(Map<String, dynamic> json) => ServiceVisit(
-        id: json['id'],
-        customerId: json['customer_id'],
-        serviceRequestId: json['service_request_id'],
-        serviceCode: json['service_code'],
-        scheduledDate: DateTime.parse(json['scheduled_date']),
-        actualDate: json['actual_date'] != null
-            ? DateTime.parse(json['actual_date'])
-            : null,
-        durationMinutes: json['duration_minutes'],
-        status: json['status'],
-        customerCompanyName: json['customer_company_name'],
-        customerContactName: json['customer_contact_name'],
-        customerPhone: json['customer_phone'],
-        customerAddress: json['customer_address'],
-        complaint: json['complaint'],
-        technicianName: json['technician_name'],
-        laborAmountUsd:
-            ((json['labor_amount_usd'] as num?) ?? (json['labor_amount'] as num?) ?? 0)
-                .toDouble(),
-        laborAmount:
-            ((json['labor_amount'] as num?) ?? (json['labor_amount_try'] as num?) ?? 0)
-                .toDouble(),
-        vatRate: ((json['vat_rate'] as num?) ?? 20).toDouble(),
-        materialTotalUsd: ((json['material_total_usd'] as num?) ??
+    id: json['id'],
+    customerId: json['customer_id'],
+    serviceRequestId: json['service_request_id'],
+    serviceCode: json['service_code'],
+    scheduledDate: DateTime.parse(json['scheduled_date']),
+    actualDate: json['actual_date'] != null
+        ? DateTime.parse(json['actual_date'])
+        : null,
+    durationMinutes: json['duration_minutes'],
+    status: json['status'],
+    customerCompanyName: json['customer_company_name'],
+    customerContactName: json['customer_contact_name'],
+    customerPhone: json['customer_phone'],
+    customerAddress: json['customer_address'],
+    complaint: json['complaint'],
+    technicianName: json['technician_name'],
+    laborAmountUsd:
+        ((json['labor_amount_usd'] as num?) ??
+                (json['labor_amount'] as num?) ??
+                0)
+            .toDouble(),
+    laborAmount:
+        ((json['labor_amount'] as num?) ??
+                (json['labor_amount_try'] as num?) ??
+                0)
+            .toDouble(),
+    vatRate: ((json['vat_rate'] as num?) ?? 20).toDouble(),
+    materialTotalUsd:
+        ((json['material_total_usd'] as num?) ??
                 (json['material_total'] as num?) ??
                 0)
             .toDouble(),
-        materialTotal:
-            ((json['material_total'] as num?) ?? (json['material_total_try'] as num?) ?? 0)
-                .toDouble(),
-        vatTotalUsd:
-            ((json['vat_total_usd'] as num?) ?? (json['vat_total'] as num?) ?? 0)
-                .toDouble(),
-        vatTotal: ((json['vat_total'] as num?) ?? 0).toDouble(),
-        grandTotalUsd:
-            ((json['grand_total_usd'] as num?) ?? (json['grand_total'] as num?) ?? 0)
-                .toDouble(),
-        grandTotal:
-            ((json['grand_total'] as num?) ?? (json['grand_total_try'] as num?) ?? 0)
-                .toDouble(),
-        exchangeRate: (json['exchange_rate'] as num?)?.toDouble(),
-        exchangeRateDate: json['exchange_rate_date'] != null
-            ? DateTime.parse(json['exchange_rate_date'])
-            : null,
-        exchangeRateSource: json['exchange_rate_source'] as String?,
-        baseCurrency: (json['base_currency'] ?? 'USD') as String,
-        displayCurrency: (json['display_currency'] ?? 'TRY') as String,
-        notes: json['notes'],
-        technicianNotes: json['technician_notes'],
-        createdAt: DateTime.parse(json['created_at']),
-        items: (json['items'] as List? ?? [])
-            .map((e) => ServiceVisitItem.fromJson(e))
-            .toList(),
-      );
+    materialTotal:
+        ((json['material_total'] as num?) ??
+                (json['material_total_try'] as num?) ??
+                0)
+            .toDouble(),
+    vatTotalUsd:
+        ((json['vat_total_usd'] as num?) ?? (json['vat_total'] as num?) ?? 0)
+            .toDouble(),
+    vatTotal: ((json['vat_total'] as num?) ?? 0).toDouble(),
+    grandTotalUsd:
+        ((json['grand_total_usd'] as num?) ??
+                (json['grand_total'] as num?) ??
+                0)
+            .toDouble(),
+    grandTotal:
+        ((json['grand_total'] as num?) ??
+                (json['grand_total_try'] as num?) ??
+                0)
+            .toDouble(),
+    exchangeRate: (json['exchange_rate'] as num?)?.toDouble(),
+    exchangeRateDate: json['exchange_rate_date'] != null
+        ? DateTime.parse(json['exchange_rate_date'])
+        : null,
+    exchangeRateSource: json['exchange_rate_source'] as String?,
+    baseCurrency: (json['base_currency'] ?? 'USD') as String,
+    displayCurrency: (json['display_currency'] ?? 'TRY') as String,
+    notes: json['notes'],
+    technicianNotes: json['technician_notes'],
+    createdAt: DateTime.parse(json['created_at']),
+    items: (json['items'] as List? ?? [])
+        .map((e) => ServiceVisitItem.fromJson(e))
+        .toList(),
+  );
 
   static const Map<String, String> statusLabels = {
-    'scheduled': 'Planlandi',
+    'scheduled': 'Planlandı',
     'in_progress': 'Devam Ediyor',
-    'completed': 'Tamamlandi',
-    'cancelled': 'Iptal',
+    'completed': 'Tamamlandı',
+    'cancelled': 'İptal',
   };
 
   String get statusLabel => statusLabels[status] ?? status;

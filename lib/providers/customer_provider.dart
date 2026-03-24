@@ -26,7 +26,7 @@ class CustomerProvider extends ChangeNotifier {
     await AppNotifications.instance.notify(
       AppNotificationTopic.companyRecords,
       title: 'Yeni firma kaydedildi',
-      body: '${c.companyName} icin firma karti olusturuldu.',
+      body: '${c.companyName} için firma kartı oluşturuldu.',
     );
   }
 
@@ -38,9 +38,9 @@ class CustomerProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.companyRecords,
-      title: 'Firma profili guncellendi',
+      title: 'Firma profili güncellendi',
       body:
-          '${previous?.companyName ?? c.companyName} firma kaydi guncellendi.',
+          '${previous?.companyName ?? c.companyName} firma kaydı güncellendi.',
     );
   }
 

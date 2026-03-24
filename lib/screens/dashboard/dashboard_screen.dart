@@ -141,7 +141,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _LaunchPadCard(
                       icon: Icons.add_business_outlined,
-                      title: 'Sirket Ekle',
+                      title: 'Şirket Ekle',
                       description:
                           'Sadece sirket unvani ile hizli kayit acin, diger bilgileri sonra duzenleyin.',
                       buttonLabel: 'Yeni Firma',
@@ -150,18 +150,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     _LaunchPadCard(
                       icon: Icons.request_quote_outlined,
-                      title: 'Teklif Hazirla',
+                      title: 'Teklif Hazırla',
                       description:
                           'Kalemler, KDV, belge numarasi ve ciktiyi tek formda yonetin.',
-                      buttonLabel: 'Teklif Olustur',
+                      buttonLabel: 'Teklif Oluştur',
                       color: const Color(0xFF1F7A8C),
                       onTap: () => context.go('/quotes/new'),
                     ),
                     _LaunchPadCard(
                       icon: Icons.build_circle_outlined,
-                      title: 'Servis Formu Hazirla',
+                      title: 'Servis Formu Hazırla',
                       description:
-                          'Servis kaydi, malzeme ve iscilik toplamlarini tek ekranda toplayin.',
+                          'Servis kaydı, malzeme ve işçilik toplamlarını tek ekranda toplayın.',
                       buttonLabel: 'Servis Formu',
                       color: const Color(0xFF0F766E),
                       onTap: () => context.go('/visits/new'),
@@ -347,7 +347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _QuickAction(
                       icon: Icons.inventory_2_outlined,
-                      label: 'Urun Ekle',
+                      label: 'Ürün Ekle',
                       onTap: () => context.go('/products/new'),
                     ),
                     _QuickAction(

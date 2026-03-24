@@ -71,11 +71,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Urun Bulunamadi'),
+          title: const Text('Ürün Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Urun kaydi bulunamadi',
+            'Ürün kaydı bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -97,7 +97,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
@@ -125,7 +125,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _HeroBadge(
-                  label: product.isActive ? 'Aktif Kayit' : 'Pasif Kayit',
+                  label: product.isActive ? 'Aktif Kayıt' : 'Pasif Kayıt',
                 ),
                 const SizedBox(height: 10),
                 if (product.trackInventory)
@@ -135,7 +135,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         : 'Stok: ${_qty.format(product.stockQuantity)} ${product.unit}',
                   )
                 else
-                  const _HeroBadge(label: 'Stok Takibi Kapali'),
+                  const _HeroBadge(label: 'Stok Takibi Kapalı'),
               ],
             ),
           ),
@@ -149,7 +149,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 minItemWidth: 220,
                 children: [
                   _InfoPanel(label: 'SKU', value: product.sku),
-                  _InfoPanel(label: 'Urun Tipi', value: product.typeLabel),
+                  _InfoPanel(label: 'Ürün Tipi', value: product.typeLabel),
                   _InfoPanel(label: 'Birim', value: product.unit),
                   _InfoPanel(label: 'Kategori', value: product.category ?? '-'),
                   _InfoPanel(label: 'Marka', value: product.brand ?? '-'),
@@ -168,15 +168,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 minItemWidth: 220,
                 children: [
                   _InfoPanel(
-                    label: 'Servis Fiyati (USD, KDV Haric)',
+                    label: 'Servis Fiyatı (USD, KDV Hariç)',
                     value: '${_money.format(product.servicePriceUsd)} USD',
                   ),
                   _InfoPanel(
-                    label: 'Site Satis Fiyati (USD, KDV Haric)',
+                    label: 'Site Satış Fiyatı (USD, KDV Hariç)',
                     value: '${_money.format(product.sitePriceUsd)} USD',
                   ),
                   _InfoPanel(
-                    label: 'KDV Orani',
+                    label: 'KDV Oranı',
                     value: '%${_qty.format(product.vatRate)}',
                   ),
                 ],
@@ -194,7 +194,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   _InfoPanel(
                     label: 'Stok Takibi',
-                    value: product.trackInventory ? 'Acik' : 'Kapali',
+                    value: product.trackInventory ? 'Açık' : 'Kapalı',
                   ),
                   _InfoPanel(
                     label: 'Mevcut Stok',
@@ -216,8 +216,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.notes_outlined,
-              title: 'Aciklama',
-              children: [_DetailLine('Urun Aciklamasi', product.description)],
+              title: 'Açıklama',
+              children: [_DetailLine('Ürün Açıklaması', product.description)],
             ),
           ],
         ],

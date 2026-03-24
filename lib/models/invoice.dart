@@ -14,18 +14,18 @@ class InvoiceItem {
   });
 
   factory InvoiceItem.fromJson(Map<String, dynamic> json) => InvoiceItem(
-        id: json['id'],
-        description: json['description'],
-        quantity: (json['quantity'] as num).toDouble(),
-        unitPrice: (json['unit_price'] as num).toDouble(),
-        totalPrice: (json['total_price'] as num).toDouble(),
-      );
+    id: json['id'],
+    description: json['description'],
+    quantity: (json['quantity'] as num).toDouble(),
+    unitPrice: (json['unit_price'] as num).toDouble(),
+    totalPrice: (json['total_price'] as num).toDouble(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'description': description,
-        'quantity': quantity,
-        'unit_price': unitPrice,
-      };
+    'description': description,
+    'quantity': quantity,
+    'unit_price': unitPrice,
+  };
 }
 
 class Invoice {
@@ -56,21 +56,20 @@ class Invoice {
   });
 
   factory Invoice.fromJson(Map<String, dynamic> json) => Invoice(
-        id: json['id'],
-        customerId: json['customer_id'],
-        quoteId: json['quote_id'],
-        invoiceNumber: json['invoice_number'],
-        title: json['title'],
-        status: json['status'],
-        dueDate:
-            json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
-        totalAmount: (json['total_amount'] as num).toDouble(),
-        notes: json['notes'],
-        createdAt: DateTime.parse(json['created_at']),
-        items: (json['items'] as List? ?? [])
-            .map((e) => InvoiceItem.fromJson(e))
-            .toList(),
-      );
+    id: json['id'],
+    customerId: json['customer_id'],
+    quoteId: json['quote_id'],
+    invoiceNumber: json['invoice_number'],
+    title: json['title'],
+    status: json['status'],
+    dueDate: json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
+    totalAmount: (json['total_amount'] as num).toDouble(),
+    notes: json['notes'],
+    createdAt: DateTime.parse(json['created_at']),
+    items: (json['items'] as List? ?? [])
+        .map((e) => InvoiceItem.fromJson(e))
+        .toList(),
+  );
 
   static const Map<String, String> statusLabels = {
     'draft': 'Taslak',

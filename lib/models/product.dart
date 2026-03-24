@@ -40,7 +40,7 @@ class Product {
   });
 
   static const Map<String, String> typeLabels = {
-    'inventory': 'Stoklu Urun',
+    'inventory': 'Stoklu Ürün',
     'service': 'Hizmet',
     'consumable': 'Sarf Malzeme',
     'spare_part': 'Yedek Parca',
@@ -62,10 +62,11 @@ class Product {
     category: json['category'] as String?,
     brand: json['brand'] as String?,
     unit: (json['unit'] ?? 'Adet') as String,
-    servicePriceUsd: ((json['service_price_usd'] as num?) ??
-            (json['service_price'] as num?) ??
-            0)
-        .toDouble(),
+    servicePriceUsd:
+        ((json['service_price_usd'] as num?) ??
+                (json['service_price'] as num?) ??
+                0)
+            .toDouble(),
     sitePriceUsd:
         ((json['site_price_usd'] as num?) ?? (json['site_price'] as num?) ?? 0)
             .toDouble(),

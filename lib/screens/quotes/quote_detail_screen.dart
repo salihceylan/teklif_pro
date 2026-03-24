@@ -83,7 +83,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Fatura olusturuldu')));
+        ).showSnackBar(const SnackBar(content: Text('Fatura oluşturuldu')));
       }
     } else if (value == 'delete') {
       await quotes.delete(quote.id);
@@ -113,11 +113,11 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Teklif Bulunamadi'),
+          title: const Text('Teklif Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Teklif kaydi bulunamadi',
+            'Teklif kaydı bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -142,28 +142,28 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                 value: 'print',
                 child: ActionMenuRow(
                   icon: Icons.print_outlined,
-                  label: 'Teklif Ciktisi',
+                  label: 'Teklif Çıktısı',
                 ),
               ),
               PopupMenuItem(
                 value: 'mail',
                 child: ActionMenuRow(
                   icon: Icons.email_outlined,
-                  label: 'Mail Gonder',
+                  label: 'Mail Gönder',
                 ),
               ),
               PopupMenuItem(
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
                 value: 'invoice',
                 child: ActionMenuRow(
                   icon: Icons.receipt_long_outlined,
-                  label: 'Fatura Olustur',
+                  label: 'Fatura Oluştur',
                 ),
               ),
               PopupMenuItem(
@@ -186,7 +186,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             icon: Icons.request_quote_outlined,
             title: quote.title,
             subtitle:
-                '${customer?.companyName ?? quote.customerCompanyName ?? 'Firma secilmedi'} icin hazirlanan teklif belgesi.',
+                '${customer?.companyName ?? quote.customerCompanyName ?? 'Firma seçilmedi'} için hazırlanan teklif belgesi.',
             trailing: Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -229,7 +229,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
           const SizedBox(height: 20),
           AppSectionCard(
             icon: Icons.description_outlined,
-            title: 'Belge Ozeti',
+            title: 'Belge Özeti',
             children: [
               AdaptiveFieldRow(
                 maxColumns: 3,
@@ -240,7 +240,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                     value: _date.format(quote.issuedAt ?? quote.createdAt),
                   ),
                   _InfoPanel(
-                    label: 'Gecerlilik',
+                    label: 'Geçerlilik',
                     value: quote.validUntil == null
                         ? '-'
                         : _date.format(quote.validUntil!),
@@ -250,10 +250,10 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                     label: 'Teslimat',
                     value: quote.deliveryTime ?? '-',
                   ),
-                  _InfoPanel(label: 'Odeme', value: quote.paymentTerms ?? '-'),
+                  _InfoPanel(label: 'Ödeme', value: quote.paymentTerms ?? '-'),
                   _InfoPanel(
                     label: 'KDV Dahil',
-                    value: quote.pricesIncludeVat ? 'Evet' : 'Hayir',
+                    value: quote.pricesIncludeVat ? 'Evet' : 'Hayır',
                   ),
                   _InfoPanel(
                     label: 'TCMB USD/TRY',
@@ -268,7 +268,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                         : _date.format(quote.exchangeRateDate!),
                   ),
                   _InfoPanel(
-                    label: 'Kur Kaynagi',
+                    label: 'Kur Kaynağı',
                     value: quote.exchangeRateSource ?? '-',
                   ),
                 ],
@@ -314,7 +314,7 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                             'Toplam ${_currency.format(item.totalPriceUsd)} USD',
                           ),
                           _MiniPill(
-                            'TL Karsilik ${_currency.format(item.totalPrice)} ₺',
+                            'TL Karşılık ${_currency.format(item.totalPrice)} ₺',
                           ),
                         ],
                       ),
@@ -370,10 +370,10 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.sticky_note_2_outlined,
-              title: 'Aciklamalar',
+              title: 'Açıklamalar',
               children: [
-                _InfoLine('Teklif Aciklamasi', quote.description),
-                _InfoLine('Kosullar', quote.termsAndConditions),
+                _InfoLine('Teklif Açıklaması', quote.description),
+                _InfoLine('Koşullar', quote.termsAndConditions),
                 _InfoLine('Notlar', quote.notes),
               ],
             ),

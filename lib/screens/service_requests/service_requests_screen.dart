@@ -45,7 +45,7 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
           : prov.items.isEmpty
           ? _EmptyState(
               icon: Icons.build_circle_outlined,
-              message: 'Henuz servis talebi yok',
+              message: 'Henüz servis talebi yok',
               actionLabel: 'Talep Ekle',
               onAction: () => context.go('/service-requests/new'),
             )
@@ -140,12 +140,12 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Talebi Goster',
+            label: 'Talebi Göster',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'delete',

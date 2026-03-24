@@ -34,7 +34,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
     final visits = context.watch<VisitProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Servis Formlari')),
+      appBar: AppBar(title: const Text('Servis Formları')),
       drawer: const AppDrawer(currentRoute: '/visits'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/visits/new'),
@@ -46,7 +46,7 @@ class _VisitsScreenState extends State<VisitsScreen> {
           : visits.items.isEmpty
           ? _EmptyState(
               icon: Icons.build_circle_outlined,
-              message: 'Henuz servis formu olusturulmadi',
+              message: 'Henüz servis formu oluşturulmadı',
               actionLabel: 'Form Ekle',
               onAction: () => context.go('/visits/new'),
             )
@@ -186,12 +186,12 @@ class _VisitsScreenState extends State<VisitsScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Servis Formunu Goster',
+            label: 'Servis Formunu Göster',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'delete',

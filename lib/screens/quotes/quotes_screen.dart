@@ -70,7 +70,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Fatura olusturuldu')));
+        ).showSnackBar(const SnackBar(content: Text('Fatura oluşturuldu')));
       }
     } else if (value == 'delete') {
       await quotes.delete(quote.id);
@@ -100,32 +100,32 @@ class _QuotesScreenState extends State<QuotesScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Teklifi Goster',
+            label: 'Teklifi Göster',
           ),
         ),
         PopupMenuItem(
           value: 'print',
           child: ActionMenuRow(
             icon: Icons.print_outlined,
-            label: 'Teklif Ciktisi',
+            label: 'Teklif Çıktısı',
           ),
         ),
         PopupMenuItem(
           value: 'mail',
           child: ActionMenuRow(
             icon: Icons.email_outlined,
-            label: 'Mail Gonder',
+            label: 'Mail Gönder',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'invoice',
           child: ActionMenuRow(
             icon: Icons.receipt_long_outlined,
-            label: 'Fatura Olustur',
+            label: 'Fatura Oluştur',
           ),
         ),
         PopupMenuItem(
@@ -167,7 +167,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
           : quotes.items.isEmpty
           ? _EmptyState(
               icon: Icons.request_quote_outlined,
-              message: 'Henuz teklif olusturulmadi',
+              message: 'Henüz teklif oluşturulmadı',
               actionLabel: 'Teklif Ekle',
               onAction: () => context.go('/quotes/new'),
             )
@@ -233,7 +233,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
                                   Text(
                                     quote.customerCompanyName ??
                                         customer?.companyName ??
-                                        'Firma secilmedi',
+                                        'Firma seçilmedi',
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: AppTheme.textMedium,
@@ -253,7 +253,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
                                       if (quote.validUntil != null)
                                         _meta(
                                           Icons.event_available_outlined,
-                                          'Gecerlilik: ${_date.format(quote.validUntil!)}',
+                                          'Geçerlilik: ${_date.format(quote.validUntil!)}',
                                         ),
                                       _meta(
                                         Icons.payments_outlined,

@@ -25,9 +25,9 @@ class VisitProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.serviceForms,
-      title: 'Yeni servis formu hazirlandi',
+      title: 'Yeni servis formu hazırlandı',
       body:
-          '${v.customerCompanyName ?? 'Musteri'} icin ${v.serviceCode ?? 'servis formu'} olusturuldu.',
+          '${v.customerCompanyName ?? 'Müşteri'} için ${v.serviceCode ?? 'servis formu'} oluşturuldu.',
     );
   }
 
@@ -40,11 +40,11 @@ class VisitProvider extends ChangeNotifier {
     await AppNotifications.instance.notify(
       AppNotificationTopic.serviceForms,
       title: previous?.status != v.status
-          ? 'Servis formu durumu guncellendi'
-          : 'Servis formu guncellendi',
+          ? 'Servis formu durumu güncellendi'
+          : 'Servis formu güncellendi',
       body: previous?.status != v.status
           ? '${v.serviceCode ?? 'Servis formu'} durumu ${v.statusLabel} oldu.'
-          : '${v.serviceCode ?? 'Servis formu'} kaydi guncellendi.',
+          : '${v.serviceCode ?? 'Servis formu'} kaydı güncellendi.',
     );
   }
 

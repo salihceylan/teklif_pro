@@ -40,7 +40,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           : provider.items.isEmpty
           ? _EmptyState(
               icon: Icons.apartment_outlined,
-              message: 'Henuz firma eklenmedi',
+              message: 'Henüz firma eklenmedi',
               actionLabel: 'Firma Ekle',
               onAction: () => context.go('/customers/new'),
             )
@@ -172,12 +172,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Firmayi Goster',
+            label: 'Firmayı Göster',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'delete',
@@ -206,14 +206,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Firmayi Sil'),
+        title: const Text('Firmayı Sil'),
         content: const Text(
-          'Bu firma kaydini silmek istediginizden emin misiniz?',
+          'Bu firma kaydını silmek istediğinizden emin misiniz?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Iptal'),
+            child: const Text('İptal'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(

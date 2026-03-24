@@ -166,7 +166,8 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _rateError = 'TCMB kuru alinamadi. Baglantiyi kontrol edip tekrar deneyin.';
+        _rateError =
+            'TCMB kuru alınamadı. Bağlantıyı kontrol edip tekrar deneyin.';
       });
     } finally {
       if (mounted) {
@@ -326,21 +327,21 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
   Future<void> _printDraftQuote(List<Customer> customers) async {
     if (_exchangeRate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        buildErrorSnackBar('Yazdirmadan once TCMB kurunu yukleyin'),
+        buildErrorSnackBar('Yazdırmadan önce TCMB kurunu yükleyin'),
       );
       return;
     }
     if (_customerId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(buildErrorSnackBar('Once bir firma secin'));
+      ).showSnackBar(buildErrorSnackBar('Önce bir firma seçin'));
       return;
     }
     final quote = _buildDraftQuote(_selectedCustomer(customers));
     if (quote.items.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(buildErrorSnackBar('Teklifte en az bir kalem olmalidir'));
+      ).showSnackBar(buildErrorSnackBar('Teklifte en az bir kalem olmalıdır'));
       return;
     }
 
@@ -355,14 +356,14 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_exchangeRate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        buildErrorSnackBar('Teklif icin TCMB USD/TRY kuru gerekli'),
+        buildErrorSnackBar('Teklif için TCMB USD/TRY kuru gerekli'),
       );
       return;
     }
     if (_customerId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(buildErrorSnackBar('Firma secin'));
+      ).showSnackBar(buildErrorSnackBar('Firma seçin'));
       return;
     }
 
@@ -441,7 +442,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     if (customerProvider.loading && customers.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(_isEdit ? 'Teklifi Duzenle' : 'Yeni Teklif'),
+          title: Text(_isEdit ? 'Teklifi Düzenle' : 'Yeni Teklif'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -454,23 +455,23 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
           maxWidth: 920,
           children: [
             AppPageIntro(
-              badge: 'Teklif Hazirlama',
+              badge: 'Teklif Hazırlama',
               icon: Icons.request_quote_outlined,
-              title: 'Teklif icin once firma ekleyin',
+              title: 'Teklif için önce firma ekleyin',
               subtitle:
-                  'Teklif belgesi bir firma kaydina bagli calisir. Sadece sirket unvani ile hizli kayit acabilirsiniz.',
+                  'Teklif belgesi bir firma kaydına bağlı çalışır. Sadece şirket unvanı ile hızlı kayıt açabilirsiniz.',
             ),
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.add_business_outlined,
-              title: 'Gerekli ilk adim',
+              title: 'Gerekli ilk adım',
               description:
-                  'Firma kaydi acildiktan sonra teklif formuna otomatik olarak geri donebilirsiniz.',
+                  'Firma kaydı açıldıktan sonra teklif formuna otomatik olarak geri dönebilirsiniz.',
               children: [
                 FilledButton.icon(
                   onPressed: () => context.go(_customerCreateRoute),
                   icon: const Icon(Icons.add_business_outlined),
-                  label: const Text('Firma Ekle ve Teklife Don'),
+                  label: const Text('Firma Ekle ve Teklife Dön'),
                 ),
               ],
             ),
@@ -480,7 +481,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Teklifi Duzenle' : 'Yeni Teklif')),
+      appBar: AppBar(title: Text(_isEdit ? 'Teklifi Düzenle' : 'Yeni Teklif')),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
@@ -490,10 +491,10 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               badge: _loadedQuote?.quoteCode ?? 'Teklif Belgesi',
               icon: Icons.request_quote_outlined,
               title: _isEdit
-                  ? 'Teklif belgesini guncelleyin'
-                  : 'Yeni fiyat teklifi hazirlayin',
+                  ? 'Teklif belgesini güncelleyin'
+                  : 'Yeni fiyat teklifi hazırlayın',
               subtitle:
-                  'Urun fiyatlari USD net tutulur; teklifte kullanilan TCMB USD/TRY kuru ve TL karsiliklari belgeye snapshot olarak yazilir.',
+                  'Ürün fiyatları USD net tutulur; teklifte kullanılan TCMB USD/TRY kuru ve TL karşılıkları belgeye snapshot olarak yazılır.',
               trailing: Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -506,12 +507,12 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                   FilledButton.tonalIcon(
                     onPressed: () => context.go(_productCreateRoute),
                     icon: const Icon(Icons.inventory_2_outlined),
-                    label: const Text('Yeni Urun'),
+                    label: const Text('Yeni Ürün'),
                   ),
                   FilledButton.icon(
                     onPressed: () => _printDraftQuote(customers),
                     icon: const Icon(Icons.print_outlined),
-                    label: const Text('Teklif Ciktisi'),
+                    label: const Text('Teklif Çıktısı'),
                   ),
                 ],
               ),
@@ -521,7 +522,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               icon: Icons.currency_exchange_outlined,
               title: 'TCMB Kur Bilgisi',
               description:
-                  'Formdaki TL karsiliklar gosterilen TCMB USD doviz satis kuru ile hesaplanir.',
+                  'Formdaki TL karşılıklar gösterilen TCMB USD döviz satış kuru ile hesaplanır.',
               trailing: FilledButton.tonalIcon(
                 onPressed: _rateLoading ? null : _loadExchangeRate,
                 icon: _rateLoading
@@ -560,7 +561,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                         value: _fmt.format(_exchangeRate!.rate),
                       ),
                       _RateInfoPanel(
-                        label: 'Bulten Tarihi',
+                        label: 'Bülten Tarihi',
                         value: DateFormat(
                           'dd.MM.yyyy',
                           'tr_TR',
@@ -591,7 +592,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Kaydetmeden once kur degisirse teklifte gorunen TL fiyatlar da degisir. Teklif kaydedildiginde kullanilan TCMB kuru bu belgeye sabit snapshot olarak yazilir.',
+                          'Kaydetmeden önce kur değişirse teklifte görünen TL fiyatlar da değişir. Teklif kaydedildiğinde kullanılan TCMB kuru bu belgeye sabit snapshot olarak yazılır.',
                           style: TextStyle(
                             color: Color(0xFF6F4B00),
                             fontSize: 13,
@@ -610,7 +611,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               icon: Icons.description_outlined,
               title: 'Belge Bilgileri',
               description:
-                  'Firma secimi, belge tarihi ve gecerlilik bilgileri teklif ust bilgisini olusturur.',
+                  'Firma seçimi, belge tarihi ve geçerlilik bilgileri teklif üst bilgisini oluşturur.',
               trailing: TextButton.icon(
                 onPressed: () => context.go(_customerCreateRoute),
                 icon: const Icon(Icons.add_business_outlined, size: 18),
@@ -645,7 +646,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                           .toList(),
                       onChanged: (value) => setState(() => _customerId = value),
                       validator: (value) =>
-                          value == null ? 'Firma secin' : null,
+                          value == null ? 'Firma seçin' : null,
                     ),
                     AppDatePickerField(
                       label: 'Teklif Tarihi',
@@ -654,13 +655,13 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                       onTap: _pickIssueDate,
                     ),
                     AppDatePickerField(
-                      label: 'Gecerlilik',
+                      label: 'Geçerlilik',
                       icon: Icons.event_available_outlined,
                       value: _validUntil == null
                           ? null
                           : DateFormat('dd.MM.yyyy').format(_validUntil!),
                       onTap: _pickValidUntilDate,
-                      placeholder: 'Tarih secin',
+                      placeholder: 'Tarih seçin',
                     ),
                   ],
                 ),
@@ -691,7 +692,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                         DropdownMenuItem(value: 'draft', child: Text('Taslak')),
                         DropdownMenuItem(
                           value: 'sent',
-                          child: Text('Gonderildi'),
+                          child: Text('Gönderildi'),
                         ),
                         DropdownMenuItem(
                           value: 'accepted',
@@ -703,7 +704,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                         ),
                         DropdownMenuItem(
                           value: 'expired',
-                          child: Text('Suresi Doldu'),
+                          child: Text('Süresi Doldu'),
                         ),
                       ],
                       onChanged: (value) => setState(() => _status = value!),
@@ -753,13 +754,13 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               icon: Icons.assignment_outlined,
               title: 'Kapsam ve Ticari Kosullar',
               description:
-                  'Teklif aciklamasi, teslimat suresi ve odeme kosullari belgeyle birlikte kur snapshot notuna da eklenir.',
+                  'Teklif açıklaması, teslimat süresi ve ödeme koşulları belgeyle birlikte kur snapshot notuna da eklenir.',
               children: [
                 TextFormField(
                   controller: _descCtrl,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    labelText: 'Teklif Aciklamasi',
+                    labelText: 'Teklif Açıklaması',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.notes_outlined),
                   ),
@@ -771,14 +772,14 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                     TextFormField(
                       controller: _deliveryCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'Teslimat Suresi',
+                        labelText: 'Teslimat Süresi',
                         prefixIcon: Icon(Icons.local_shipping_outlined),
                       ),
                     ),
                     TextFormField(
                       controller: _paymentCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'Odeme Kosullari',
+                        labelText: 'Ödeme Koşulları',
                         prefixIcon: Icon(Icons.payments_outlined),
                       ),
                     ),
@@ -791,7 +792,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Fiyatlara KDV dahildir'),
                   subtitle: const Text(
-                    'Cikti belgesindeki kosul satirina otomatik olarak yansitilir.',
+                    'Çıktı belgesindeki koşul satırına otomatik olarak yansıtılır.',
                   ),
                 ),
               ],
@@ -801,7 +802,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               icon: Icons.view_list_outlined,
               title: 'Teklif Kalemleri',
               description:
-                  'Kalemler USD ve KDV haric girilir; TL karsiliklar aktif TCMB kuru ile anlik hesaplanir.',
+                  'Kalemler USD ve KDV hariç girilir; TL karşılıklar aktif TCMB kuru ile anlık hesaplanır.',
               trailing: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -809,7 +810,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                   TextButton.icon(
                     onPressed: () => context.go(_productCreateRoute),
                     icon: const Icon(Icons.inventory_2_outlined, size: 18),
-                    label: const Text('Yeni Urun'),
+                    label: const Text('Yeni Ürün'),
                   ),
                   TextButton.icon(
                     onPressed: _addItem,
@@ -857,7 +858,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                   controller: _termsCtrl,
                   maxLines: 5,
                   decoration: const InputDecoration(
-                    labelText: 'Aciklamalar ve Kosullar',
+                    labelText: 'Açıklamalar ve Koşullar',
                     alignLabelWithHint: true,
                     prefixIcon: Icon(Icons.rule_folder_outlined),
                   ),
@@ -890,7 +891,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                           ? Icons.save_outlined
                           : Icons.request_quote_outlined,
                     ),
-              label: Text(_isEdit ? 'Teklifi Guncelle' : 'Teklifi Kaydet'),
+              label: Text(_isEdit ? 'Teklifi Güncelle' : 'Teklifi Kaydet'),
             ),
           ],
         ),
@@ -961,7 +962,7 @@ class _QuoteItemCard extends StatelessWidget {
                 controller: row.descCtrl,
                 maxLines: 2,
                 decoration: const InputDecoration(
-                  labelText: 'Urun / Hizmet Adi',
+                  labelText: 'Ürün / Hizmet Adı',
                   alignLabelWithHint: true,
                   prefixIcon: Icon(Icons.inventory_2_outlined),
                 ),
@@ -1021,7 +1022,7 @@ class _QuoteItemCard extends StatelessWidget {
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Kayitli urun yok. Kalemi manuel girebilir veya once urun ekleyebilirsiniz.',
+                'Kayıtlı ürün yok. Kalemi manuel girebilir veya önce ürün ekleyebilirsiniz.',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppTheme.textMedium,
@@ -1039,7 +1040,7 @@ class _QuoteItemCard extends StatelessWidget {
       initialValue: row.selectedProductId,
       isExpanded: true,
       decoration: const InputDecoration(
-        labelText: 'Kayitli Urun',
+        labelText: 'Kayıtlı Ürün',
         prefixIcon: Icon(Icons.inventory_2_outlined),
       ),
       items: [
@@ -1274,8 +1275,7 @@ class _ItemRow {
       double.tryParse(vatCtrl.text.replaceAll(',', '.')) ?? 20;
   double get totalPriceUsd => quantity * unitPriceUsd * (1 + (vatRate / 100));
   double unitPriceTry(double exchangeRate) => unitPriceUsd * exchangeRate;
-  double totalPriceTry(double exchangeRate) =>
-      totalPriceUsd * exchangeRate;
+  double totalPriceTry(double exchangeRate) => totalPriceUsd * exchangeRate;
 
   void dispose() {
     codeCtrl.dispose();

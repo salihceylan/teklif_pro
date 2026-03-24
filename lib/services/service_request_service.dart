@@ -13,8 +13,10 @@ class ServiceRequestService {
   }
 
   Future<ServiceRequest> update(int id, Map<String, dynamic> data) async {
-    final res =
-        await ApiClient.instance.put('/service-requests/$id', data: data);
+    final res = await ApiClient.instance.put(
+      '/service-requests/$id',
+      data: data,
+    );
     return ServiceRequest.fromJson(res.data);
   }
 

@@ -22,18 +22,18 @@ class ServiceRequest {
   });
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) => ServiceRequest(
-        id: json['id'],
-        customerId: json['customer_id'],
-        title: json['title'],
-        description: json['description'],
-        status: json['status'],
-        priority: json['priority'] ?? 'normal',
-        location: json['location'],
-        scheduledDate: json['scheduled_date'] != null
-            ? DateTime.parse(json['scheduled_date'])
-            : null,
-        createdAt: DateTime.parse(json['created_at']),
-      );
+    id: json['id'],
+    customerId: json['customer_id'],
+    title: json['title'],
+    description: json['description'],
+    status: json['status'],
+    priority: json['priority'] ?? 'normal',
+    location: json['location'],
+    scheduledDate: json['scheduled_date'] != null
+        ? DateTime.parse(json['scheduled_date'])
+        : null,
+    createdAt: DateTime.parse(json['created_at']),
+  );
 
   static const Map<String, String> statusLabels = {
     'new': 'Yeni',

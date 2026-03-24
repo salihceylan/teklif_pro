@@ -80,10 +80,10 @@ class AppDrawer extends StatelessWidget {
                   route: '/',
                   currentRoute: currentRoute,
                 ),
-                const _DrawerDivider(label: 'IS YONETIMI'),
+                const _DrawerDivider(label: 'İŞ YÖNETİMİ'),
                 _DrawerItem(
                   icon: Icons.inventory_2_outlined,
-                  label: 'Urunler',
+                  label: 'Ürünler',
                   route: '/products',
                   currentRoute: currentRoute,
                 ),
@@ -107,7 +107,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _DrawerItem(
                   icon: Icons.calendar_month_outlined,
-                  label: 'Servis Formlari',
+                  label: 'Servis Formları',
                   route: '/visits',
                   currentRoute: currentRoute,
                 ),
@@ -117,7 +117,7 @@ class AppDrawer extends StatelessWidget {
                   route: '/invoices',
                   currentRoute: currentRoute,
                 ),
-                const _DrawerDivider(label: 'TERCIHLER'),
+                const _DrawerDivider(label: 'TERCİHLER'),
                 _DrawerItem(
                   icon: Icons.notifications_outlined,
                   label: 'Bildirimler',
@@ -143,7 +143,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             title: const Text(
-              'Cikis Yap',
+              'Çıkış Yap',
               style: TextStyle(
                 color: Color(0xFFEF4444),
                 fontWeight: FontWeight.w600,

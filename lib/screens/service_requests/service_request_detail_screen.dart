@@ -43,7 +43,7 @@ class _ServiceRequestDetailScreenState
 
   String _customerName(List<dynamic> customers, int id) =>
       customers.where((item) => item.id == id).firstOrNull?.companyName ??
-      'Musteri #$id';
+      'Müşteri #$id';
 
   void _goBack() {
     if (Navigator.of(context).canPop()) {
@@ -81,11 +81,11 @@ class _ServiceRequestDetailScreenState
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Talep Bulunamadi'),
+          title: const Text('Talep Bulunamadı'),
         ),
         body: const Center(
           child: Text(
-            'Servis talebi bulunamadi',
+            'Servis talebi bulunamadı',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -107,7 +107,7 @@ class _ServiceRequestDetailScreenState
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(
@@ -130,7 +130,7 @@ class _ServiceRequestDetailScreenState
             icon: Icons.handyman_outlined,
             title: request.title,
             subtitle:
-                '${_customerName(customerProvider.items, request.customerId)} icin acilan servis talebi',
+                '${_customerName(customerProvider.items, request.customerId)} için açılan servis talebi',
           ),
           const SizedBox(height: 20),
           AppSectionCard(
@@ -142,14 +142,14 @@ class _ServiceRequestDetailScreenState
                 minItemWidth: 220,
                 children: [
                   _InfoPanel(
-                    label: 'Musteri',
+                    label: 'Müşteri',
                     value: _customerName(
                       customerProvider.items,
                       request.customerId,
                     ),
                   ),
                   _InfoPanel(label: 'Durum', value: request.statusLabel),
-                  _InfoPanel(label: 'Oncelik', value: request.priority),
+                  _InfoPanel(label: 'Öncelik', value: request.priority),
                   _InfoPanel(
                     label: 'Planlanan Tarih',
                     value: request.scheduledDate == null
@@ -161,7 +161,7 @@ class _ServiceRequestDetailScreenState
                   ),
                   _InfoPanel(label: 'Lokasyon', value: request.location ?? '-'),
                   _InfoPanel(
-                    label: 'Olusturma',
+                    label: 'Oluşturma',
                     value: DateFormat(
                       'dd.MM.yyyy',
                       'tr_TR',
@@ -169,7 +169,7 @@ class _ServiceRequestDetailScreenState
                   ),
                 ],
               ),
-              _DetailLine('Aciklama', request.description),
+              _DetailLine('Açıklama', request.description),
             ],
           ),
         ],

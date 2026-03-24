@@ -25,8 +25,8 @@ class QuoteProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.quoteLifecycle,
-      title: 'Yeni teklif hazirlandi',
-      body: '${q.title} icin ${q.quoteCode ?? 'yeni teklif'} olusturuldu.',
+      title: 'Yeni teklif hazırlandı',
+      body: '${q.title} için ${q.quoteCode ?? 'yeni teklif'} oluşturuldu.',
     );
   }
 
@@ -39,11 +39,11 @@ class QuoteProvider extends ChangeNotifier {
     await AppNotifications.instance.notify(
       AppNotificationTopic.quoteLifecycle,
       title: previous?.status != q.status
-          ? 'Teklif durumu guncellendi'
-          : 'Teklif guncellendi',
+          ? 'Teklif durumu güncellendi'
+          : 'Teklif güncellendi',
       body: previous?.status != q.status
           ? '${q.title} durumu ${q.statusLabel} oldu.'
-          : '${q.title} teklifi guncellendi.',
+          : '${q.title} teklifi güncellendi.',
     );
   }
 
@@ -68,8 +68,8 @@ class QuoteProvider extends ChangeNotifier {
     final quote = _items.where((e) => e.id == id).firstOrNull;
     await AppNotifications.instance.notify(
       AppNotificationTopic.quoteDelivery,
-      title: 'Teklif mail ile gonderildi',
-      body: '${quote?.title ?? 'Teklif'} belgesi $email adresine gonderildi.',
+      title: 'Teklif mail ile gönderildi',
+      body: '${quote?.title ?? 'Teklif'} belgesi $email adresine gönderildi.',
     );
   }
 }

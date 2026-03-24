@@ -25,8 +25,8 @@ class InvoiceProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.invoiceLifecycle,
-      title: 'Yeni fatura olusturuldu',
-      body: '${inv.invoiceNumber} numarali fatura kaydedildi.',
+      title: 'Yeni fatura oluşturuldu',
+      body: '${inv.invoiceNumber} numaralı fatura kaydedildi.',
     );
   }
 
@@ -36,8 +36,8 @@ class InvoiceProvider extends ChangeNotifier {
     notifyListeners();
     await AppNotifications.instance.notify(
       AppNotificationTopic.invoiceLifecycle,
-      title: 'Tekliften fatura olusturuldu',
-      body: '${inv.invoiceNumber} numarali fatura olusturuldu.',
+      title: 'Tekliften fatura oluşturuldu',
+      body: '${inv.invoiceNumber} numaralı fatura oluşturuldu.',
     );
   }
 
@@ -50,11 +50,11 @@ class InvoiceProvider extends ChangeNotifier {
     await AppNotifications.instance.notify(
       AppNotificationTopic.invoiceLifecycle,
       title: previous?.status != inv.status
-          ? 'Fatura durumu guncellendi'
-          : 'Fatura guncellendi',
+          ? 'Fatura durumu güncellendi'
+          : 'Fatura güncellendi',
       body: previous?.status != inv.status
           ? '${inv.invoiceNumber} durumu ${inv.statusLabel} oldu.'
-          : '${inv.invoiceNumber} numarali fatura guncellendi.',
+          : '${inv.invoiceNumber} numaralı fatura güncellendi.',
     );
   }
 

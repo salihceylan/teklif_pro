@@ -212,8 +212,8 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
   Widget _buildBasicHint() {
     final text = _hasReturnRoute
-        ? 'Sadece firma unvani ile kaydi acin. Kaydet dediginizde ilgili forma geri doneceksiniz.'
-        : 'Sadece firma unvani zorunlu. Diger alanlari daha sonra duzenleyebilirsiniz.';
+        ? 'Sadece firma unvanı ile kaydı açın. Kaydet dediğinizde ilgili forma geri döneceksiniz.'
+        : 'Sadece firma unvanı zorunlu. Diğer alanları daha sonra düzenleyebilirsiniz.';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -240,7 +240,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Hizli kayit modu',
+                  'Hızlı kayıt modu',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
@@ -283,7 +283,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         ),
         if (!_isEdit)
           const Text(
-            'Isterseniz simdilik sadece sirket adini kaydedebilirsiniz.',
+            'İsterseniz şimdilik sadece şirket adını kaydedebilirsiniz.',
             style: TextStyle(fontSize: 12, color: Color(0xFF607085)),
           ),
       ],
@@ -297,23 +297,23 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         : DateFormat('dd.MM.yyyy').format(_foundationDate!);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Firmayi Duzenle' : 'Yeni Firma')),
+      appBar: AppBar(title: Text(_isEdit ? 'Firmayı Düzenle' : 'Yeni Firma')),
       body: Form(
         key: _formKey,
         child: AppScrollableBody(
           maxWidth: 1080,
           children: [
             AppPageIntro(
-              badge: _isEdit ? 'Firma Profili' : 'Hizli Sirket Kaydi',
+              badge: _isEdit ? 'Firma Profili' : 'Hızlı Şirket Kaydı',
               icon: _isEdit
                   ? Icons.apartment_outlined
                   : Icons.add_business_outlined,
               title: _isEdit
-                  ? 'Sirket profilini guncelleyin'
-                  : 'Sadece sirket adiyla kayit acin',
+                  ? 'Şirket profilini güncelleyin'
+                  : 'Sadece şirket adıyla kayıt açın',
               subtitle: _isEdit
                   ? 'Iletisim, vergi ve sektor bilgilerini istediginiz zaman guncelleyebilirsiniz.'
-                  : 'Ilk adimda sadece sirket unvani zorunlu. Diger bilgileri ister simdi, ister daha sonra duzenleyin.',
+                  : 'İlk adımda sadece şirket unvanı zorunlu. Diğer bilgileri ister şimdi, ister daha sonra düzenleyin.',
               trailing: _currentCustomer?.customerCode == null
                   ? null
                   : _CodeBadge(
@@ -324,20 +324,20 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.apartment_outlined,
-              title: 'Temel Kayit',
+              title: 'Temel Kayıt',
               description:
-                  'Teklif ve servis formlarinda kullanilacak firma adini kaydedin.',
+                  'Teklif ve servis formlarında kullanılacak firma adını kaydedin.',
               children: [
                 TextFormField(
                   controller: _companyCtrl,
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
-                    labelText: 'Sirket Unvani',
+                    labelText: 'Şirket Unvanı',
                     hintText: 'Orn. Gude Teknoloji',
                     prefixIcon: Icon(Icons.business_outlined),
                   ),
                   validator: (value) => value == null || value.trim().isEmpty
-                      ? 'Sirket unvani zorunlu'
+                      ? 'Şirket unvanı zorunlu'
                       : null,
                 ),
                 if (!_showAdvancedSections) _buildBasicHint(),
@@ -350,7 +350,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                 icon: Icons.contact_phone_outlined,
                 title: 'Iletisim Bilgileri',
                 description:
-                    'Yetkili kisi ve iletisim alanlari opsiyoneldir. Sonradan da guncellenebilir.',
+                    'Yetkili kişi ve iletişim alanları opsiyoneldir. Sonradan da güncellenebilir.',
                 children: [
                   AdaptiveFieldRow(
                     maxColumns: 2,
@@ -360,7 +360,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         controller: _contactCtrl,
                         textCapitalization: TextCapitalization.words,
                         decoration: const InputDecoration(
-                          labelText: 'Yetkili Kisi',
+                          labelText: 'Yetkili Kişi',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
                       ),
@@ -432,11 +432,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         ),
                       ),
                       AppDatePickerField(
-                        label: 'Kurulus Tarihi',
+                        label: 'Kuruluş Tarihi',
                         icon: Icons.event_outlined,
                         value: dateLabel,
                         onTap: _pickFoundationDate,
-                        placeholder: 'Tarih secin',
+                        placeholder: 'Tarih seçin',
                       ),
                     ],
                   ),
@@ -472,7 +472,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _hibCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'HiB Uye No',
+                          labelText: 'HİB Üye No',
                           prefixIcon: Icon(Icons.verified_outlined),
                         ),
                       ),
@@ -483,9 +483,9 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               const SizedBox(height: 20),
               AppSectionCard(
                 icon: Icons.location_on_outlined,
-                title: 'Adres ve Sektor Bilgileri',
+                title: 'Adres ve Sektör Bilgileri',
                 description:
-                    'Adres, faaliyet alani ve sektor verilerini dilediginizde ekleyin.',
+                    'Adres, faaliyet alanı ve sektör verilerini dilediğinizde ekleyin.',
                 children: [
                   AdaptiveFieldRow(
                     maxColumns: 2,
@@ -516,7 +516,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _exporterCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Ihracatci Birlikleri',
+                          labelText: 'İhracatçı Birlikleri',
                           prefixIcon: Icon(Icons.public_outlined),
                         ),
                       ),
@@ -550,14 +550,14 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _subSectorCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Alt Sektor',
+                          labelText: 'Alt Sektör',
                           prefixIcon: Icon(Icons.hub_outlined),
                         ),
                       ),
                       TextFormField(
                         controller: _solutionCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Sunulan Cozum',
+                          labelText: 'Sunulan Çözüm',
                           prefixIcon: Icon(Icons.inventory_2_outlined),
                         ),
                       ),
@@ -579,14 +579,14 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _targetCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Hedef Musteri Grubu',
+                          labelText: 'Hedef Müşteri Grubu',
                           prefixIcon: Icon(Icons.groups_outlined),
                         ),
                       ),
                       TextFormField(
                         controller: _salesChannelCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Satis Kanali / Platform',
+                          labelText: 'Satış Kanalı / Platform',
                           prefixIcon: Icon(Icons.storefront_outlined),
                         ),
                       ),
@@ -621,7 +621,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                           ? Icons.save_outlined
                           : Icons.add_business_outlined,
                     ),
-              label: Text(_isEdit ? 'Firmayi Guncelle' : 'Firmayi Kaydet'),
+              label: Text(_isEdit ? 'Firmayı Güncelle' : 'Firmayı Kaydet'),
             ),
           ],
         ),

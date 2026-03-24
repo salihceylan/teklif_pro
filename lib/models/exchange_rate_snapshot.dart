@@ -21,7 +21,8 @@ class ExchangeRateSnapshot {
         rateDate: DateTime.parse(
           (json['rate_date'] ?? json['exchange_rate_date']) as String,
         ),
-        source: (json['source'] ?? json['exchange_rate_source'] ?? 'TCMB')
-            as String,
+        source:
+            (json['source'] ?? json['exchange_rate_source'] ?? 'TCMB')
+                as String,
       );
 }

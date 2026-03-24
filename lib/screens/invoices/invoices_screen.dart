@@ -48,7 +48,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           : prov.items.isEmpty
           ? _EmptyState(
               icon: Icons.receipt_long_outlined,
-              message: 'Henuz fatura olusturulmadi',
+              message: 'Henüz fatura oluşturulmadı',
               actionLabel: 'Fatura Ekle',
               onAction: () => context.go('/invoices/new'),
             )
@@ -154,18 +154,18 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
           value: 'show',
           child: ActionMenuRow(
             icon: Icons.visibility_outlined,
-            label: 'Faturayi Goster',
+            label: 'Faturayı Göster',
           ),
         ),
         PopupMenuItem(
           value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
         ),
         PopupMenuItem(
           value: 'paid',
           child: ActionMenuRow(
             icon: Icons.check_circle_outlined,
-            label: 'Odendi Isaretle',
+            label: 'Ödendi İşaretle',
             color: Color(0xFF10B981),
           ),
         ),
