@@ -23,6 +23,35 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 
+  void _confirmDelete(BuildContext context, int id) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Firmayı Sil'),
+        content: const Text(
+          'Bu firma kaydını silmek istediğinizden emin misiniz?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<CustomerProvider>().delete(id);
+            },
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CustomerProvider>();
@@ -55,8 +84,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   return Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
-                      onTapDown: (details) =>
-                          _showCustomerMenu(details, customer.id),
+                      onTap: () => context.push('/customers/${customer.id}'),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -143,6 +171,43 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                 ],
                               ),
                             ),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert_rounded),
+                              tooltip: 'Firma işlemleri',
+                              onSelected: (selected) {
+                                if (selected == 'show') {
+                                  context.push('/customers/${customer.id}');
+                                } else if (selected == 'edit') {
+                                  context.go('/customers/${customer.id}/edit');
+                                } else if (selected == 'delete') {
+                                  _confirmDelete(context, customer.id);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'show',
+                                  child: ActionMenuRow(
+                                    icon: Icons.visibility_outlined,
+                                    label: 'Firmayı Göster',
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: ActionMenuRow(
+                                    icon: Icons.edit_outlined,
+                                    label: 'Düzenle',
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: ActionMenuRow(
+                                    icon: Icons.delete_outline,
+                                    label: 'Sil',
+                                    color: Color(0xFFEF4444),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -151,82 +216,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 },
               ),
             ),
-    );
-  }
-
-  Future<void> _showCustomerMenu(TapDownDetails details, int customerId) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(
-          value: 'show',
-          child: ActionMenuRow(
-            icon: Icons.visibility_outlined,
-            label: 'Firmayı Göster',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ActionMenuRow(
-            icon: Icons.delete_outline,
-            label: 'Sil',
-            color: Color(0xFFEF4444),
-          ),
-        ),
-      ],
-    );
-
-    if (!mounted || selected == null) return;
-
-    if (selected == 'show') {
-      context.push('/customers/$customerId');
-    } else if (selected == 'edit') {
-      context.go('/customers/$customerId/edit');
-    } else if (selected == 'delete') {
-      _confirmDelete(context, customerId);
-    }
-  }
-
-  void _confirmDelete(BuildContext context, int id) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Firmayı Sil'),
-        content: const Text(
-          'Bu firma kaydını silmek istediğinizden emin misiniz?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<CustomerProvider>().delete(id);
-            },
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
     );
   }
 }

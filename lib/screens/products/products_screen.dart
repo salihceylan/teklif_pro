@@ -28,53 +28,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
-  Future<void> _showProductMenu(TapDownDetails details, Product product) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(
-          value: 'show',
-          child: ActionMenuRow(
-            icon: Icons.visibility_outlined,
-            label: 'Ürünü Göster',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ActionMenuRow(
-            icon: Icons.delete_outline,
-            label: 'Sil',
-            color: Color(0xFFEF4444),
-          ),
-        ),
-      ],
-    );
-
-    if (!mounted || selected == null) return;
-
-    if (selected == 'show') {
-      context.push('/products/${product.id}');
-    } else if (selected == 'edit') {
-      context.go('/products/${product.id}/edit');
-    } else if (selected == 'delete') {
-      _confirmDelete(product);
-    }
-  }
-
   void _confirmDelete(Product product) {
     showDialog(
       context: context,
@@ -138,8 +91,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   return Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
-                      onTapDown: (details) =>
-                          _showProductMenu(details, product),
+                      onTap: () => context.push('/products/${product.id}'),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -234,10 +186,49 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                  tooltip: 'Ürün işlemleri',
+                                  onSelected: (selected) {
+                                    if (selected == 'show') {
+                                      context.push('/products/${product.id}');
+                                    } else if (selected == 'edit') {
+                                      context.go(
+                                        '/products/${product.id}/edit',
+                                      );
+                                    } else if (selected == 'delete') {
+                                      _confirmDelete(product);
+                                    }
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'show',
+                                      child: ActionMenuRow(
+                                        icon: Icons.visibility_outlined,
+                                        label: 'Ürünü Göster',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ActionMenuRow(
+                                        icon: Icons.edit_outlined,
+                                        label: 'Düzenle',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ActionMenuRow(
+                                        icon: Icons.delete_outline,
+                                        label: 'Sil',
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 _StatusBadge(
                                   label: product.isActive ? 'Aktif' : 'Pasif',
                                   color: product.isActive

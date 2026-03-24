@@ -17,7 +17,7 @@ class InvoicesScreen extends StatefulWidget {
 }
 
 class _InvoicesScreenState extends State<InvoicesScreen> {
-  final _fmt = NumberFormat('#,##0.00', 'tr_TR');
+  final _currency = NumberFormat('#,##0.00', 'tr_TR');
 
   @override
   void initState() {
@@ -30,22 +30,24 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<InvoiceProvider>();
+    final provider = context.watch<InvoiceProvider>();
     final customers = context.watch<CustomerProvider>().items;
 
     String customerName(int id) =>
-        customers.where((c) => c.id == id).firstOrNull?.fullName ?? '#$id';
+        customers.where((item) => item.id == id).firstOrNull?.companyName ??
+        '#$id';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Faturalar')),
       drawer: const AppDrawer(currentRoute: '/invoices'),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/invoices/new'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.receipt_long_outlined),
+        label: const Text('Yeni Fatura'),
       ),
-      body: prov.loading
+      body: provider.loading
           ? const Center(child: CircularProgressIndicator())
-          : prov.items.isEmpty
+          : provider.items.isEmpty
           ? _EmptyState(
               icon: Icons.receipt_long_outlined,
               message: 'Henüz fatura oluşturulmadı',
@@ -53,37 +55,37 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               onAction: () => context.go('/invoices/new'),
             )
           : RefreshIndicator(
-              onRefresh: prov.load,
+              onRefresh: provider.load,
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
-                itemCount: prov.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (ctx, i) {
-                  final invoice = prov.items[i];
+                itemCount: provider.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final invoice = provider.items[index];
                   final color = AppTheme.statusColor(invoice.status);
+
                   return Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTapDown: (details) =>
-                          _showInvoiceMenu(details, invoice.id),
+                      onTap: () => context.push('/invoices/${invoice.id}'),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: 44,
-                              height: 44,
+                              width: 52,
+                              height: 52,
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
                                 Icons.receipt_long_outlined,
                                 color: color,
-                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,29 +93,27 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                                   Text(
                                     invoice.title,
                                     style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
                                       color: AppTheme.textDark,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 6),
                                   Text(
-                                    '${invoice.invoiceNumber}  •  ${customerName(invoice.customerId)}',
+                                    '${invoice.invoiceNumber} • ${customerName(invoice.customerId)}',
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 13,
                                       color: AppTheme.textMedium,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    '${_fmt.format(invoice.totalAmount)} ₺',
+                                    '${_currency.format(invoice.totalAmount)} ₺',
                                     style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
                                       color: color,
                                     ),
                                   ),
@@ -121,9 +121,67 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _StatusBadge(
-                              label: invoice.statusLabel,
-                              color: color,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                  tooltip: 'Fatura işlemleri',
+                                  onSelected: (selected) async {
+                                    final invoices = context
+                                        .read<InvoiceProvider>();
+                                    if (selected == 'show') {
+                                      context.push('/invoices/${invoice.id}');
+                                    } else if (selected == 'edit') {
+                                      context.go(
+                                        '/invoices/${invoice.id}/edit',
+                                      );
+                                    } else if (selected == 'paid') {
+                                      await invoices.update(invoice.id, {
+                                        'status': 'paid',
+                                      });
+                                    } else if (selected == 'delete') {
+                                      await invoices.delete(invoice.id);
+                                    }
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'show',
+                                      child: ActionMenuRow(
+                                        icon: Icons.visibility_outlined,
+                                        label: 'Faturayı Göster',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ActionMenuRow(
+                                        icon: Icons.edit_outlined,
+                                        label: 'Düzenle',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'paid',
+                                      child: ActionMenuRow(
+                                        icon: Icons.check_circle_outlined,
+                                        label: 'Ödendi İşaretle',
+                                        color: Color(0xFF10B981),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ActionMenuRow(
+                                        icon: Icons.delete_outline,
+                                        label: 'Sil',
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                _StatusBadge(
+                                  label: invoice.statusLabel,
+                                  color: color,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -134,64 +192,6 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               ),
             ),
     );
-  }
-
-  Future<void> _showInvoiceMenu(TapDownDetails details, int invoiceId) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(
-          value: 'show',
-          child: ActionMenuRow(
-            icon: Icons.visibility_outlined,
-            label: 'Faturayı Göster',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
-        ),
-        PopupMenuItem(
-          value: 'paid',
-          child: ActionMenuRow(
-            icon: Icons.check_circle_outlined,
-            label: 'Ödendi İşaretle',
-            color: Color(0xFF10B981),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ActionMenuRow(
-            icon: Icons.delete_outline,
-            label: 'Sil',
-            color: Color(0xFFEF4444),
-          ),
-        ),
-      ],
-    );
-
-    if (!mounted || selected == null) return;
-
-    final prov = context.read<InvoiceProvider>();
-    if (selected == 'show') {
-      context.push('/invoices/$invoiceId');
-    } else if (selected == 'edit') {
-      context.go('/invoices/$invoiceId/edit');
-    } else if (selected == 'paid') {
-      await prov.update(invoiceId, {'status': 'paid'});
-    } else if (selected == 'delete') {
-      await prov.delete(invoiceId);
-    }
   }
 }
 

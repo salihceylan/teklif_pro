@@ -91,6 +91,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         title: Text(product.name),
         actions: [
           PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Ürün işlemleri',
             onSelected: (value) => _handleMenuAction(value, product),
             itemBuilder: (_) => const [
               PopupMenuItem(

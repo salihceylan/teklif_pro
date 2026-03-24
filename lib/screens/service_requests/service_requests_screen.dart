@@ -27,22 +27,24 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<ServiceRequestProvider>();
+    final provider = context.watch<ServiceRequestProvider>();
     final customers = context.watch<CustomerProvider>().items;
 
     String customerName(int id) =>
-        customers.where((c) => c.id == id).firstOrNull?.fullName ?? '#$id';
+        customers.where((item) => item.id == id).firstOrNull?.companyName ??
+        '#$id';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Servis Talepleri')),
       drawer: const AppDrawer(currentRoute: '/service-requests'),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/service-requests/new'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.build_outlined),
+        label: const Text('Yeni Talep'),
       ),
-      body: prov.loading
+      body: provider.loading
           ? const Center(child: CircularProgressIndicator())
-          : prov.items.isEmpty
+          : provider.items.isEmpty
           ? _EmptyState(
               icon: Icons.build_circle_outlined,
               message: 'Henüz servis talebi yok',
@@ -50,37 +52,35 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
               onAction: () => context.go('/service-requests/new'),
             )
           : RefreshIndicator(
-              onRefresh: prov.load,
+              onRefresh: provider.load,
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
-                itemCount: prov.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (ctx, i) {
-                  final request = prov.items[i];
+                itemCount: provider.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final request = provider.items[index];
                   final color = AppTheme.statusColor(request.status);
+
                   return Card(
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTapDown: (details) =>
-                          _showRequestMenu(details, request.id),
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () =>
+                          context.push('/service-requests/${request.id}'),
                       child: Padding(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              width: 44,
-                              height: 44,
+                              width: 52,
+                              height: 52,
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Icon(
-                                Icons.build_outlined,
-                                color: color,
-                                size: 20,
-                              ),
+                              child: Icon(Icons.build_outlined, color: color),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,28 +88,90 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
                                   Text(
                                     request.title,
                                     style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
                                       color: AppTheme.textDark,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 6),
                                   Text(
                                     customerName(request.customerId),
                                     style: const TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 13,
                                       color: AppTheme.textMedium,
                                     ),
                                   ),
+                                  if ((request.description ?? '')
+                                      .trim()
+                                      .isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: Text(
+                                        request.description!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textLight,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _StatusBadge(
-                              label: request.statusLabel,
-                              color: color,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                  tooltip: 'Talep işlemleri',
+                                  onSelected: (selected) async {
+                                    if (selected == 'show') {
+                                      context.push(
+                                        '/service-requests/${request.id}',
+                                      );
+                                    } else if (selected == 'edit') {
+                                      context.go(
+                                        '/service-requests/${request.id}/edit',
+                                      );
+                                    } else if (selected == 'delete') {
+                                      await context
+                                          .read<ServiceRequestProvider>()
+                                          .delete(request.id);
+                                    }
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'show',
+                                      child: ActionMenuRow(
+                                        icon: Icons.visibility_outlined,
+                                        label: 'Talebi Göster',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ActionMenuRow(
+                                        icon: Icons.edit_outlined,
+                                        label: 'Düzenle',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ActionMenuRow(
+                                        icon: Icons.delete_outline,
+                                        label: 'Sil',
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                _StatusBadge(
+                                  label: request.statusLabel,
+                                  color: color,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -120,53 +182,6 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
               ),
             ),
     );
-  }
-
-  Future<void> _showRequestMenu(TapDownDetails details, int requestId) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(
-          value: 'show',
-          child: ActionMenuRow(
-            icon: Icons.visibility_outlined,
-            label: 'Talebi Göster',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ActionMenuRow(
-            icon: Icons.delete_outline,
-            label: 'Sil',
-            color: Color(0xFFEF4444),
-          ),
-        ),
-      ],
-    );
-
-    if (!mounted || selected == null) return;
-
-    if (selected == 'show') {
-      context.push('/service-requests/$requestId');
-    } else if (selected == 'edit') {
-      context.go('/service-requests/$requestId/edit');
-    } else if (selected == 'delete') {
-      await context.read<ServiceRequestProvider>().delete(requestId);
-    }
   }
 }
 

@@ -77,78 +77,6 @@ class _QuotesScreenState extends State<QuotesScreen> {
     }
   }
 
-  Future<void> _showQuoteMenu(
-    BuildContext context, {
-    required TapDownDetails details,
-    required Quote quote,
-    required Customer? customer,
-  }) async {
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final selected = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromRect(
-        Rect.fromLTWH(
-          details.globalPosition.dx,
-          details.globalPosition.dy,
-          0,
-          0,
-        ),
-        Offset.zero & overlay.size,
-      ),
-      items: const [
-        PopupMenuItem(
-          value: 'show',
-          child: ActionMenuRow(
-            icon: Icons.visibility_outlined,
-            label: 'Teklifi Göster',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'print',
-          child: ActionMenuRow(
-            icon: Icons.print_outlined,
-            label: 'Teklif Çıktısı',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'mail',
-          child: ActionMenuRow(
-            icon: Icons.email_outlined,
-            label: 'Mail Gönder',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'edit',
-          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Düzenle'),
-        ),
-        PopupMenuItem(
-          value: 'invoice',
-          child: ActionMenuRow(
-            icon: Icons.receipt_long_outlined,
-            label: 'Fatura Oluştur',
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: ActionMenuRow(
-            icon: Icons.delete_outline,
-            label: 'Sil',
-            color: Color(0xFFEF4444),
-          ),
-        ),
-      ],
-    );
-
-    if (selected != null && context.mounted) {
-      await _handleMenuAction(
-        context,
-        value: selected,
-        quote: quote,
-        customer: customer,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final quotes = context.watch<QuoteProvider>();
@@ -185,12 +113,7 @@ class _QuotesScreenState extends State<QuotesScreen> {
                   return Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
-                      onTapDown: (details) => _showQuoteMenu(
-                        context,
-                        details: details,
-                        quote: quote,
-                        customer: customer,
-                      ),
+                      onTap: () => context.push('/quotes/${quote.id}'),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -274,10 +197,70 @@ class _QuotesScreenState extends State<QuotesScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            _StatusBadge(
-                              label: quote.statusLabel,
-                              color: color,
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert_rounded),
+                                  tooltip: 'Teklif işlemleri',
+                                  onSelected: (selected) => _handleMenuAction(
+                                    context,
+                                    value: selected,
+                                    quote: quote,
+                                    customer: customer,
+                                  ),
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'show',
+                                      child: ActionMenuRow(
+                                        icon: Icons.visibility_outlined,
+                                        label: 'Teklifi Göster',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'print',
+                                      child: ActionMenuRow(
+                                        icon: Icons.print_outlined,
+                                        label: 'Teklif Çıktısı',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'mail',
+                                      child: ActionMenuRow(
+                                        icon: Icons.email_outlined,
+                                        label: 'Mail Gönder',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ActionMenuRow(
+                                        icon: Icons.edit_outlined,
+                                        label: 'Düzenle',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'invoice',
+                                      child: ActionMenuRow(
+                                        icon: Icons.receipt_long_outlined,
+                                        label: 'Fatura Oluştur',
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: ActionMenuRow(
+                                        icon: Icons.delete_outline,
+                                        label: 'Sil',
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                _StatusBadge(
+                                  label: quote.statusLabel,
+                                  color: color,
+                                ),
+                              ],
                             ),
                           ],
                         ),
