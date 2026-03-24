@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/app_theme.dart';
 import '../../core/branding.dart';
 import '../widgets/app_shell.dart';
+import 'widgets/contact_map_embed.dart';
 
 class CompanyHomeScreen extends StatefulWidget {
   const CompanyHomeScreen({super.key});
@@ -786,7 +787,7 @@ class _ContactSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Güde Teknoloji için kurumsal giriş noktası hazır.',
+            'İletişim ve konum bilgileri',
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w800,
@@ -796,7 +797,7 @@ class _ContactSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Bu yapı ile ziyaretçiler önce şirketinizi tanır, ardından ihtiyaç duyduklarında Teklif Pro girişine yönlendirilir. Bu ayrım hem daha profesyonel hem de marka açısından daha doğrudur.',
+            'Ziyaretçiler Güde Teknoloji ile hızlıca iletişime geçebilsin diye adres, telefon ve Google konum görünümünü aynı bölümde topladık.',
             style: TextStyle(
               fontSize: 14,
               height: 1.6,
@@ -804,28 +805,120 @@ class _ContactSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const AdaptiveFieldRow(
-            maxColumns: 3,
-            minItemWidth: 220,
-            children: [
-              _ContactCard(
-                icon: Icons.web_asset_outlined,
-                title: 'Kurumsal Sunum',
-                detail:
-                    'Şirket hizmetlerini ve dijital yüzünü sergileyen anasayfa',
-              ),
-              _ContactCard(
-                icon: Icons.lock_open_outlined,
-                title: 'Ürün Girişi',
-                detail: 'Teklif Pro için üst sağ buton ile ayrı erişim akışı',
-              ),
-              _ContactCard(
-                icon: Icons.phone_iphone_outlined,
-                title: 'Mobil Uyum',
-                detail:
-                    'Tüm bölümler mobilde bozulmadan okunacak şekilde kurgulandı',
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 920;
+              final infoColumn = Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: const [
+                  _ContactCard(
+                    icon: Icons.location_on_outlined,
+                    title: 'Adres',
+                    detail: Branding.companyAddress,
+                  ),
+                  SizedBox(height: 12),
+                  _ContactCard(
+                    icon: Icons.phone_in_talk_outlined,
+                    title: 'Telefon',
+                    detail: Branding.companyPhoneDisplay,
+                  ),
+                  SizedBox(height: 12),
+                  _ContactCard(
+                    icon: Icons.language_outlined,
+                    title: 'Web',
+                    detail: Branding.website,
+                  ),
+                ],
+              );
+
+              final mapPanel = Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.map_outlined,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Google Konumu',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                Branding.companyDistrict,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withValues(alpha: 0.78),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: const ContactMapEmbed(height: 320),
+                    ),
+                    const SizedBox(height: 14),
+                    const _ContactMetaLine(
+                      icon: Icons.place_outlined,
+                      text: Branding.companyAddress,
+                    ),
+                    const SizedBox(height: 8),
+                    const _ContactMetaLine(
+                      icon: Icons.call_outlined,
+                      text: Branding.companyPhoneDisplay,
+                    ),
+                  ],
+                ),
+              );
+
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [infoColumn, const SizedBox(height: 18), mapPanel],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 9, child: infoColumn),
+                  const SizedBox(width: 18),
+                  Expanded(flex: 13, child: mapPanel),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           Wrap(
@@ -911,13 +1004,37 @@ class _Footer extends StatelessWidget {
             runSpacing: 12,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Text(
-                'Güde Teknoloji',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textDark,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    Branding.companyName,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    Branding.companyPhoneDisplay,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textMedium,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    Branding.companyDistrict,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
               OutlinedButton(
                 onPressed: onLoginTap,
@@ -1715,6 +1832,35 @@ class _ContactCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ContactMetaLine extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _ContactMetaLine({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.white, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: Colors.white.withValues(alpha: 0.84),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

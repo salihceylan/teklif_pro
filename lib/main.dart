@@ -46,7 +46,7 @@ class TeklifProApp extends StatelessWidget {
             routerConfig: router,
             builder: (context, child) => Stack(
               fit: StackFit.expand,
-              children: [if (child != null) child, const _WebFontBootstrap()],
+              children: [child ?? const SizedBox.shrink(), const _WebFontBootstrap()],
             ),
           );
         },
