@@ -163,10 +163,29 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     value: visit.technicianName ?? '-',
                   ),
                   _InfoPanel(
-                    label: 'Toplam',
+                    label: 'Toplam TL',
                     value: '${_currency.format(visit.grandTotal)} ₺',
                   ),
                   _InfoPanel(label: 'KDV Orani', value: '%${visit.vatRate}'),
+                  _InfoPanel(
+                    label: 'Toplam USD',
+                    value: '${_currency.format(visit.grandTotalUsd)} USD',
+                  ),
+                  _InfoPanel(
+                    label: 'TCMB USD/TRY',
+                    value: visit.hasExchangeRate
+                        ? _currency.format(visit.exchangeRate!)
+                        : '-',
+                  ),
+                  _InfoPanel(
+                    label: 'Kur Tarihi',
+                    value: visit.exchangeRateDate == null
+                        ? '-'
+                        : DateFormat(
+                            'dd.MM.yyyy',
+                            'tr_TR',
+                          ).format(visit.exchangeRateDate!),
+                  ),
                 ],
               ),
               _DetailLine('Sikayet / Talep', visit.complaint),
@@ -204,10 +223,13 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                           _MiniPill('Kod ${item.productCode ?? '-'}'),
                           _MiniPill('Adet ${item.quantity}'),
                           _MiniPill(
-                            'Birim ${_currency.format(item.unitPrice)} ₺',
+                            'Birim ${_currency.format(item.unitPriceUsd)} USD',
                           ),
                           _MiniPill(
-                            'Toplam ${_currency.format(item.totalPrice)} ₺',
+                            'Toplam ${_currency.format(item.totalPriceUsd)} USD',
+                          ),
+                          _MiniPill(
+                            'TL Karsilik ${_currency.format(item.totalPrice)} ₺',
                           ),
                         ],
                       ),
@@ -223,16 +245,39 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                 child: Column(
                   children: [
                     _SummaryRow(
-                      'Malzeme',
-                      _currency.format(visit.materialTotal),
+                      'Malzeme (USD)',
+                      '${_currency.format(visit.materialTotalUsd)} USD',
                     ),
                     const SizedBox(height: 8),
-                    _SummaryRow('Iscilik', _currency.format(visit.laborAmount)),
+                    _SummaryRow(
+                      'Malzeme (TL)',
+                      '${_currency.format(visit.materialTotal)} ₺',
+                    ),
                     const SizedBox(height: 8),
-                    _SummaryRow('KDV', _currency.format(visit.vatTotal)),
+                    _SummaryRow(
+                      'Iscilik (USD)',
+                      '${_currency.format(visit.laborAmountUsd)} USD',
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow(
+                      'Iscilik (TL)',
+                      '${_currency.format(visit.laborAmount)} ₺',
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow(
+                      'KDV (USD)',
+                      '${_currency.format(visit.vatTotalUsd)} USD',
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow('KDV (TL)', '${_currency.format(visit.vatTotal)} ₺'),
                     const Divider(height: 24),
                     _SummaryRow(
-                      'Genel Toplam',
+                      'Genel Toplam (USD)',
+                      '${_currency.format(visit.grandTotalUsd)} USD',
+                    ),
+                    const Divider(height: 24),
+                    _SummaryRow(
+                      'Genel Toplam (TL)',
                       '${_currency.format(visit.grandTotal)} ₺',
                       highlighted: true,
                     ),

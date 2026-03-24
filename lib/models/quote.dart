@@ -4,8 +4,10 @@ class QuoteItem {
   final String description;
   final double quantity;
   final String unit;
+  final double unitPriceUsd;
   final double unitPrice;
   final double vatRate;
+  final double totalPriceUsd;
   final double totalPrice;
 
   const QuoteItem({
@@ -14,13 +16,17 @@ class QuoteItem {
     required this.description,
     required this.quantity,
     required this.unit,
+    required this.unitPriceUsd,
     required this.unitPrice,
     required this.vatRate,
+    required this.totalPriceUsd,
     required this.totalPrice,
   });
 
   double get subtotal => quantity * unitPrice;
+  double get subtotalUsd => quantity * unitPriceUsd;
   double get vatAmount => totalPrice - subtotal;
+  double get vatAmountUsd => totalPriceUsd - subtotalUsd;
 
   factory QuoteItem.fromJson(Map<String, dynamic> json) => QuoteItem(
         id: json['id'],
@@ -28,9 +34,23 @@ class QuoteItem {
         description: json['description'],
         quantity: (json['quantity'] as num).toDouble(),
         unit: (json['unit'] ?? 'Adet') as String,
-        unitPrice: (json['unit_price'] as num).toDouble(),
+        unitPriceUsd: ((json['unit_price_usd'] as num?) ??
+                (json['unit_price'] as num?) ??
+                0)
+            .toDouble(),
+        unitPrice: ((json['unit_price'] as num?) ??
+                (json['unit_price_try'] as num?) ??
+                0)
+            .toDouble(),
         vatRate: ((json['vat_rate'] as num?) ?? 20).toDouble(),
-        totalPrice: (json['total_price'] as num).toDouble(),
+        totalPriceUsd: ((json['total_price_usd'] as num?) ??
+                (json['total_price'] as num?) ??
+                0)
+            .toDouble(),
+        totalPrice: ((json['total_price'] as num?) ??
+                (json['total_price_try'] as num?) ??
+                0)
+            .toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -39,7 +59,7 @@ class QuoteItem {
         'description': description,
         'quantity': quantity,
         'unit': unit,
-        'unit_price': unitPrice,
+        'unit_price_usd': unitPriceUsd,
         'vat_rate': vatRate,
       };
 }
@@ -55,9 +75,17 @@ class Quote {
   final String? customerContactName;
   final String? customerPhone;
   final String? customerAddress;
+  final double subtotalUsd;
   final double subtotal;
+  final double vatTotalUsd;
   final double vatTotal;
+  final double totalAmountUsd;
   final double totalAmount;
+  final double? exchangeRate;
+  final DateTime? exchangeRateDate;
+  final String? exchangeRateSource;
+  final String baseCurrency;
+  final String displayCurrency;
   final String status;
   final DateTime? issuedAt;
   final DateTime? validUntil;
@@ -80,9 +108,17 @@ class Quote {
     this.customerContactName,
     this.customerPhone,
     this.customerAddress,
+    required this.subtotalUsd,
     required this.subtotal,
+    required this.vatTotalUsd,
     required this.vatTotal,
+    required this.totalAmountUsd,
     required this.totalAmount,
+    this.exchangeRate,
+    this.exchangeRateDate,
+    this.exchangeRateSource,
+    this.baseCurrency = 'USD',
+    this.displayCurrency = 'TRY',
     required this.status,
     this.issuedAt,
     this.validUntil,
@@ -106,9 +142,34 @@ class Quote {
         customerContactName: json['customer_contact_name'],
         customerPhone: json['customer_phone'],
         customerAddress: json['customer_address'],
-        subtotal: ((json['subtotal'] as num?) ?? json['total_amount']).toDouble(),
+        subtotalUsd: ((json['subtotal_usd'] as num?) ??
+                (json['subtotal'] as num?) ??
+                (json['total_amount_usd'] as num?) ??
+                0)
+            .toDouble(),
+        subtotal:
+            ((json['subtotal'] as num?) ?? (json['total_amount'] as num?) ?? 0)
+                .toDouble(),
+        vatTotalUsd:
+            ((json['vat_total_usd'] as num?) ?? (json['vat_total'] as num?) ?? 0)
+                .toDouble(),
         vatTotal: ((json['vat_total'] as num?) ?? 0).toDouble(),
-        totalAmount: (json['total_amount'] as num).toDouble(),
+        totalAmountUsd:
+            ((json['total_amount_usd'] as num?) ??
+                    (json['total_amount'] as num?) ??
+                    0)
+                .toDouble(),
+        totalAmount: ((json['total_amount'] as num?) ??
+                (json['total_amount_try'] as num?) ??
+                0)
+            .toDouble(),
+        exchangeRate: (json['exchange_rate'] as num?)?.toDouble(),
+        exchangeRateDate: json['exchange_rate_date'] != null
+            ? DateTime.parse(json['exchange_rate_date'])
+            : null,
+        exchangeRateSource: json['exchange_rate_source'] as String?,
+        baseCurrency: (json['base_currency'] ?? 'USD') as String,
+        displayCurrency: (json['display_currency'] ?? 'TRY') as String,
         status: json['status'],
         issuedAt: json['issued_at'] != null
             ? DateTime.parse(json['issued_at'])
@@ -136,4 +197,5 @@ class Quote {
   };
 
   String get statusLabel => statusLabels[status] ?? status;
+  bool get hasExchangeRate => exchangeRate != null && exchangeRate! > 0;
 }

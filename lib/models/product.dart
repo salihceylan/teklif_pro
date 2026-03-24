@@ -7,8 +7,9 @@ class Product {
   final String? category;
   final String? brand;
   final String unit;
-  final double servicePrice;
-  final double sitePrice;
+  final double servicePriceUsd;
+  final double sitePriceUsd;
+  final String priceCurrency;
   final double vatRate;
   final bool trackInventory;
   final double stockQuantity;
@@ -26,8 +27,9 @@ class Product {
     this.category,
     this.brand,
     required this.unit,
-    required this.servicePrice,
-    required this.sitePrice,
+    required this.servicePriceUsd,
+    required this.sitePriceUsd,
+    required this.priceCurrency,
     required this.vatRate,
     required this.trackInventory,
     required this.stockQuantity,
@@ -47,6 +49,9 @@ class Product {
   String get typeLabel => typeLabels[productType] ?? productType;
 
   bool get isLowStock => trackInventory && stockQuantity <= reorderLevel;
+  double get servicePrice => servicePriceUsd;
+  double get sitePrice => sitePriceUsd;
+  bool get isUsdPricing => priceCurrency.toUpperCase() == 'USD';
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
     id: json['id'] as int,
@@ -57,8 +62,14 @@ class Product {
     category: json['category'] as String?,
     brand: json['brand'] as String?,
     unit: (json['unit'] ?? 'Adet') as String,
-    servicePrice: ((json['service_price'] as num?) ?? 0).toDouble(),
-    sitePrice: ((json['site_price'] as num?) ?? 0).toDouble(),
+    servicePriceUsd: ((json['service_price_usd'] as num?) ??
+            (json['service_price'] as num?) ??
+            0)
+        .toDouble(),
+    sitePriceUsd:
+        ((json['site_price_usd'] as num?) ?? (json['site_price'] as num?) ?? 0)
+            .toDouble(),
+    priceCurrency: (json['price_currency'] ?? 'USD') as String,
     vatRate: ((json['vat_rate'] as num?) ?? 20).toDouble(),
     trackInventory: (json['track_inventory'] ?? true) as bool,
     stockQuantity: ((json['stock_quantity'] as num?) ?? 0).toDouble(),
@@ -78,8 +89,9 @@ class Product {
       'category': category!.trim(),
     if (brand != null && brand!.trim().isNotEmpty) 'brand': brand!.trim(),
     'unit': unit,
-    'service_price': servicePrice,
-    'site_price': sitePrice,
+    'service_price_usd': servicePriceUsd,
+    'site_price_usd': sitePriceUsd,
+    'price_currency': priceCurrency,
     'vat_rate': vatRate,
     'track_inventory': trackInventory,
     'stock_quantity': stockQuantity,

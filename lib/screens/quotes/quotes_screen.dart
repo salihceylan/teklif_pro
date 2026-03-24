@@ -259,6 +259,16 @@ class _QuotesScreenState extends State<QuotesScreen> {
                                         Icons.payments_outlined,
                                         '${_currency.format(quote.totalAmount)} ₺',
                                       ),
+                                      if (quote.totalAmountUsd > 0)
+                                        _meta(
+                                          Icons.attach_money_outlined,
+                                          '${_currency.format(quote.totalAmountUsd)} USD',
+                                        ),
+                                      if (quote.hasExchangeRate)
+                                        _meta(
+                                          Icons.currency_exchange_outlined,
+                                          'Kur ${_currency.format(quote.exchangeRate!)}',
+                                        ),
                                     ],
                                   ),
                                 ],

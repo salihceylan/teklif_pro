@@ -144,6 +144,17 @@ class _VisitsScreenState extends State<VisitsScreen> {
                                     color: AppTheme.primary,
                                   ),
                                 ),
+                                if (visit.grandTotalUsd > 0) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_currency.format(visit.grandTotalUsd)} USD',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textMedium,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ],

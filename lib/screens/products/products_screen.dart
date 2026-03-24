@@ -204,11 +204,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                     children: [
                                       _meta(
                                         Icons.payments_outlined,
-                                        'Servis: ${_money.format(product.servicePrice)} TL',
+                                        'Servis: ${_money.format(product.servicePriceUsd)} USD',
                                       ),
                                       _meta(
                                         Icons.storefront_outlined,
-                                        'Site: ${_money.format(product.sitePrice)} TL',
+                                        'Site: ${_money.format(product.sitePriceUsd)} USD',
                                       ),
                                       _meta(
                                         Icons.percent_outlined,

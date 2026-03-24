@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/app_theme.dart';
+import '../../models/exchange_rate_snapshot.dart';
 import '../../models/product.dart';
 import '../../models/visit.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/visit_provider.dart';
+import '../../services/exchange_rate_service.dart';
 import '../widgets/app_shell.dart';
 
 class VisitFormScreen extends StatefulWidget {
@@ -29,25 +31,34 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   final _laborCtrl = TextEditingController(text: '0');
   final _vatCtrl = TextEditingController(text: '20');
   final List<_MaterialRow> _items = [];
+  final _exchangeRateService = ExchangeRateService();
 
   int? _customerId;
   DateTime? _scheduledDate;
   DateTime? _actualDate;
   String _status = 'scheduled';
   bool _saving = false;
+  bool _rateLoading = false;
+  String? _rateError;
   ServiceVisit? _loadedVisit;
+  ExchangeRateSnapshot? _exchangeRate;
   final _fmt = NumberFormat('#,##0.00', 'tr_TR');
+  double get _activeRate => _exchangeRate?.rate ?? 0;
 
   bool get _isEdit => widget.visitId != null;
 
-  double get _materialTotal =>
-      _items.fold(0, (sum, item) => sum + item.totalPrice);
-  double get _laborAmount =>
+  double get _materialTotalUsd =>
+      _items.fold(0, (sum, item) => sum + item.totalPriceUsd);
+  double get _laborAmountUsd =>
       double.tryParse(_laborCtrl.text.replaceAll(',', '.')) ?? 0;
   double get _vatRate =>
       double.tryParse(_vatCtrl.text.replaceAll(',', '.')) ?? 20;
-  double get _vatTotal => (_materialTotal + _laborAmount) * _vatRate / 100;
-  double get _grandTotal => _materialTotal + _laborAmount + _vatTotal;
+  double get _vatTotalUsd => (_materialTotalUsd + _laborAmountUsd) * _vatRate / 100;
+  double get _grandTotalUsd => _materialTotalUsd + _laborAmountUsd + _vatTotalUsd;
+  double get _materialTotalTry => _materialTotalUsd * _activeRate;
+  double get _laborAmountTry => _laborAmountUsd * _activeRate;
+  double get _vatTotalTry => _vatTotalUsd * _activeRate;
+  double get _grandTotalTry => _grandTotalUsd * _activeRate;
 
   @override
   void initState() {
@@ -79,7 +90,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             .firstOrNull;
         if (visit != null) {
           _bindVisit(visit, productProvider.items);
+        } else {
+          await _loadExchangeRate();
         }
+      } else {
+        await _loadExchangeRate();
       }
     });
   }
@@ -95,8 +110,17 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       _notesCtrl.text = visit.notes ?? '';
       _techNotesCtrl.text = visit.technicianNotes ?? '';
       _technicianCtrl.text = visit.technicianName ?? '';
-      _laborCtrl.text = visit.laborAmount.toString();
+      _laborCtrl.text = visit.laborAmountUsd.toString();
       _vatCtrl.text = visit.vatRate.toString();
+      if (visit.hasExchangeRate && visit.exchangeRateDate != null) {
+        _exchangeRate = ExchangeRateSnapshot(
+          baseCurrency: visit.baseCurrency,
+          quoteCurrency: visit.displayCurrency,
+          rate: visit.exchangeRate!,
+          rateDate: visit.exchangeRateDate!,
+          source: visit.exchangeRateSource ?? 'TCMB',
+        );
+      }
       _items
         ..clear()
         ..addAll(
@@ -105,7 +129,9 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               codeCtrl: TextEditingController(text: item.productCode ?? ''),
               nameCtrl: TextEditingController(text: item.materialName),
               qtyCtrl: TextEditingController(text: item.quantity.toString()),
-              priceCtrl: TextEditingController(text: item.unitPrice.toString()),
+              priceCtrl: TextEditingController(
+                text: item.unitPriceUsd.toString(),
+              ),
               selectedProductId: products
                   .where((product) => product.sku == item.productCode)
                   .firstOrNull
@@ -117,6 +143,30 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         _items.add(_MaterialRow.empty());
       }
     });
+  }
+
+  Future<void> _loadExchangeRate() async {
+    setState(() {
+      _rateLoading = true;
+      _rateError = null;
+    });
+
+    try {
+      final rate = await _exchangeRateService.getUsdTry();
+      if (!mounted) return;
+      setState(() {
+        _exchangeRate = rate;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _rateError = 'TCMB kuru alinamadi. Baglantiyi kontrol edip tekrar deneyin.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _rateLoading = false);
+      }
+    }
   }
 
   @override
@@ -205,12 +255,18 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       if (product == null) return;
       row.codeCtrl.text = product.sku;
       row.nameCtrl.text = product.name;
-      row.priceCtrl.text = _formatProductNumber(product.servicePrice);
+      row.priceCtrl.text = _formatProductNumber(product.servicePriceUsd);
     });
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_exchangeRate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        buildErrorSnackBar('Servis formu icin TCMB USD/TRY kuru gerekli'),
+      );
+      return;
+    }
     if (_scheduledDate == null || _customerId == null) {
       ScaffoldMessenger.of(
         context,
@@ -234,7 +290,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       'technician_notes': _techNotesCtrl.text.trim().isEmpty
           ? null
           : _techNotesCtrl.text.trim(),
-      'labor_amount': _laborAmount,
+      'exchange_rate': _exchangeRate!.rate,
+      'exchange_rate_date': _exchangeRate!.rateDate.toIso8601String(),
+      'exchange_rate_source': _exchangeRate!.source,
+      'labor_amount_usd': _laborAmountUsd,
       'vat_rate': _vatRate,
       'items': _items
           .map(
@@ -242,7 +301,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               if (row.productCode.isNotEmpty) 'product_code': row.productCode,
               'material_name': row.materialName,
               'quantity': row.quantity,
-              'unit_price': row.unitPrice,
+              'unit_price_usd': row.unitPriceUsd,
             },
           )
           .toList(),
@@ -339,7 +398,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   ? 'Servis formunu guncelleyin'
                   : 'Yeni servis formu olusturun',
               subtitle:
-                  'Musteri sikayeti, kullanilan malzemeler, iscilik ve toplamlar tek form yapisinda toplanir.',
+                  'Malzeme ve iscilik USD net tutulur; TL karsiliklar belgeye kullanilan TCMB kuru ile snapshot olarak yazilir.',
               trailing: Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -356,6 +415,95 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 20),
+            AppSectionCard(
+              icon: Icons.currency_exchange_outlined,
+              title: 'TCMB Kur Bilgisi',
+              description:
+                  'Servis formundaki TL karsiliklar gosterilen TCMB USD doviz satis kuru ile hesaplanir.',
+              trailing: FilledButton.tonalIcon(
+                onPressed: _rateLoading ? null : _loadExchangeRate,
+                icon: _rateLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_outlined),
+                label: const Text('Kuru Yenile'),
+              ),
+              children: [
+                if (_rateError != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF4E5),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFF4C26B)),
+                    ),
+                    child: Text(
+                      _rateError!,
+                      style: const TextStyle(
+                        color: Color(0xFF8A5A00),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else if (_exchangeRate != null)
+                  AdaptiveFieldRow(
+                    maxColumns: 3,
+                    minItemWidth: 220,
+                    children: [
+                      _VisitRateInfoPanel(
+                        label: 'USD/TRY Kuru',
+                        value: _fmt.format(_exchangeRate!.rate),
+                      ),
+                      _VisitRateInfoPanel(
+                        label: 'Bulten Tarihi',
+                        value: DateFormat(
+                          'dd.MM.yyyy',
+                          'tr_TR',
+                        ).format(_exchangeRate!.rateDate),
+                      ),
+                      _VisitRateInfoPanel(
+                        label: 'Kaynak',
+                        value: _exchangeRate!.source,
+                      ),
+                    ],
+                  )
+                else
+                  const SizedBox.shrink(),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E8),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFF5D18C)),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: Color(0xFF9A6A00),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Kaydetmeden once kur degisirse serviste gorunen TL maliyetler de degisir. Kayıt anındaki TCMB kuru servis formuna sabit olarak yazilir.',
+                          style: TextStyle(
+                            color: Color(0xFF6F4B00),
+                            fontSize: 13,
+                            height: 1.45,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             AppSectionCard(
@@ -477,7 +625,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               icon: Icons.inventory_2_outlined,
               title: 'Malzeme ve Hizmet Kalemleri',
               description:
-                  'Kod, malzeme adi, adet ve birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
+                  'Kod, malzeme adi, adet ve USD birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
               trailing: Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -501,6 +649,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                     products: products,
                     canDelete: _items.length > 1,
                     fmt: _fmt,
+                    exchangeRate: _activeRate,
                     onDelete: () => _removeItem(entry.key),
                     onChanged: () => setState(() {}),
                     onProductSelected: (productId) => _applyProductToRow(
@@ -517,7 +666,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               icon: Icons.calculate_outlined,
               title: 'Toplamlar',
               description:
-                  'Malzeme, iscilik ve KDV toplamlari servis formunun alt bloklarinda kullanilir.',
+                  'Malzeme ve iscilik USD net hesaplanir; belgeye yazilan TL toplamlari aktif TCMB kuru ile uretilir.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 2,
@@ -529,7 +678,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Iscilik Toplami',
+                        labelText: 'Iscilik Toplami (USD)',
                         prefixIcon: Icon(Icons.handyman_outlined),
                       ),
                       onChanged: (_) => setState(() {}),
@@ -549,10 +698,14 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                 ),
                 _VisitSummaryCard(
                   fmt: _fmt,
-                  materialTotal: _materialTotal,
-                  laborAmount: _laborAmount,
-                  vatTotal: _vatTotal,
-                  grandTotal: _grandTotal,
+                  materialTotalUsd: _materialTotalUsd,
+                  materialTotalTry: _materialTotalTry,
+                  laborAmountUsd: _laborAmountUsd,
+                  laborAmountTry: _laborAmountTry,
+                  vatTotalUsd: _vatTotalUsd,
+                  vatTotalTry: _vatTotalTry,
+                  grandTotalUsd: _grandTotalUsd,
+                  grandTotalTry: _grandTotalTry,
                 ),
               ],
             ),
@@ -612,6 +765,7 @@ class _MaterialCard extends StatelessWidget {
   final List<Product> products;
   final bool canDelete;
   final NumberFormat fmt;
+  final double exchangeRate;
   final VoidCallback onDelete;
   final VoidCallback onChanged;
   final ValueChanged<int?> onProductSelected;
@@ -621,6 +775,7 @@ class _MaterialCard extends StatelessWidget {
     required this.products,
     required this.canDelete,
     required this.fmt,
+    required this.exchangeRate,
     required this.onDelete,
     required this.onChanged,
     required this.onProductSelected,
@@ -692,7 +847,9 @@ class _MaterialCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Toplam: ${fmt.format(row.totalPrice)} ₺',
+                    exchangeRate > 0
+                        ? 'Toplam: ${fmt.format(row.totalPriceUsd)} USD  •  ${fmt.format(row.totalPriceTry(exchangeRate))} ₺'
+                        : 'Toplam: ${fmt.format(row.totalPriceUsd)} USD',
                     style: const TextStyle(
                       color: Color(0xFF1F5EA8),
                       fontSize: 13,
@@ -779,7 +936,7 @@ class _MaterialCard extends StatelessWidget {
           controller: row.priceCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
-            labelText: 'Birim Fiyati',
+            labelText: 'Birim Fiyati (USD)',
             prefixIcon: Icon(Icons.payments_outlined),
           ),
           onChanged: (_) => onChanged(),
@@ -804,7 +961,7 @@ class _MaterialCard extends StatelessWidget {
         controller: row.priceCtrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: const InputDecoration(
-          labelText: 'Birim Fiyati',
+          labelText: 'Birim Fiyati (USD)',
           prefixIcon: Icon(Icons.payments_outlined),
         ),
         onChanged: (_) => onChanged(),
@@ -815,17 +972,25 @@ class _MaterialCard extends StatelessWidget {
 
 class _VisitSummaryCard extends StatelessWidget {
   final NumberFormat fmt;
-  final double materialTotal;
-  final double laborAmount;
-  final double vatTotal;
-  final double grandTotal;
+  final double materialTotalUsd;
+  final double materialTotalTry;
+  final double laborAmountUsd;
+  final double laborAmountTry;
+  final double vatTotalUsd;
+  final double vatTotalTry;
+  final double grandTotalUsd;
+  final double grandTotalTry;
 
   const _VisitSummaryCard({
     required this.fmt,
-    required this.materialTotal,
-    required this.laborAmount,
-    required this.vatTotal,
-    required this.grandTotal,
+    required this.materialTotalUsd,
+    required this.materialTotalTry,
+    required this.laborAmountUsd,
+    required this.laborAmountTry,
+    required this.vatTotalUsd,
+    required this.vatTotalTry,
+    required this.grandTotalUsd,
+    required this.grandTotalTry,
   });
 
   @override
@@ -838,19 +1003,32 @@ class _VisitSummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row('Malzeme Toplami', materialTotal),
+          _row('Malzeme Toplami (USD)', materialTotalUsd, currency: 'USD'),
           const SizedBox(height: 8),
-          _row('Iscilik Toplami', laborAmount),
+          _row('Malzeme Toplami (TL)', materialTotalTry),
           const SizedBox(height: 8),
-          _row('KDV', vatTotal),
+          _row('Iscilik Toplami (USD)', laborAmountUsd, currency: 'USD'),
+          const SizedBox(height: 8),
+          _row('Iscilik Toplami (TL)', laborAmountTry),
+          const SizedBox(height: 8),
+          _row('KDV (USD)', vatTotalUsd, currency: 'USD'),
+          const SizedBox(height: 8),
+          _row('KDV (TL)', vatTotalTry),
           const Divider(height: 24),
-          _row('Genel Toplam', grandTotal, highlighted: true),
+          _row('Genel Toplam (USD)', grandTotalUsd, currency: 'USD'),
+          const Divider(height: 24),
+          _row('Genel Toplam (TL)', grandTotalTry, highlighted: true),
         ],
       ),
     );
   }
 
-  Widget _row(String label, double value, {bool highlighted = false}) => Row(
+  Widget _row(
+    String label,
+    double value, {
+    bool highlighted = false,
+    String currency = 'TRY',
+  }) => Row(
     children: [
       Expanded(
         child: Text(
@@ -864,7 +1042,7 @@ class _VisitSummaryCard extends StatelessWidget {
         ),
       ),
       Text(
-        '${fmt.format(value)} ₺',
+        '${fmt.format(value)} ${currency == 'USD' ? 'USD' : '₺'}',
         style: TextStyle(
           fontSize: highlighted ? 18 : 14,
           fontWeight: highlighted ? FontWeight.w800 : FontWeight.w700,
@@ -903,14 +1081,58 @@ class _MaterialRow {
   String get materialName => nameCtrl.text.trim();
   double get quantity =>
       double.tryParse(qtyCtrl.text.replaceAll(',', '.')) ?? 1;
-  double get unitPrice =>
+  double get unitPriceUsd =>
       double.tryParse(priceCtrl.text.replaceAll(',', '.')) ?? 0;
-  double get totalPrice => quantity * unitPrice;
+  double get totalPriceUsd => quantity * unitPriceUsd;
+  double unitPriceTry(double exchangeRate) => unitPriceUsd * exchangeRate;
+  double totalPriceTry(double exchangeRate) =>
+      totalPriceUsd * exchangeRate;
 
   void dispose() {
     codeCtrl.dispose();
     nameCtrl.dispose();
     qtyCtrl.dispose();
     priceCtrl.dispose();
+  }
+}
+
+class _VisitRateInfoPanel extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _VisitRateInfoPanel({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FBFD),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFD8E3EE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textMedium,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

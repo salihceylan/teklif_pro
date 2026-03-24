@@ -197,8 +197,13 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                   color: color,
                 ),
                 _MetricPill(
-                  label: 'Toplam',
+                  label: 'Toplam TL',
                   value: '${_currency.format(quote.totalAmount)} ₺',
+                  color: Colors.white,
+                ),
+                _MetricPill(
+                  label: 'Toplam USD',
+                  value: '${_currency.format(quote.totalAmountUsd)} USD',
                   color: Colors.white,
                 ),
               ],
@@ -250,6 +255,22 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                     label: 'KDV Dahil',
                     value: quote.pricesIncludeVat ? 'Evet' : 'Hayir',
                   ),
+                  _InfoPanel(
+                    label: 'TCMB USD/TRY',
+                    value: quote.hasExchangeRate
+                        ? _currency.format(quote.exchangeRate!)
+                        : '-',
+                  ),
+                  _InfoPanel(
+                    label: 'Kur Tarihi',
+                    value: quote.exchangeRateDate == null
+                        ? '-'
+                        : _date.format(quote.exchangeRateDate!),
+                  ),
+                  _InfoPanel(
+                    label: 'Kur Kaynagi',
+                    value: quote.exchangeRateSource ?? '-',
+                  ),
                 ],
               ),
             ],
@@ -286,11 +307,14 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                           _MiniPill('Kod ${item.productCode ?? '-'}'),
                           _MiniPill('Miktar ${item.quantity} ${item.unit}'),
                           _MiniPill(
-                            'Birim ${_currency.format(item.unitPrice)} ₺',
+                            'Birim ${_currency.format(item.unitPriceUsd)} USD',
                           ),
                           _MiniPill('KDV %${item.vatRate}'),
                           _MiniPill(
-                            'Toplam ${_currency.format(item.totalPrice)} ₺',
+                            'Toplam ${_currency.format(item.totalPriceUsd)} USD',
+                          ),
+                          _MiniPill(
+                            'TL Karsilik ${_currency.format(item.totalPrice)} ₺',
                           ),
                         ],
                       ),
@@ -305,12 +329,33 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                 ),
                 child: Column(
                   children: [
-                    _SummaryRow('Ara Toplam', _currency.format(quote.subtotal)),
+                    _SummaryRow(
+                      'Ara Toplam (USD)',
+                      '${_currency.format(quote.subtotalUsd)} USD',
+                    ),
                     const SizedBox(height: 8),
-                    _SummaryRow('KDV', _currency.format(quote.vatTotal)),
+                    _SummaryRow(
+                      'Ara Toplam (TL)',
+                      '${_currency.format(quote.subtotal)} ₺',
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow(
+                      'KDV (USD)',
+                      '${_currency.format(quote.vatTotalUsd)} USD',
+                    ),
+                    const SizedBox(height: 8),
+                    _SummaryRow(
+                      'KDV (TL)',
+                      '${_currency.format(quote.vatTotal)} ₺',
+                    ),
                     const Divider(height: 24),
                     _SummaryRow(
-                      'Genel Toplam',
+                      'Genel Toplam (USD)',
+                      '${_currency.format(quote.totalAmountUsd)} USD',
+                    ),
+                    const Divider(height: 24),
+                    _SummaryRow(
+                      'Genel Toplam (TL)',
                       '${_currency.format(quote.totalAmount)} ₺',
                       highlighted: true,
                     ),

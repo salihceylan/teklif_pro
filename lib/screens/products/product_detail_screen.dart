@@ -168,12 +168,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 minItemWidth: 220,
                 children: [
                   _InfoPanel(
-                    label: 'Servis Fiyati (KDV Haric)',
-                    value: '${_money.format(product.servicePrice)} TL',
+                    label: 'Servis Fiyati (USD, KDV Haric)',
+                    value: '${_money.format(product.servicePriceUsd)} USD',
                   ),
                   _InfoPanel(
-                    label: 'Site Satis Fiyati (KDV Haric)',
-                    value: '${_money.format(product.sitePrice)} TL',
+                    label: 'Site Satis Fiyati (USD, KDV Haric)',
+                    value: '${_money.format(product.sitePriceUsd)} USD',
                   ),
                   _InfoPanel(
                     label: 'KDV Orani',

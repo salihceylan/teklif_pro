@@ -87,8 +87,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _barcodeCtrl.text = product.barcode ?? '';
       _categoryCtrl.text = product.category ?? '';
       _brandCtrl.text = product.brand ?? '';
-      _servicePriceCtrl.text = _formatNumber(product.servicePrice);
-      _sitePriceCtrl.text = _formatNumber(product.sitePrice);
+      _servicePriceCtrl.text = _formatNumber(product.servicePriceUsd);
+      _sitePriceCtrl.text = _formatNumber(product.sitePriceUsd);
       _vatRateCtrl.text = _formatNumber(product.vatRate);
       _stockCtrl.text = _formatNumber(product.stockQuantity);
       _reorderCtrl.text = _formatNumber(product.reorderLevel);
@@ -154,8 +154,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       'category': _trimOrNull(_categoryCtrl),
       'brand': _trimOrNull(_brandCtrl),
       'unit': _unit,
-      'service_price': _parseNumber(_servicePriceCtrl),
-      'site_price': _parseNumber(_sitePriceCtrl),
+      'service_price_usd': _parseNumber(_servicePriceCtrl),
+      'site_price_usd': _parseNumber(_sitePriceCtrl),
+      'price_currency': 'USD',
       'vat_rate': _parseNumber(_vatRateCtrl),
       'track_inventory': _trackInventory,
       'stock_quantity': _trackInventory ? _parseNumber(_stockCtrl) : 0,
@@ -204,7 +205,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   ? 'Urun kaydini guncelleyin'
                   : 'Yeni urun veya hizmet tanimlayin',
               subtitle:
-                  'SKU, fiyat, KDV, stok seviyesi ve kritik stok esigi tek bir kayitta toplanir.',
+                  'SKU, USD net fiyatlar, KDV, stok seviyesi ve kritik stok esigi tek bir kayitta toplanir.',
               trailing: _currentProduct == null
                   ? null
                   : _CodeBadge(
@@ -336,7 +337,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               icon: Icons.payments_outlined,
               title: 'Fiyat ve Vergi',
               description:
-                  'Servis ve site fiyatlari KDV haric tutulur. Teklif ve servis formu kalemleri servis fiyatini kullanir.',
+                  'Her iki fiyat da USD ve KDV haric tutulur. Teklif ve servis formu kalemleri servis fiyatini, site satisi ise ikinci fiyati kullanir.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -348,7 +349,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Servis Fiyati (KDV Haric)',
+                        labelText: 'Servis Fiyati (USD, KDV Haric)',
                         prefixIcon: Icon(Icons.handyman_outlined),
                       ),
                       validator: _validateNumber,
@@ -359,7 +360,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Site Satis Fiyati (KDV Haric)',
+                        labelText: 'Site Satis Fiyati (USD, KDV Haric)',
                         prefixIcon: Icon(Icons.storefront_outlined),
                       ),
                       validator: _validateNumber,
@@ -384,6 +385,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   title: const Text('Urun aktif olarak kullanilsin'),
                   subtitle: const Text(
                     'Pasif urunler listede gorunur ancak yeni kayitlarda secilmez.',
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F8FC),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFD9E5F0)),
+                  ),
+                  child: const Text(
+                    'USD fiyatlar kaydedilir. Teklif ve servis formlarinda TL karsiliklar TCMB USD/TRY kuru ile anlik hesaplanir ve belgeye snapshot olarak yazilir.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF607085),
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ],

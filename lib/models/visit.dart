@@ -3,7 +3,9 @@ class ServiceVisitItem {
   final String? productCode;
   final String materialName;
   final double quantity;
+  final double unitPriceUsd;
   final double unitPrice;
+  final double totalPriceUsd;
   final double totalPrice;
 
   const ServiceVisitItem({
@@ -11,7 +13,9 @@ class ServiceVisitItem {
     this.productCode,
     required this.materialName,
     required this.quantity,
+    required this.unitPriceUsd,
     required this.unitPrice,
+    required this.totalPriceUsd,
     required this.totalPrice,
   });
 
@@ -21,8 +25,20 @@ class ServiceVisitItem {
         productCode: json['product_code'],
         materialName: json['material_name'],
         quantity: (json['quantity'] as num).toDouble(),
-        unitPrice: (json['unit_price'] as num).toDouble(),
-        totalPrice: (json['total_price'] as num).toDouble(),
+        unitPriceUsd: ((json['unit_price_usd'] as num?) ??
+                (json['unit_price'] as num?) ??
+                0)
+            .toDouble(),
+        unitPrice:
+            ((json['unit_price'] as num?) ?? (json['unit_price_try'] as num?) ?? 0)
+                .toDouble(),
+        totalPriceUsd: ((json['total_price_usd'] as num?) ??
+                (json['total_price'] as num?) ??
+                0)
+            .toDouble(),
+        totalPrice:
+            ((json['total_price'] as num?) ?? (json['total_price_try'] as num?) ?? 0)
+                .toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -30,7 +46,7 @@ class ServiceVisitItem {
           'product_code': productCode,
         'material_name': materialName,
         'quantity': quantity,
-        'unit_price': unitPrice,
+        'unit_price_usd': unitPriceUsd,
       };
 }
 
@@ -49,11 +65,20 @@ class ServiceVisit {
   final String? customerAddress;
   final String? complaint;
   final String? technicianName;
+  final double laborAmountUsd;
   final double laborAmount;
   final double vatRate;
+  final double materialTotalUsd;
   final double materialTotal;
+  final double vatTotalUsd;
   final double vatTotal;
+  final double grandTotalUsd;
   final double grandTotal;
+  final double? exchangeRate;
+  final DateTime? exchangeRateDate;
+  final String? exchangeRateSource;
+  final String baseCurrency;
+  final String displayCurrency;
   final String? notes;
   final String? technicianNotes;
   final DateTime createdAt;
@@ -74,11 +99,20 @@ class ServiceVisit {
     this.customerAddress,
     this.complaint,
     this.technicianName,
+    required this.laborAmountUsd,
     required this.laborAmount,
     required this.vatRate,
+    required this.materialTotalUsd,
     required this.materialTotal,
+    required this.vatTotalUsd,
     required this.vatTotal,
+    required this.grandTotalUsd,
     required this.grandTotal,
+    this.exchangeRate,
+    this.exchangeRateDate,
+    this.exchangeRateSource,
+    this.baseCurrency = 'USD',
+    this.displayCurrency = 'TRY',
     this.notes,
     this.technicianNotes,
     required this.createdAt,
@@ -102,11 +136,37 @@ class ServiceVisit {
         customerAddress: json['customer_address'],
         complaint: json['complaint'],
         technicianName: json['technician_name'],
-        laborAmount: ((json['labor_amount'] as num?) ?? 0).toDouble(),
+        laborAmountUsd:
+            ((json['labor_amount_usd'] as num?) ?? (json['labor_amount'] as num?) ?? 0)
+                .toDouble(),
+        laborAmount:
+            ((json['labor_amount'] as num?) ?? (json['labor_amount_try'] as num?) ?? 0)
+                .toDouble(),
         vatRate: ((json['vat_rate'] as num?) ?? 20).toDouble(),
-        materialTotal: ((json['material_total'] as num?) ?? 0).toDouble(),
+        materialTotalUsd: ((json['material_total_usd'] as num?) ??
+                (json['material_total'] as num?) ??
+                0)
+            .toDouble(),
+        materialTotal:
+            ((json['material_total'] as num?) ?? (json['material_total_try'] as num?) ?? 0)
+                .toDouble(),
+        vatTotalUsd:
+            ((json['vat_total_usd'] as num?) ?? (json['vat_total'] as num?) ?? 0)
+                .toDouble(),
         vatTotal: ((json['vat_total'] as num?) ?? 0).toDouble(),
-        grandTotal: ((json['grand_total'] as num?) ?? 0).toDouble(),
+        grandTotalUsd:
+            ((json['grand_total_usd'] as num?) ?? (json['grand_total'] as num?) ?? 0)
+                .toDouble(),
+        grandTotal:
+            ((json['grand_total'] as num?) ?? (json['grand_total_try'] as num?) ?? 0)
+                .toDouble(),
+        exchangeRate: (json['exchange_rate'] as num?)?.toDouble(),
+        exchangeRateDate: json['exchange_rate_date'] != null
+            ? DateTime.parse(json['exchange_rate_date'])
+            : null,
+        exchangeRateSource: json['exchange_rate_source'] as String?,
+        baseCurrency: (json['base_currency'] ?? 'USD') as String,
+        displayCurrency: (json['display_currency'] ?? 'TRY') as String,
         notes: json['notes'],
         technicianNotes: json['technician_notes'],
         createdAt: DateTime.parse(json['created_at']),
@@ -123,4 +183,5 @@ class ServiceVisit {
   };
 
   String get statusLabel => statusLabels[status] ?? status;
+  bool get hasExchangeRate => exchangeRate != null && exchangeRate! > 0;
 }

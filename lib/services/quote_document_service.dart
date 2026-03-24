@@ -128,6 +128,18 @@ class QuoteDocumentService {
                         _infoRow('Tarih', _formatDate(quote.issuedAt ?? quote.createdAt)),
                         _infoRow('Teklif No', quote.quoteCode ?? '-'),
                         _infoRow(
+                          'TCMB USD/TRY',
+                          quote.hasExchangeRate
+                              ? _currency.format(quote.exchangeRate!)
+                              : '-',
+                        ),
+                        _infoRow(
+                          'Kur Tarihi',
+                          quote.exchangeRateDate == null
+                              ? '-'
+                              : _formatDate(quote.exchangeRateDate!),
+                        ),
+                        _infoRow(
                           'Geçerlilik',
                           quote.validUntil == null
                               ? '-'
@@ -176,10 +188,17 @@ class QuoteDocumentService {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           _conditionLine(
+                            'Kalem fiyatlari USD ve KDV haric girilir. TL karsiliklar TCMB USD/TRY kuru ile hesaplanir.',
+                          ),
+                          _conditionLine(
                             quote.pricesIncludeVat
                                 ? 'Fiyatlara KDV dahildir.'
                                 : 'Fiyatlara KDV dahil değildir.',
                           ),
+                          if ((quote.exchangeRateSource ?? '').trim().isNotEmpty)
+                            _conditionLine(
+                              'Uygulanan kur kaynagi: ${quote.exchangeRateSource}.',
+                            ),
                           if ((quote.deliveryTime ?? '').trim().isNotEmpty)
                             _conditionLine('Teslimat süresi: ${quote.deliveryTime}.'),
                           if ((quote.paymentTerms ?? '').trim().isNotEmpty)
@@ -204,10 +223,13 @@ class QuoteDocumentService {
                 child: pw.Table(
                   border: pw.TableBorder.all(color: PdfColors.grey600),
                   children: [
-                    _summaryRow('Ara Toplam', quote.subtotal),
-                    _summaryRow('Toplam KDV', quote.vatTotal),
+                    _summaryRow('Ara Toplam (USD)', quote.subtotalUsd, currency: 'USD'),
+                    _summaryRow('Ara Toplam (TL)', quote.subtotal),
+                    _summaryRow('Toplam KDV (USD)', quote.vatTotalUsd, currency: 'USD'),
+                    _summaryRow('Toplam KDV (TL)', quote.vatTotal),
+                    _summaryRow('Genel Toplam (USD)', quote.totalAmountUsd, currency: 'USD'),
                     _summaryRow(
-                      'Genel Toplam',
+                      'Genel Toplam (TL)',
                       quote.totalAmount,
                       highlighted: true,
                     ),
@@ -241,9 +263,10 @@ class QuoteDocumentService {
           _headerCell('Ürün / Hizmet Adı'),
           _headerCell('Miktar'),
           _headerCell('Birim'),
-          _headerCell('Birim Fiyat'),
+          _headerCell('Birim USD'),
+          _headerCell('Birim TL'),
           _headerCell('KDV'),
-          _headerCell('Toplam'),
+          _headerCell('Toplam TL'),
         ],
       ),
     ];
@@ -258,6 +281,7 @@ class QuoteDocumentService {
             _cell(item.description),
             _cell(_currency.format(item.quantity), align: pw.TextAlign.center),
             _cell(item.unit, align: pw.TextAlign.center),
+            _cell('${_currency.format(item.unitPriceUsd)} USD', align: pw.TextAlign.right),
             _cell('${_currency.format(item.unitPrice)} ₺', align: pw.TextAlign.right),
             _cell('%${item.vatRate.toStringAsFixed(0)}', align: pw.TextAlign.center),
             _cell('${_currency.format(item.totalPrice)} ₺', align: pw.TextAlign.right),
@@ -273,9 +297,10 @@ class QuoteDocumentService {
         1: const pw.FixedColumnWidth(54),
         3: const pw.FixedColumnWidth(48),
         4: const pw.FixedColumnWidth(46),
-        5: const pw.FixedColumnWidth(68),
+        5: const pw.FixedColumnWidth(58),
         6: const pw.FixedColumnWidth(40),
-        7: const pw.FixedColumnWidth(72),
+        7: const pw.FixedColumnWidth(40),
+        8: const pw.FixedColumnWidth(72),
       },
       children: rows,
     );
@@ -302,6 +327,7 @@ class QuoteDocumentService {
     String label,
     double value, {
     bool highlighted = false,
+    String currency = 'TRY',
   }) =>
       pw.TableRow(
         decoration: highlighted
@@ -314,7 +340,7 @@ class QuoteDocumentService {
             textColor: highlighted ? PdfColors.white : PdfColors.black,
           ),
           _cell(
-            '${_currency.format(value)} ₺',
+            '${_currency.format(value)} ${currency == 'USD' ? 'USD' : '₺'}',
             align: pw.TextAlign.right,
             bold: true,
             textColor: highlighted ? PdfColors.white : PdfColors.black,
