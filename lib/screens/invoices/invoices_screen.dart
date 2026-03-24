@@ -8,6 +8,7 @@ import '../../providers/customer_provider.dart';
 import '../../providers/invoice_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -141,6 +142,16 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                                         'status': 'paid',
                                       });
                                     } else if (selected == 'delete') {
+                                      final confirmed =
+                                          await showDestructiveConfirmDialog(
+                                            context,
+                                            title: 'Faturayı Sil',
+                                            message:
+                                                '${invoice.title} faturasını silmek istediğinizden emin misiniz?',
+                                          );
+                                      if (!confirmed || !context.mounted) {
+                                        return;
+                                      }
                                       await invoices.delete(invoice.id);
                                     }
                                   },

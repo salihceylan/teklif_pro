@@ -8,6 +8,7 @@ import '../../models/customer.dart';
 import '../../providers/customer_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   final int customerId;
@@ -45,6 +46,15 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     if (value == 'edit') {
       context.push('/customers/${customer.id}/edit');
     } else if (value == 'delete') {
+      final confirmed = await showDestructiveConfirmDialog(
+        context,
+        title: 'Firmayı Sil',
+        message:
+            '${customer.companyName} firma kaydını silmek istediğinizden emin misiniz?',
+      );
+      if (!confirmed || !mounted) {
+        return;
+      }
       await context.read<CustomerProvider>().delete(customer.id);
       if (mounted) {
         _goBack();

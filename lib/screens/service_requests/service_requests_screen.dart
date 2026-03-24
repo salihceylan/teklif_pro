@@ -7,6 +7,7 @@ import '../../providers/customer_provider.dart';
 import '../../providers/service_request_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class ServiceRequestsScreen extends StatefulWidget {
   const ServiceRequestsScreen({super.key});
@@ -137,6 +138,16 @@ class _ServiceRequestsScreenState extends State<ServiceRequestsScreen> {
                                         '/service-requests/${request.id}/edit',
                                       );
                                     } else if (selected == 'delete') {
+                                      final confirmed =
+                                          await showDestructiveConfirmDialog(
+                                            context,
+                                            title: 'Servis Talebini Sil',
+                                            message:
+                                                '${request.title} talebini silmek istediğinizden emin misiniz?',
+                                          );
+                                      if (!confirmed || !context.mounted) {
+                                        return;
+                                      }
                                       await context
                                           .read<ServiceRequestProvider>()
                                           .delete(request.id);

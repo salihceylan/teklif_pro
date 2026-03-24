@@ -12,6 +12,7 @@ import '../../providers/product_provider.dart';
 import '../../providers/visit_provider.dart';
 import '../../services/exchange_rate_service.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class VisitFormScreen extends StatefulWidget {
   final int? visitId;
@@ -222,7 +223,16 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     setState(() => _items.add(_MaterialRow.empty()));
   }
 
-  void _removeItem(int index) {
+  Future<void> _removeItem(int index) async {
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Servis Kalemini Sil',
+      message:
+          'Bu servis kalemini formdan kaldırmak istediğinizden emin misiniz?',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
     final row = _items.removeAt(index);
     row.dispose();
     setState(() {});

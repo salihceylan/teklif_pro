@@ -11,6 +11,7 @@ import '../../providers/invoice_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 import 'quote_ui_actions.dart';
 
 class QuotesScreen extends StatefulWidget {
@@ -73,6 +74,15 @@ class _QuotesScreenState extends State<QuotesScreen> {
         ).showSnackBar(const SnackBar(content: Text('Fatura oluşturuldu')));
       }
     } else if (value == 'delete') {
+      final confirmed = await showDestructiveConfirmDialog(
+        context,
+        title: 'Teklifi Sil',
+        message:
+            '${quote.title} teklif kaydını silmek istediğinizden emin misiniz?',
+      );
+      if (!confirmed || !context.mounted) {
+        return;
+      }
       await quotes.delete(quote.id);
     }
   }

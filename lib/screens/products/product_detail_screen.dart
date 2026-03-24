@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -48,6 +49,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (value == 'edit') {
       context.push('/products/${product.id}/edit');
     } else if (value == 'delete') {
+      final confirmed = await showDestructiveConfirmDialog(
+        context,
+        title: 'Ürünü Sil',
+        message:
+            '${product.name} ürün kaydını silmek istediğinizden emin misiniz?',
+      );
+      if (!confirmed || !mounted) {
+        return;
+      }
       await context.read<ProductProvider>().delete(product.id);
       if (mounted) {
         _goBack();

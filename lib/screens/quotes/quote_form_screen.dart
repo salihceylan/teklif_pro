@@ -15,6 +15,7 @@ import '../../providers/quote_provider.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../services/quote_document_service.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class QuoteFormScreen extends StatefulWidget {
   final int? quoteId;
@@ -218,7 +219,16 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
     setState(() => _items.add(_ItemRow.empty()));
   }
 
-  void _removeItem(int index) {
+  Future<void> _removeItem(int index) async {
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Teklif Kalemini Sil',
+      message:
+          'Bu teklif kalemini formdan kaldırmak istediğinizden emin misiniz?',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
     final row = _items.removeAt(index);
     row.dispose();
     setState(() {});

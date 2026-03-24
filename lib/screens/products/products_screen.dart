@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 import '../widgets/app_shell.dart';
 
 enum _ProductSort { newest, name, servicePrice, sitePrice, stock }
@@ -55,33 +56,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
     setState(() => _query = next);
   }
 
-  void _confirmDelete(Product product) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Ürünü Sil'),
-        content: Text(
+  Future<void> _confirmDelete(Product product) async {
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Ürünü Sil',
+      message:
           '${product.name} ürün kaydını silmek istediğinizden emin misiniz?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-            ),
-            onPressed: () async {
-              Navigator.pop(context);
-              await context.read<ProductProvider>().delete(product.id);
-            },
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
     );
+    if (!confirmed || !mounted) {
+      return;
+    }
+    await context.read<ProductProvider>().delete(product.id);
   }
 
   void _clearFilters() {
@@ -113,12 +98,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   List<String> _categories(List<Product> items) {
-    final values = items
-        .map((item) => item.category?.trim() ?? '')
-        .where((item) => item.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final values =
+        items
+            .map((item) => item.category?.trim() ?? '')
+            .where((item) => item.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return values;
   }
 
@@ -262,7 +248,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         child: Card(
                           child: InkWell(
                             borderRadius: BorderRadius.circular(24),
-                            onTap: () => context.push('/products/${product.id}'),
+                            onTap: () =>
+                                context.push('/products/${product.id}'),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Row(
@@ -313,7 +300,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                         Text(
                                           [
                                             product.typeLabel,
-                                            if ((product.brand ?? '').isNotEmpty)
+                                            if ((product.brand ?? '')
+                                                .isNotEmpty)
                                               product.brand!,
                                             'Birim: ${product.unit}',
                                           ].join(' • '),
@@ -342,7 +330,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                             if (product.trackInventory)
                                               _meta(
                                                 product.isLowStock
-                                                    ? Icons.warning_amber_outlined
+                                                    ? Icons
+                                                          .warning_amber_outlined
                                                     : Icons.inventory_outlined,
                                                 'Stok: ${_qty.format(product.stockQuantity)}',
                                                 color: product.isLowStock
@@ -364,7 +353,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       PopupMenuButton<String>(
-                                        icon: const Icon(Icons.more_vert_rounded),
+                                        icon: const Icon(
+                                          Icons.more_vert_rounded,
+                                        ),
                                         tooltip: 'Ürün işlemleri',
                                         onSelected: (selected) {
                                           if (selected == 'show') {
@@ -907,10 +898,7 @@ class _FilteredEmptyState extends StatelessWidget {
                   ? 'Arama metnini veya seçili filtreleri değiştirerek tekrar deneyin.'
                   : 'Henüz gösterilecek ürün bulunmuyor.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.textMedium,
-              ),
+              style: const TextStyle(fontSize: 13, color: AppTheme.textMedium),
             ),
             if (hasActiveFilters) ...[
               const SizedBox(height: 16),

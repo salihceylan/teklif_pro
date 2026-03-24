@@ -9,6 +9,7 @@ import '../../providers/customer_provider.dart';
 import '../../providers/visit_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class VisitDetailScreen extends StatefulWidget {
   final int visitId;
@@ -57,6 +58,15 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
     if (value == 'edit') {
       context.push('/visits/${visit.id}/edit');
     } else if (value == 'delete') {
+      final confirmed = await showDestructiveConfirmDialog(
+        context,
+        title: 'Servis Formunu Sil',
+        message:
+            '${visit.serviceCode ?? 'Bu'} servis formunu silmek istediğinizden emin misiniz?',
+      );
+      if (!confirmed || !mounted) {
+        return;
+      }
       await context.read<VisitProvider>().delete(visit.id);
       if (mounted) {
         _goBack();

@@ -6,6 +6,7 @@ import '../../core/app_theme.dart';
 import '../../providers/customer_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -23,33 +24,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, int id) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Firmayı Sil'),
-        content: const Text(
-          'Bu firma kaydını silmek istediğinizden emin misiniz?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              context.read<CustomerProvider>().delete(id);
-            },
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+  Future<void> _confirmDelete(BuildContext context, int id) async {
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Firmayı Sil',
+      message: 'Bu firma kaydını silmek istediğinizden emin misiniz?',
     );
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+    await context.read<CustomerProvider>().delete(id);
   }
 
   @override

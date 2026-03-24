@@ -7,6 +7,7 @@ import '../../core/app_theme.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/invoice_provider.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class InvoiceFormScreen extends StatefulWidget {
   final int? invoiceId;
@@ -90,7 +91,16 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     setState(() => _items.add(_ItemRow.empty()));
   }
 
-  void _removeItem(int index) {
+  Future<void> _removeItem(int index) async {
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: 'Fatura Kalemini Sil',
+      message:
+          'Bu fatura kalemini formdan kaldırmak istediğinizden emin misiniz?',
+    );
+    if (!confirmed || !mounted) {
+      return;
+    }
     final row = _items.removeAt(index);
     row.dispose();
     setState(() {});

@@ -10,6 +10,7 @@ import '../../providers/customer_provider.dart';
 import '../../providers/invoice_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
+import '../widgets/destructive_confirm_dialog.dart';
 
 class InvoiceDetailScreen extends StatefulWidget {
   final int invoiceId;
@@ -62,6 +63,15 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
     } else if (value == 'paid') {
       await invoices.update(invoice.id, {'status': 'paid'});
     } else if (value == 'delete') {
+      final confirmed = await showDestructiveConfirmDialog(
+        context,
+        title: 'Faturayı Sil',
+        message:
+            '${invoice.title} faturasını silmek istediğinizden emin misiniz?',
+      );
+      if (!confirmed || !mounted) {
+        return;
+      }
       await invoices.delete(invoice.id);
       if (mounted) {
         _goBack();
