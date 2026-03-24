@@ -4,12 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/app_theme.dart';
+import '../../models/customer.dart';
 import '../../models/visit.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/visit_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/destructive_confirm_dialog.dart';
+import 'visit_ui_actions.dart';
 
 class VisitDetailScreen extends StatefulWidget {
   final int visitId;
@@ -42,9 +44,11 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
   ServiceVisit? _visit(VisitProvider provider) =>
       provider.items.where((item) => item.id == widget.visitId).firstOrNull;
 
-  String _customerName(List<dynamic> customers, int id) =>
-      customers.where((item) => item.id == id).firstOrNull?.companyName ??
-      'Müşteri #$id';
+  Customer? _customer(List<Customer> customers, int id) =>
+      customers.where((item) => item.id == id).firstOrNull;
+
+  String _customerName(List<Customer> customers, int id) =>
+      _customer(customers, id)?.companyName ?? 'Musteri #$id';
 
   void _goBack() {
     if (Navigator.of(context).canPop()) {
@@ -54,15 +58,40 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
     }
   }
 
-  Future<void> _handleMenuAction(String value, ServiceVisit visit) async {
+  Future<void> _handleMenuAction(
+    String value,
+    ServiceVisit visit, {
+    Customer? customer,
+  }) async {
+    if (value == 'print') {
+      await VisitUiActions.previewVisit(
+        context,
+        visit: visit,
+        customer: customer,
+      );
+      return;
+    }
+
+    if (value == 'mail') {
+      await VisitUiActions.showSendEmailDialog(
+        context,
+        visit: visit,
+        customer: customer,
+      );
+      return;
+    }
+
     if (value == 'edit') {
       context.push('/visits/${visit.id}/edit');
-    } else if (value == 'delete') {
+      return;
+    }
+
+    if (value == 'delete') {
       final confirmed = await showDestructiveConfirmDialog(
         context,
         title: 'Servis Formunu Sil',
         message:
-            '${visit.serviceCode ?? 'Bu'} servis formunu silmek istediğinizden emin misiniz?',
+            '${visit.serviceCode ?? 'Bu'} servis formunu silmek istediginizden emin misiniz?',
       );
       if (!confirmed || !mounted) {
         return;
@@ -79,6 +108,9 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
     final visitProvider = context.watch<VisitProvider>();
     final customerProvider = context.watch<CustomerProvider>();
     final visit = _visit(visitProvider);
+    final customer = visit == null
+        ? null
+        : _customer(customerProvider.items, visit.customerId);
 
     if (visitProvider.loading && visit == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -91,11 +123,11 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back_rounded),
           ),
-          title: const Text('Servis Formu Bulunamadı'),
+          title: const Text('Servis Formu Bulunamadi'),
         ),
         body: const Center(
           child: Text(
-            'Servis formu bulunamadı',
+            'Servis formu bulunamadi',
             style: TextStyle(color: AppTheme.textMedium),
           ),
         ),
@@ -112,14 +144,29 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded),
-            tooltip: 'Servis formu işlemleri',
-            onSelected: (value) => _handleMenuAction(value, visit),
+            tooltip: 'Servis formu islemleri',
+            onSelected: (value) =>
+                _handleMenuAction(value, visit, customer: customer),
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'print',
+                child: ActionMenuRow(
+                  icon: Icons.print_outlined,
+                  label: 'Servis Ciktisi',
+                ),
+              ),
+              PopupMenuItem(
+                value: 'mail',
+                child: ActionMenuRow(
+                  icon: Icons.email_outlined,
+                  label: 'Mail Gonder',
+                ),
+              ),
               PopupMenuItem(
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Düzenle',
+                  label: 'Duzenle',
                 ),
               ),
               PopupMenuItem(
@@ -142,7 +189,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             icon: Icons.build_circle_outlined,
             title: _customerName(customerProvider.items, visit.customerId),
             subtitle:
-                '${visit.serviceCode ?? 'Servis belgesi'} için operasyon ve maliyet özeti',
+                '${visit.serviceCode ?? 'Servis belgesi'} icin operasyon ve maliyet ozeti',
             trailing: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -152,14 +199,40 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   children: [
                     AppIntroActionButton(
                       icon: Icons.edit_outlined,
-                      label: 'Düzenle',
-                      onPressed: () => _handleMenuAction('edit', visit),
+                      label: 'Duzenle',
+                      onPressed: () => _handleMenuAction(
+                        'edit',
+                        visit,
+                        customer: customer,
+                      ),
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.print_outlined,
+                      label: 'Yazdir',
+                      onPressed: () => _handleMenuAction(
+                        'print',
+                        visit,
+                        customer: customer,
+                      ),
                       emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.email_outlined,
+                      label: 'Mail',
+                      onPressed: () => _handleMenuAction(
+                        'mail',
+                        visit,
+                        customer: customer,
+                      ),
                     ),
                     AppIntroActionButton(
                       icon: Icons.delete_outline,
                       label: 'Sil',
-                      onPressed: () => _handleMenuAction('delete', visit),
+                      onPressed: () => _handleMenuAction(
+                        'delete',
+                        visit,
+                        customer: customer,
+                      ),
                       destructive: true,
                     ),
                   ],
@@ -171,7 +244,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   children: [
                     _MetricPill(
                       label: 'Toplam TL',
-                      value: '${_currency.format(visit.grandTotal)} ₺',
+                      value: '${_currency.format(visit.grandTotal)} TL',
                     ),
                     _MetricPill(
                       label: 'Toplam USD',
@@ -199,7 +272,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ).format(visit.scheduledDate),
                   ),
                   _InfoPanel(
-                    label: 'Gerçekleşen Tarih',
+                    label: 'Gerceklesen Tarih',
                     value: visit.actualDate == null
                         ? '-'
                         : DateFormat(
@@ -214,9 +287,9 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   ),
                   _InfoPanel(
                     label: 'Toplam TL',
-                    value: '${_currency.format(visit.grandTotal)} ₺',
+                    value: '${_currency.format(visit.grandTotal)} TL',
                   ),
-                  _InfoPanel(label: 'KDV Oranı', value: '%${visit.vatRate}'),
+                  _InfoPanel(label: 'KDV Orani', value: '%${visit.vatRate}'),
                   _InfoPanel(
                     label: 'Toplam USD',
                     value: '${_currency.format(visit.grandTotalUsd)} USD',
@@ -238,7 +311,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   ),
                 ],
               ),
-              _DetailLine('Şikayet / Talep', visit.complaint),
+              _DetailLine('Sikayet / Talep', visit.complaint),
             ],
           ),
           const SizedBox(height: 20),
@@ -279,7 +352,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                             'Toplam ${_currency.format(item.totalPriceUsd)} USD',
                           ),
                           _MiniPill(
-                            'TL Karşılık ${_currency.format(item.totalPrice)} ₺',
+                            'TL Karsilik ${_currency.format(item.totalPrice)} TL',
                           ),
                         ],
                       ),
@@ -301,17 +374,17 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     const SizedBox(height: 8),
                     _SummaryRow(
                       'Malzeme (TL)',
-                      '${_currency.format(visit.materialTotal)} ₺',
+                      '${_currency.format(visit.materialTotal)} TL',
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'İşçilik (USD)',
+                      'Iscilik (USD)',
                       '${_currency.format(visit.laborAmountUsd)} USD',
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'İşçilik (TL)',
-                      '${_currency.format(visit.laborAmount)} ₺',
+                      'Iscilik (TL)',
+                      '${_currency.format(visit.laborAmount)} TL',
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
@@ -321,7 +394,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     const SizedBox(height: 8),
                     _SummaryRow(
                       'KDV (TL)',
-                      '${_currency.format(visit.vatTotal)} ₺',
+                      '${_currency.format(visit.vatTotal)} TL',
                     ),
                     const Divider(height: 24),
                     _SummaryRow(
@@ -331,7 +404,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     const Divider(height: 24),
                     _SummaryRow(
                       'Genel Toplam (TL)',
-                      '${_currency.format(visit.grandTotal)} ₺',
+                      '${_currency.format(visit.grandTotal)} TL',
                       highlighted: true,
                     ),
                   ],
@@ -346,8 +419,8 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
               icon: Icons.notes_outlined,
               title: 'Notlar',
               children: [
-                _DetailLine('Müşteri Notları', visit.notes),
-                _DetailLine('Teknisyen Notları', visit.technicianNotes),
+                _DetailLine('Musteri Notlari', visit.notes),
+                _DetailLine('Teknisyen Notlari', visit.technicianNotes),
               ],
             ),
           ],

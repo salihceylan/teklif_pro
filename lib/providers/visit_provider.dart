@@ -53,4 +53,25 @@ class VisitProvider extends ChangeNotifier {
     _items.removeWhere((e) => e.id == id);
     notifyListeners();
   }
+
+  Future<void> sendEmail(
+    int id, {
+    required String email,
+    String? subject,
+    String? message,
+  }) async {
+    await _service.sendEmail(
+      id,
+      email: email,
+      subject: subject,
+      message: message,
+    );
+    final visit = _items.where((e) => e.id == id).firstOrNull;
+    await AppNotifications.instance.notify(
+      AppNotificationTopic.serviceForms,
+      title: 'Servis formu mail ile gonderildi',
+      body:
+          '${visit?.serviceCode ?? 'Servis formu'} belgesi $email adresine gonderildi.',
+    );
+  }
 }

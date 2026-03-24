@@ -6,29 +6,29 @@ import 'package:printing/printing.dart';
 import '../../core/app_theme.dart';
 import '../../core/browser_file_download.dart';
 import '../../models/customer.dart';
-import '../../models/quote.dart';
 import '../../models/user.dart';
-import '../../services/quote_document_service.dart';
-import 'quote_ui_actions.dart';
-import 'widgets/quote_pdf_web_viewer.dart';
+import '../../models/visit.dart';
+import '../../services/visit_document_service.dart';
+import '../quotes/widgets/quote_pdf_web_viewer.dart';
+import 'visit_ui_actions.dart';
 
-class QuotePdfPreviewScreen extends StatefulWidget {
-  final Quote quote;
+class VisitPdfPreviewScreen extends StatefulWidget {
+  final ServiceVisit visit;
   final Customer? customer;
   final User? user;
 
-  const QuotePdfPreviewScreen({
+  const VisitPdfPreviewScreen({
     super.key,
-    required this.quote,
+    required this.visit,
     required this.customer,
     required this.user,
   });
 
   @override
-  State<QuotePdfPreviewScreen> createState() => _QuotePdfPreviewScreenState();
+  State<VisitPdfPreviewScreen> createState() => _VisitPdfPreviewScreenState();
 }
 
-class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
+class _VisitPdfPreviewScreenState extends State<VisitPdfPreviewScreen> {
   late final Future<Uint8List> _pdfFuture;
 
   bool _downloading = false;
@@ -36,15 +36,15 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
   @override
   void initState() {
     super.initState();
-    _pdfFuture = QuoteDocumentService.buildQuotePdf(
-      quote: widget.quote,
+    _pdfFuture = VisitDocumentService.buildVisitPdf(
+      visit: widget.visit,
       customer: widget.customer,
       user: widget.user,
     );
   }
 
   String get _fileName {
-    final code = (widget.quote.quoteCode ?? 'teklif-${widget.quote.id}').trim();
+    final code = (widget.visit.serviceCode ?? 'servis-${widget.visit.id}').trim();
     final safeCode = code.replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-');
     return '$safeCode.pdf';
   }
@@ -66,7 +66,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Teklif PDF indirilemedi')),
+        const SnackBar(content: Text('Servis PDF indirilemedi')),
       );
     } finally {
       if (mounted) {
@@ -76,9 +76,9 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
   }
 
   Future<void> _sendByEmail() async {
-    await QuoteUiActions.showSendEmailDialog(
+    await VisitUiActions.showSendEmailDialog(
       context,
-      quote: widget.quote,
+      visit: widget.visit,
       customer: widget.customer,
     );
   }
@@ -105,7 +105,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Teklif PDF onizlemesi acilamadi',
+              'Servis PDF onizlemesi acilamadi',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -203,7 +203,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.quote.quoteCode ?? 'Teklif PDF')),
+      appBar: AppBar(title: Text(widget.visit.serviceCode ?? 'Servis PDF')),
       body: Column(
         children: [
           _buildActionBar(),
