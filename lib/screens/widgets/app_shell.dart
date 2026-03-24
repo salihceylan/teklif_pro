@@ -240,6 +240,121 @@ class AppIntroActionButton extends StatelessWidget {
   }
 }
 
+class AppActionPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final Color color;
+  final Color? textColor;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry padding;
+
+  const AppActionPill({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color = AppTheme.primary,
+    this.textColor,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = textColor ?? color;
+    final background =
+        backgroundColor ?? color.withValues(alpha: 0.08);
+
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: padding,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: foreground),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: foreground,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AppSelectablePill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color color;
+
+  const AppSelectablePill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.color = AppTheme.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? color : AppTheme.textMedium;
+    final background = selected
+        ? color.withValues(alpha: 0.12)
+        : const Color(0xFFF8FBFD);
+
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? color.withValues(alpha: 0.3) : AppTheme.border,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AppSectionCard extends StatelessWidget {
   final String title;
   final String? description;

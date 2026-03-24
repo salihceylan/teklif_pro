@@ -845,17 +845,10 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      avatar: Icon(icon, size: 18, color: AppTheme.primary),
-      label: Text(label),
-      onPressed: onTap,
-      backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
-      side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.12)),
-      labelStyle: const TextStyle(
-        color: AppTheme.primary,
-        fontWeight: FontWeight.w700,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    return AppActionPill(
+      icon: icon,
+      label: label,
+      onTap: onTap,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../providers/product_provider.dart';
 import '../widgets/action_menu_row.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/app_shell.dart';
 
 enum _ProductSort { newest, name, servicePrice, sitePrice, stock }
 
@@ -754,22 +755,10 @@ class _FilterChipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
+    return AppSelectablePill(
+      label: label,
       selected: selected,
-      onSelected: (_) => onSelected(),
-      showCheckmark: false,
-      selectedColor: AppTheme.primary.withValues(alpha: 0.12),
-      backgroundColor: const Color(0xFFF8FBFD),
-      side: BorderSide(
-        color: selected
-            ? AppTheme.primary.withValues(alpha: 0.3)
-            : AppTheme.border,
-      ),
-      labelStyle: TextStyle(
-        color: selected ? AppTheme.primary : AppTheme.textMedium,
-        fontWeight: FontWeight.w700,
-      ),
+      onTap: onSelected,
     );
   }
 }
