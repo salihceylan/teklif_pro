@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /register
+Disallow: /customers
+Disallow: /products
+Disallow: /quotes
+Disallow: /visits
+Disallow: /invoices
+Disallow: /service-requests
+Disallow: /notifications
+Disallow: /panel
+
+Sitemap: https://www.gudeteknoloji.com.tr/sitemap.xml
