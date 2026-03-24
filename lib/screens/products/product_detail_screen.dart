@@ -133,34 +133,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             title: product.name,
             subtitle:
                 '${product.typeLabel} • ${product.category ?? 'Kategori belirtilmedi'}',
-            trailing: Column(
-              mainAxisSize: MainAxisSize.min,
+            supporting: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AppIntroSectionLabel(
-                  label: 'Kayit Islemleri',
-                  icon: Icons.bolt_outlined,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    AppIntroActionButton(
-                      icon: Icons.edit_outlined,
-                      label: 'Düzenle',
-                      onPressed: () => _handleMenuAction('edit', product),
-                      emphasized: true,
-                    ),
-                    AppIntroActionButton(
-                      icon: Icons.delete_outline,
-                      label: 'Sil',
-                      onPressed: () => _handleMenuAction('delete', product),
-                      destructive: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
                 const AppIntroSectionLabel(
                   label: 'Stok ve Durum',
                   icon: Icons.insights_outlined,
@@ -180,7 +155,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             : 'Stok: ${_qty.format(product.stockQuantity)} ${product.unit}',
                       )
                     else
-                      const _HeroBadge(label: 'Stok Takibi Kapalı'),
+                      const AppIntroTag(label: 'Stok Takibi Kapalı'),
+                  ],
+                ),
+              ],
+            ),
+            trailing: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppIntroSectionLabel(
+                  label: 'Kayıt İşlemleri',
+                  icon: Icons.bolt_outlined,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroActionButton(
+                      icon: Icons.edit_outlined,
+                      label: 'Düzenle',
+                      onPressed: () => _handleMenuAction('edit', product),
+                      emphasized: true,
+                    ),
+                    AppIntroActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Sil',
+                      onPressed: () => _handleMenuAction('delete', product),
+                      destructive: true,
+                    ),
                   ],
                 ),
               ],
@@ -270,17 +274,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
     );
-  }
-}
-
-class _HeroBadge extends StatelessWidget {
-  final String label;
-
-  const _HeroBadge({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppIntroTag(label: label);
   }
 }
 

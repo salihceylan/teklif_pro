@@ -159,12 +159,37 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             title: invoice.title,
             subtitle:
                 '${customer?.companyName ?? 'Firma seçilmedi'} için hazırlanan fatura dökümü.',
+            supporting: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppIntroSectionLabel(
+                  label: 'Fatura Özeti',
+                  icon: Icons.insights_outlined,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroStatCard(
+                      label: 'Durum',
+                      value: invoice.statusLabel,
+                      accentColor: AppTheme.statusColor(invoice.status),
+                    ),
+                    AppIntroStatCard(
+                      label: 'Toplam',
+                      value: '${_currency.format(invoice.totalAmount)} ₺',
+                    ),
+                  ],
+                ),
+              ],
+            ),
             trailing: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const AppIntroSectionLabel(
-                  label: 'Hizli Islemler',
+                  label: 'Hızlı İşlemler',
                   icon: Icons.bolt_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -188,27 +213,6 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                       label: 'Sil',
                       onPressed: () => _handleMenuAction('delete', invoice),
                       destructive: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const AppIntroSectionLabel(
-                  label: 'Fatura Ozeti',
-                  icon: Icons.insights_outlined,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    AppIntroStatCard(
-                      label: 'Durum',
-                      value: invoice.statusLabel,
-                      accentColor: AppTheme.statusColor(invoice.status),
-                    ),
-                    AppIntroStatCard(
-                      label: 'Toplam',
-                      value: '${_currency.format(invoice.totalAmount)} ₺',
                     ),
                   ],
                 ),

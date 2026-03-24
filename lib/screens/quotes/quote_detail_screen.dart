@@ -199,12 +199,41 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             title: quote.title,
             subtitle:
                 '${customer?.companyName ?? quote.customerCompanyName ?? 'Firma seçilmedi'} için hazırlanan teklif belgesi.',
+            supporting: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppIntroSectionLabel(
+                  label: 'Belge Özeti',
+                  icon: Icons.insights_outlined,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroStatCard(
+                      label: 'Durum',
+                      value: quote.statusLabel,
+                      accentColor: statusColor,
+                    ),
+                    AppIntroStatCard(
+                      label: 'Toplam TL',
+                      value: '${_currency.format(quote.totalAmount)} ₺',
+                    ),
+                    AppIntroStatCard(
+                      label: 'Toplam USD',
+                      value: '${_currency.format(quote.totalAmountUsd)} USD',
+                    ),
+                  ],
+                ),
+              ],
+            ),
             trailing: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const AppIntroSectionLabel(
-                  label: 'Hizli Islemler',
+                  label: 'Hızlı İşlemler',
                   icon: Icons.bolt_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -258,31 +287,6 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                         customer: customer,
                       ),
                       destructive: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const AppIntroSectionLabel(
-                  label: 'Belge Ozeti',
-                  icon: Icons.insights_outlined,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    AppIntroStatCard(
-                      label: 'Durum',
-                      value: quote.statusLabel,
-                      accentColor: statusColor,
-                    ),
-                    AppIntroStatCard(
-                      label: 'Toplam TL',
-                      value: '${_currency.format(quote.totalAmount)} ₺',
-                    ),
-                    AppIntroStatCard(
-                      label: 'Toplam USD',
-                      value: '${_currency.format(quote.totalAmountUsd)} USD',
                     ),
                   ],
                 ),

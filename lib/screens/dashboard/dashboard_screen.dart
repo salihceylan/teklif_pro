@@ -106,12 +106,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: user?.fullName ?? 'Panel',
               subtitle:
                   '${user?.companyName ?? 'Teklif Pro'} için müşteri, servis ve finansal akışı tek ekrandan takip edin.',
-              trailing: Column(
-                mainAxisSize: MainAxisSize.min,
+              supporting: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const AppIntroSectionLabel(
-                    label: 'Anlik Durum',
+                    label: 'Anlık Durum',
                     icon: Icons.insights_outlined,
                   ),
                   const SizedBox(height: 12),

@@ -52,6 +52,7 @@ class AppPageIntro extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final String? badge;
+  final Widget? supporting;
   final Widget? trailing;
 
   const AppPageIntro({
@@ -60,20 +61,21 @@ class AppPageIntro extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     this.badge,
+    this.supporting,
     this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
@@ -106,16 +108,16 @@ class AppPageIntro extends StatelessWidget {
               final stacked = constraints.maxWidth < 820;
               final titleFontSize = constraints.maxWidth < 540 ? 24.0 : 30.0;
               final leading = Container(
-                width: 66,
-                height: 66,
+                width: 62,
+                height: 62,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(18),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.18),
                   ),
                 ),
-                child: Icon(icon, size: 30, color: Colors.white),
+                child: Icon(icon, size: 28, color: Colors.white),
               );
 
               final textBlock = Column(
@@ -144,14 +146,22 @@ class AppPageIntro extends StatelessWidget {
                       height: 1.55,
                     ),
                   ),
+                  if (supporting != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 18),
+                      child: supporting!,
+                    ),
                 ],
               );
 
               final trailingBlock = trailing == null
                   ? null
-                  : ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: AppIntroPanel(child: trailing!),
+                  : Align(
+                      alignment: Alignment.topRight,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: AppIntroPanel(child: trailing!),
+                      ),
                     );
 
               if (stacked) {
@@ -217,7 +227,7 @@ class AppIntroPanel extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
@@ -274,20 +284,20 @@ class AppIntroActionButton extends StatelessWidget {
       child: Ink(
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: border),
         ),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 26,
+                  height: 26,
                   decoration: BoxDecoration(
                     color: emphasized
                         ? AppTheme.primary.withValues(alpha: 0.12)
@@ -303,7 +313,7 @@ class AppIntroActionButton extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: foreground,
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -362,11 +372,11 @@ class AppIntroStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 132),
-      padding: const EdgeInsets.all(14),
+      constraints: const BoxConstraints(minWidth: 134, maxWidth: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Column(

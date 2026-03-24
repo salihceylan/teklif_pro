@@ -189,13 +189,37 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             icon: Icons.build_circle_outlined,
             title: _customerName(customerProvider.items, visit.customerId),
             subtitle:
-                '${visit.serviceCode ?? 'Servis belgesi'} icin operasyon ve maliyet ozeti',
+                '${visit.serviceCode ?? 'Servis belgesi'} için operasyon ve maliyet özeti',
+            supporting: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppIntroSectionLabel(
+                  label: 'Servis Özeti',
+                  icon: Icons.insights_outlined,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AppIntroStatCard(
+                      label: 'Toplam TL',
+                      value: '${_currency.format(visit.grandTotal)} TL',
+                    ),
+                    AppIntroStatCard(
+                      label: 'Toplam USD',
+                      value: '${_currency.format(visit.grandTotalUsd)} USD',
+                    ),
+                  ],
+                ),
+              ],
+            ),
             trailing: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const AppIntroSectionLabel(
-                  label: 'Hizli Islemler',
+                  label: 'Hızlı İşlemler',
                   icon: Icons.bolt_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -205,13 +229,13 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   children: [
                     AppIntroActionButton(
                       icon: Icons.edit_outlined,
-                      label: 'Duzenle',
+                      label: 'Düzenle',
                       onPressed: () =>
                           _handleMenuAction('edit', visit, customer: customer),
                     ),
                     AppIntroActionButton(
                       icon: Icons.print_outlined,
-                      label: 'Yazdir',
+                      label: 'Yazdır',
                       onPressed: () =>
                           _handleMenuAction('print', visit, customer: customer),
                       emphasized: true,
@@ -231,26 +255,6 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                         customer: customer,
                       ),
                       destructive: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const AppIntroSectionLabel(
-                  label: 'Servis Ozeti',
-                  icon: Icons.insights_outlined,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    AppIntroStatCard(
-                      label: 'Toplam TL',
-                      value: '${_currency.format(visit.grandTotal)} TL',
-                    ),
-                    AppIntroStatCard(
-                      label: 'Toplam USD',
-                      value: '${_currency.format(visit.grandTotalUsd)} USD',
                     ),
                   ],
                 ),

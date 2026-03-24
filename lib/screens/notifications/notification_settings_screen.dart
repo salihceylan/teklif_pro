@@ -121,17 +121,32 @@ class _NotificationSettingsScreenState
                   title: 'Bildirim Tercihleri',
                   subtitle:
                       'Olay gerçekleştiğinde cihazda hangi konu başlıklarının bildirim üreteceğini buradan yönetebilirsiniz.',
-                  trailing: Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+                  supporting: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _HeroMetric(
-                        label: 'Platform',
-                        value: _supported
-                            ? (_isWebPush ? 'Tarayıcı Push' : 'Cihaz Bildirimi')
-                            : 'Destek Yok',
+                      const AppIntroSectionLabel(
+                        label: 'Durum',
+                        icon: Icons.insights_outlined,
                       ),
-                      _HeroMetric(label: 'İzin', value: _permissionLabel),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          AppIntroStatCard(
+                            label: 'Platform',
+                            value: _supported
+                                ? (_isWebPush
+                                      ? 'Tarayıcı Push'
+                                      : 'Cihaz Bildirimi')
+                                : 'Destek Yok',
+                          ),
+                          AppIntroStatCard(
+                            label: 'İzin',
+                            value: _permissionLabel,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -270,47 +285,6 @@ class _NotificationSettingsScreenState
       default:
         return 'Destek Yok';
     }
-  }
-}
-
-class _HeroMetric extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _HeroMetric({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
