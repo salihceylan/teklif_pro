@@ -191,8 +191,14 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
             subtitle:
                 '${visit.serviceCode ?? 'Servis belgesi'} icin operasyon ve maliyet ozeti',
             trailing: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const AppIntroSectionLabel(
+                  label: 'Hizli Islemler',
+                  icon: Icons.bolt_outlined,
+                ),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -200,30 +206,21 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     AppIntroActionButton(
                       icon: Icons.edit_outlined,
                       label: 'Duzenle',
-                      onPressed: () => _handleMenuAction(
-                        'edit',
-                        visit,
-                        customer: customer,
-                      ),
+                      onPressed: () =>
+                          _handleMenuAction('edit', visit, customer: customer),
                     ),
                     AppIntroActionButton(
                       icon: Icons.print_outlined,
                       label: 'Yazdir',
-                      onPressed: () => _handleMenuAction(
-                        'print',
-                        visit,
-                        customer: customer,
-                      ),
+                      onPressed: () =>
+                          _handleMenuAction('print', visit, customer: customer),
                       emphasized: true,
                     ),
                     AppIntroActionButton(
                       icon: Icons.email_outlined,
                       label: 'Mail',
-                      onPressed: () => _handleMenuAction(
-                        'mail',
-                        visit,
-                        customer: customer,
-                      ),
+                      onPressed: () =>
+                          _handleMenuAction('mail', visit, customer: customer),
                     ),
                     AppIntroActionButton(
                       icon: Icons.delete_outline,
@@ -237,16 +234,21 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                const AppIntroSectionLabel(
+                  label: 'Servis Ozeti',
+                  icon: Icons.insights_outlined,
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    _MetricPill(
+                    AppIntroStatCard(
                       label: 'Toplam TL',
                       value: '${_currency.format(visit.grandTotal)} TL',
                     ),
-                    _MetricPill(
+                    AppIntroStatCard(
                       label: 'Toplam USD',
                       value: '${_currency.format(visit.grandTotalUsd)} USD',
                     ),
@@ -424,47 +426,6 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
               ],
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricPill extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MetricPill({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
         ],
       ),
     );

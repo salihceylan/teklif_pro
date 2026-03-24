@@ -106,24 +106,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: user?.fullName ?? 'Panel',
               subtitle:
                   '${user?.companyName ?? 'Teklif Pro'} için müşteri, servis ve finansal akışı tek ekrandan takip edin.',
-              trailing: Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              trailing: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _MetricPill(
-                    label: 'Müşteri',
-                    value: '${customers.length}',
-                    icon: Icons.people_alt_outlined,
+                  const AppIntroSectionLabel(
+                    label: 'Anlik Durum',
+                    icon: Icons.insights_outlined,
                   ),
-                  _MetricPill(
-                    label: 'Aktif Talep',
-                    value: '$openRequests',
-                    icon: Icons.build_circle_outlined,
-                  ),
-                  _MetricPill(
-                    label: 'Bekleyen Teklif',
-                    value: '$pendingQuotes',
-                    icon: Icons.request_quote_outlined,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      AppIntroStatCard(
+                        label: 'Müşteri',
+                        value: '${customers.length}',
+                        icon: Icons.people_alt_outlined,
+                      ),
+                      AppIntroStatCard(
+                        label: 'Aktif Talep',
+                        value: '$openRequests',
+                        icon: Icons.build_circle_outlined,
+                      ),
+                      AppIntroStatCard(
+                        label: 'Bekleyen Teklif',
+                        value: '$pendingQuotes',
+                        icon: Icons.request_quote_outlined,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -390,58 +401,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (hour < 12) return 'Günaydın';
     if (hour < 18) return 'İyi günler';
     return 'İyi akşamlar';
-  }
-}
-
-class _MetricPill extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _MetricPill({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.78),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -845,11 +804,7 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppActionPill(
-      icon: icon,
-      label: label,
-      onTap: onTap,
-    );
+    return AppActionPill(icon: icon, label: label, onTap: onTap);
   }
 }
 

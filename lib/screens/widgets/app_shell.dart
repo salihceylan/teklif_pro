@@ -66,14 +66,15 @@ class AppPageIntro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryDark.withValues(alpha: 0.16),
@@ -82,97 +83,151 @@ class AppPageIntro extends StatelessWidget {
           ),
         ],
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final stacked = constraints.maxWidth < 760;
-          final leading = Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -40,
+            right: -28,
+            child: _GlowBlob(
+              size: 180,
+              color: Colors.white.withValues(alpha: 0.08),
             ),
-            child: Icon(icon, size: 30, color: Colors.white),
-          );
+          ),
+          Positioned(
+            bottom: -56,
+            left: -30,
+            child: _GlowBlob(
+              size: 140,
+              color: Colors.white.withValues(alpha: 0.05),
+            ),
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked = constraints.maxWidth < 820;
+              final titleFontSize = constraints.maxWidth < 540 ? 24.0 : 30.0;
+              final leading = Container(
+                width: 66,
+                height: 66,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Icon(icon, size: 30, color: Colors.white),
+              );
 
-          final textBlock = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (badge != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Text(
-                    badge!,
-                    style: const TextStyle(
+              final textBlock = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (badge != null) ...[
+                    AppIntroTag(label: badge!),
+                    const SizedBox(height: 14),
+                  ],
+                  Text(
+                    title,
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.8,
+                      height: 1.05,
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-              ],
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.7,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.82),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          );
-
-          if (stacked) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                leading,
-                const SizedBox(height: 18),
-                textBlock,
-                if (trailing != null) ...[
-                  const SizedBox(height: 18),
-                  trailing!,
+                  const SizedBox(height: 12),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 14,
+                      height: 1.55,
+                    ),
+                  ),
                 ],
-              ],
-            );
-          }
+              );
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              leading,
-              const SizedBox(width: 18),
-              Expanded(child: textBlock),
-              if (trailing != null) ...[
-                const SizedBox(width: 18),
-                Flexible(child: trailing!),
-              ],
-            ],
-          );
-        },
+              final trailingBlock = trailing == null
+                  ? null
+                  : ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: AppIntroPanel(child: trailing!),
+                    );
+
+              if (stacked) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        leading,
+                        const SizedBox(width: 16),
+                        Expanded(child: textBlock),
+                      ],
+                    ),
+                    if (trailingBlock != null) ...[
+                      const SizedBox(height: 20),
+                      trailingBlock,
+                    ],
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        leading,
+                        const SizedBox(width: 18),
+                        Expanded(child: textBlock),
+                      ],
+                    ),
+                  ),
+                  if (trailingBlock != null) ...[
+                    const SizedBox(width: 20),
+                    Flexible(child: trailingBlock),
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class AppIntroPanel extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  const AppIntroPanel({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
@@ -195,14 +250,23 @@ class AppIntroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = destructive ? const Color(0xFFFFE2E2) : Colors.white;
+    final disabled = onPressed == null;
+    final foreground = disabled
+        ? Colors.white.withValues(alpha: 0.55)
+        : destructive
+        ? const Color(0xFFFFE2E2)
+        : emphasized
+        ? AppTheme.primaryDark
+        : Colors.white;
     final background = destructive
         ? const Color(0xFF7F1D1D).withValues(alpha: 0.42)
         : emphasized
-        ? Colors.white.withValues(alpha: 0.18)
+        ? Colors.white
         : Colors.white.withValues(alpha: 0.12);
     final border = destructive
         ? const Color(0xFFFCA5A5).withValues(alpha: 0.42)
+        : emphasized
+        ? Colors.white.withValues(alpha: 0.5)
         : Colors.white.withValues(alpha: 0.16);
 
     return Material(
@@ -217,11 +281,23 @@ class AppIntroActionButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: foreground),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: emphasized
+                        ? AppTheme.primary.withValues(alpha: 0.12)
+                        : Colors.white.withValues(
+                            alpha: destructive ? 0.08 : 0.1,
+                          ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 16, color: foreground),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   label,
@@ -235,6 +311,144 @@ class AppIntroActionButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class AppIntroSectionLabel extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+
+  const AppIntroSectionLabel({super.key, required this.label, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.76)),
+          const SizedBox(width: 6),
+        ],
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.76),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class AppIntroStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData? icon;
+  final Color accentColor;
+
+  const AppIntroStatCard({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon,
+    this.accentColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 132),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 16, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withValues(alpha: 0.72),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              color: accentColor,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AppIntroTag extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color borderColor;
+
+  const AppIntroTag({
+    super.key,
+    required this.label,
+    this.icon,
+    this.foregroundColor = Colors.white,
+    this.backgroundColor = const Color(0x24FFFFFF),
+    this.borderColor = const Color(0x2EFFFFFF),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: foregroundColor),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: foregroundColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -263,25 +477,40 @@ class AppActionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = textColor ?? color;
-    final background = backgroundColor ?? color.withValues(alpha: 0.08);
+    final background = backgroundColor ?? Colors.white.withValues(alpha: 0.78);
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryDark.withValues(alpha: 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: padding,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: foreground),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 16, color: foreground),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   label,
@@ -394,16 +623,16 @@ class AppSectionCard extends StatelessWidget {
           );
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         border: Border.all(color: AppTheme.border),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryDark.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -418,8 +647,18 @@ class AppSectionCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.primary.withValues(alpha: 0.14),
+                      AppTheme.secondary.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                  ),
                 ),
                 child: Icon(icon, color: AppTheme.primary, size: 22),
               );
@@ -490,7 +729,9 @@ class AppSectionCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          Divider(color: AppTheme.border.withValues(alpha: 0.85)),
+          const SizedBox(height: 18),
           ..._withSpacing(children),
         ],
       ),

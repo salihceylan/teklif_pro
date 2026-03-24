@@ -160,8 +160,14 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
             subtitle:
                 '${customer?.companyName ?? 'Firma seçilmedi'} için hazırlanan fatura dökümü.',
             trailing: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const AppIntroSectionLabel(
+                  label: 'Hizli Islemler',
+                  icon: Icons.bolt_outlined,
+                ),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -185,13 +191,22 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                const AppIntroSectionLabel(
+                  label: 'Fatura Ozeti',
+                  icon: Icons.insights_outlined,
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    _MetricPill(label: 'Durum', value: invoice.statusLabel),
-                    _MetricPill(
+                    AppIntroStatCard(
+                      label: 'Durum',
+                      value: invoice.statusLabel,
+                      accentColor: AppTheme.statusColor(invoice.status),
+                    ),
+                    AppIntroStatCard(
                       label: 'Toplam',
                       value: '${_currency.format(invoice.totalAmount)} ₺',
                     ),
@@ -307,47 +322,6 @@ class _InvoiceDetailScreenState extends State<InvoiceDetailScreen> {
               children: [_InfoLine('Fatura Notu', invoice.notes)],
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricPill extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MetricPill({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
         ],
       ),
     );

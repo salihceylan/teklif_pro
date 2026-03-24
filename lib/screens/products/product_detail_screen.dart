@@ -134,8 +134,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             subtitle:
                 '${product.typeLabel} • ${product.category ?? 'Kategori belirtilmedi'}',
             trailing: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const AppIntroSectionLabel(
+                  label: 'Kayit Islemleri',
+                  icon: Icons.bolt_outlined,
+                ),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -154,16 +160,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                const AppIntroSectionLabel(
+                  label: 'Stok ve Durum',
+                  icon: Icons.insights_outlined,
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    _HeroBadge(
+                    AppIntroTag(
                       label: product.isActive ? 'Aktif Kayıt' : 'Pasif Kayıt',
                     ),
                     if (product.trackInventory)
-                      _HeroBadge(
+                      AppIntroTag(
                         label: product.isLowStock
                             ? 'Kritik Stok'
                             : 'Stok: ${_qty.format(product.stockQuantity)} ${product.unit}',
@@ -269,22 +280,7 @@ class _HeroBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return AppIntroTag(label: label);
   }
 }
 

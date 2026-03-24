@@ -200,8 +200,14 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
             subtitle:
                 '${customer?.companyName ?? quote.customerCompanyName ?? 'Firma seçilmedi'} için hazırlanan teklif belgesi.',
             trailing: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const AppIntroSectionLabel(
+                  label: 'Hizli Islemler',
+                  icon: Icons.bolt_outlined,
+                ),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -255,25 +261,28 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                const AppIntroSectionLabel(
+                  label: 'Belge Ozeti',
+                  icon: Icons.insights_outlined,
+                ),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    _MetricPill(
+                    AppIntroStatCard(
                       label: 'Durum',
                       value: quote.statusLabel,
-                      color: statusColor,
+                      accentColor: statusColor,
                     ),
-                    _MetricPill(
+                    AppIntroStatCard(
                       label: 'Toplam TL',
                       value: '${_currency.format(quote.totalAmount)} ₺',
-                      color: Colors.white,
                     ),
-                    _MetricPill(
+                    AppIntroStatCard(
                       label: 'Toplam USD',
                       value: '${_currency.format(quote.totalAmountUsd)} USD',
-                      color: Colors.white,
                     ),
                   ],
                 ),
@@ -449,52 +458,6 @@ class _QuoteDetailScreenState extends State<QuoteDetailScreen> {
               ],
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricPill extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MetricPill({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
         ],
       ),
     );
