@@ -345,11 +345,18 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
       return;
     }
 
-    await QuoteDocumentService.printQuote(
-      quote: quote,
-      customer: _selectedCustomer(customers),
-      user: context.read<AuthProvider>().user,
-    );
+    try {
+      await QuoteDocumentService.printQuote(
+        quote: quote,
+        customer: _selectedCustomer(customers),
+        user: context.read<AuthProvider>().user,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(buildErrorSnackBar('Teklif çıktısı oluşturulamadı'));
+    }
   }
 
   Future<void> _submit() async {

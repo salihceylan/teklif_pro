@@ -12,6 +12,7 @@ import '../models/user.dart';
 class QuoteDocumentService {
   static final DateFormat _dateFormat = DateFormat('dd.MM.yyyy', 'tr_TR');
   static final NumberFormat _currency = NumberFormat('#,##0.00', 'tr_TR');
+  static Future<pw.ThemeData>? _themeFuture;
 
   static Future<void> printQuote({
     required Quote quote,
@@ -21,6 +22,7 @@ class QuoteDocumentService {
     final document = pw.Document();
     final logoBytes = await rootBundle.load(Branding.logoAsset);
     final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
+    final theme = await _loadTheme();
 
     final companyName = (user?.companyName?.trim().isNotEmpty ?? false)
         ? user!.companyName!.trim()
@@ -39,12 +41,7 @@ class QuoteDocumentService {
     document.addPage(
       pw.MultiPage(
         margin: const pw.EdgeInsets.all(28),
-        pageTheme: pw.PageTheme(
-          theme: pw.ThemeData.withFont(
-            base: await PdfGoogleFonts.notoSansRegular(),
-            bold: await PdfGoogleFonts.notoSansBold(),
-          ),
-        ),
+        pageTheme: pw.PageTheme(theme: theme),
         build: (context) => [
           pw.Container(
             padding: const pw.EdgeInsets.all(18),
@@ -269,6 +266,18 @@ class QuoteDocumentService {
     );
 
     await Printing.layoutPdf(onLayout: (_) async => document.save());
+  }
+
+  static Future<pw.ThemeData> _loadTheme() {
+    return _themeFuture ??= () async {
+      final baseFont = pw.Font.ttf(
+        await rootBundle.load('assets/fonts/SegoeUI-Regular.ttf'),
+      );
+      final boldFont = pw.Font.ttf(
+        await rootBundle.load('assets/fonts/SegoeUI-Bold.ttf'),
+      );
+      return pw.ThemeData.withFont(base: baseFont, bold: boldFont);
+    }();
   }
 
   static pw.Widget _buildItemsTable(List<QuoteItem> items) {

@@ -263,17 +263,16 @@ class AppActionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = textColor ?? color;
-    final background =
-        backgroundColor ?? color.withValues(alpha: 0.08);
+    final background = backgroundColor ?? color.withValues(alpha: 0.08);
 
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.22)),
-        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
@@ -284,15 +283,15 @@ class AppActionPill extends StatelessWidget {
               children: [
                 Icon(icon, size: 18, color: foreground),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: foreground,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
                   ),
                 ),
               ],
@@ -325,16 +324,16 @@ class AppSelectablePill extends StatelessWidget {
         ? color.withValues(alpha: 0.12)
         : const Color(0xFFF8FBFD);
 
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? color.withValues(alpha: 0.3) : AppTheme.border,
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: selected ? color.withValues(alpha: 0.3) : AppTheme.border,
         ),
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(999),
@@ -342,10 +341,13 @@ class AppSelectablePill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: foreground,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
+                height: 1.2,
               ),
             ),
           ),

@@ -13,11 +13,19 @@ class QuoteUiActions {
     required Quote quote,
     required Customer? customer,
   }) async {
-    await QuoteDocumentService.printQuote(
-      quote: quote,
-      customer: customer,
-      user: context.read<AuthProvider>().user,
-    );
+    try {
+      await QuoteDocumentService.printQuote(
+        quote: quote,
+        customer: customer,
+        user: context.read<AuthProvider>().user,
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Teklif çıktısı oluşturulamadı')),
+        );
+      }
+    }
   }
 
   static Future<void> showSendEmailDialog(
