@@ -1,0 +1,392 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/app_theme.dart';
+import '../../models/product.dart';
+import '../../providers/product_provider.dart';
+import '../widgets/action_menu_row.dart';
+import '../widgets/app_drawer.dart';
+
+class ProductsScreen extends StatefulWidget {
+  const ProductsScreen({super.key});
+
+  @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  final _money = NumberFormat('#,##0.00', 'tr_TR');
+  final _qty = NumberFormat('#,##0.##', 'tr_TR');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => context.read<ProductProvider>().load(),
+    );
+  }
+
+  Future<void> _showProductMenu(TapDownDetails details, Product product) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(
+          details.globalPosition.dx,
+          details.globalPosition.dy,
+          0,
+          0,
+        ),
+        Offset.zero & overlay.size,
+      ),
+      items: const [
+        PopupMenuItem(
+          value: 'show',
+          child: ActionMenuRow(
+            icon: Icons.visibility_outlined,
+            label: 'Urunu Goster',
+          ),
+        ),
+        PopupMenuItem(
+          value: 'edit',
+          child: ActionMenuRow(icon: Icons.edit_outlined, label: 'Duzenle'),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: ActionMenuRow(
+            icon: Icons.delete_outline,
+            label: 'Sil',
+            color: Color(0xFFEF4444),
+          ),
+        ),
+      ],
+    );
+
+    if (!mounted || selected == null) return;
+
+    if (selected == 'show') {
+      context.push('/products/${product.id}');
+    } else if (selected == 'edit') {
+      context.go('/products/${product.id}/edit');
+    } else if (selected == 'delete') {
+      _confirmDelete(product);
+    }
+  }
+
+  void _confirmDelete(Product product) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Urunu Sil'),
+        content: Text(
+          '${product.name} urun kaydini silmek istediginizden emin misiniz?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Iptal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              await context.read<ProductProvider>().delete(product.id);
+            },
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<ProductProvider>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Urunler')),
+      drawer: const AppDrawer(currentRoute: '/products'),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go('/products/new'),
+        icon: const Icon(Icons.inventory_2_outlined),
+        label: const Text('Yeni Urun'),
+      ),
+      body: provider.loading
+          ? const Center(child: CircularProgressIndicator())
+          : provider.items.isEmpty
+          ? _EmptyState(
+              icon: Icons.inventory_2_outlined,
+              message: 'Henuz urun eklenmedi',
+              actionLabel: 'Urun Ekle',
+              onAction: () => context.go('/products/new'),
+            )
+          : RefreshIndicator(
+              onRefresh: provider.load,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: provider.items.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final product = provider.items[index];
+                  final color = _typeColor(product.productType);
+
+                  return Card(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTapDown: (details) =>
+                          _showProductMenu(details, product),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                _typeIcon(product.productType),
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        product.name,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.textDark,
+                                        ),
+                                      ),
+                                      _ChipLabel(label: product.sku),
+                                      if ((product.category ?? '').isNotEmpty)
+                                        _ChipLabel(
+                                          label: product.category!,
+                                          color: const Color(0xFF0F766E),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    [
+                                      product.typeLabel,
+                                      if ((product.brand ?? '').isNotEmpty)
+                                        product.brand!,
+                                      'Birim: ${product.unit}',
+                                    ].join('  •  '),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.textMedium,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 10,
+                                    runSpacing: 6,
+                                    children: [
+                                      _meta(
+                                        Icons.payments_outlined,
+                                        'Servis: ${_money.format(product.servicePrice)} TL',
+                                      ),
+                                      _meta(
+                                        Icons.storefront_outlined,
+                                        'Site: ${_money.format(product.sitePrice)} TL',
+                                      ),
+                                      _meta(
+                                        Icons.percent_outlined,
+                                        'KDV %${_qty.format(product.vatRate)}',
+                                      ),
+                                      if (product.trackInventory)
+                                        _meta(
+                                          product.isLowStock
+                                              ? Icons.warning_amber_outlined
+                                              : Icons.inventory_outlined,
+                                          'Stok: ${_qty.format(product.stockQuantity)}',
+                                          color: product.isLowStock
+                                              ? const Color(0xFFEF4444)
+                                              : AppTheme.textMedium,
+                                        )
+                                      else
+                                        _meta(
+                                          Icons.inventory_2_outlined,
+                                          'Stok takibi kapali',
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                _StatusBadge(
+                                  label: product.isActive ? 'Aktif' : 'Pasif',
+                                  color: product.isActive
+                                      ? AppTheme.success
+                                      : AppTheme.textLight,
+                                ),
+                                if (product.isLowStock) ...[
+                                  const SizedBox(height: 8),
+                                  const _StatusBadge(
+                                    label: 'Kritik Stok',
+                                    color: Color(0xFFEF4444),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+    );
+  }
+
+  Widget _meta(IconData icon, String text, {Color? color}) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 14, color: color ?? AppTheme.textLight),
+      const SizedBox(width: 4),
+      Text(
+        text,
+        style: TextStyle(fontSize: 12, color: color ?? AppTheme.textMedium),
+      ),
+    ],
+  );
+
+  IconData _typeIcon(String type) => switch (type) {
+    'service' => Icons.design_services_outlined,
+    'consumable' => Icons.medical_services_outlined,
+    'spare_part' => Icons.settings_input_component_outlined,
+    _ => Icons.inventory_2_outlined,
+  };
+
+  Color _typeColor(String type) => switch (type) {
+    'service' => const Color(0xFF1F7A8C),
+    'consumable' => const Color(0xFF0F766E),
+    'spare_part' => const Color(0xFFF59E0B),
+    _ => AppTheme.primary,
+  };
+}
+
+class _ChipLabel extends StatelessWidget {
+  final String label;
+  final Color? color;
+
+  const _ChipLabel({required this.label, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = color ?? AppTheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: accent,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StatusBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _EmptyState({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(icon, size: 32, color: AppTheme.primary),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(color: AppTheme.textMedium, fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onAction,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(actionLabel),
+            style: FilledButton.styleFrom(minimumSize: const Size(160, 44)),
+          ),
+        ],
+      ),
+    );
+  }
+}

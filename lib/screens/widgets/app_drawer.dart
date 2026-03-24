@@ -82,6 +82,12 @@ class AppDrawer extends StatelessWidget {
                 ),
                 const _DrawerDivider(label: 'IS YONETIMI'),
                 _DrawerItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Urunler',
+                  route: '/products',
+                  currentRoute: currentRoute,
+                ),
+                _DrawerItem(
                   icon: Icons.people_alt_outlined,
                   label: 'Firmalar',
                   route: '/customers',

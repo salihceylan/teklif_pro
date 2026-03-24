@@ -10,6 +10,9 @@ import '../screens/notifications/notification_settings_screen.dart';
 import '../screens/customers/customers_screen.dart';
 import '../screens/customers/customer_detail_screen.dart';
 import '../screens/customers/customer_form_screen.dart';
+import '../screens/products/product_detail_screen.dart';
+import '../screens/products/product_form_screen.dart';
+import '../screens/products/products_screen.dart';
 import '../screens/service_requests/service_requests_screen.dart';
 import '../screens/service_requests/service_request_detail_screen.dart';
 import '../screens/service_requests/service_request_form_screen.dart';
@@ -47,6 +50,24 @@ GoRouter buildRouter(BuildContext context) {
       GoRoute(
         path: '/notifications',
         builder: (_, _) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(path: '/products', builder: (_, _) => const ProductsScreen()),
+      GoRoute(
+        path: '/products/new',
+        builder: (_, s) =>
+            ProductFormScreen(returnTo: s.uri.queryParameters['returnTo']),
+      ),
+      GoRoute(
+        path: '/products/:id/edit',
+        builder: (_, s) => ProductFormScreen(
+          productId: int.parse(s.pathParameters['id']!),
+          returnTo: s.uri.queryParameters['returnTo'],
+        ),
+      ),
+      GoRoute(
+        path: '/products/:id',
+        builder: (_, s) =>
+            ProductDetailScreen(productId: int.parse(s.pathParameters['id']!)),
       ),
       GoRoute(path: '/customers', builder: (_, _) => const CustomersScreen()),
       GoRoute(

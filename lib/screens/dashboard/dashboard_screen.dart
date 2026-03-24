@@ -346,6 +346,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   runSpacing: 12,
                   children: [
                     _QuickAction(
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Urun Ekle',
+                      onTap: () => context.go('/products/new'),
+                    ),
+                    _QuickAction(
                       icon: Icons.person_add_alt_1_outlined,
                       label: 'Müşteri Ekle',
                       onTap: () => context.go('/customers/new'),

@@ -3,8 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/app_theme.dart';
+import '../../models/product.dart';
 import '../../models/visit.dart';
 import '../../providers/customer_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../providers/visit_provider.dart';
 import '../widgets/app_shell.dart';
 
@@ -55,8 +58,12 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final customerProvider = context.read<CustomerProvider>();
+      final productProvider = context.read<ProductProvider>();
       if (customerProvider.items.isEmpty) {
         await customerProvider.load();
+      }
+      if (productProvider.items.isEmpty) {
+        await productProvider.load();
       }
       if (!mounted) return;
 
@@ -71,13 +78,13 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             .where((item) => item.id == widget.visitId)
             .firstOrNull;
         if (visit != null) {
-          _bindVisit(visit);
+          _bindVisit(visit, productProvider.items);
         }
       }
     });
   }
 
-  void _bindVisit(ServiceVisit visit) {
+  void _bindVisit(ServiceVisit visit, List<Product> products) {
     setState(() {
       _loadedVisit = visit;
       _customerId = visit.customerId;
@@ -99,6 +106,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               nameCtrl: TextEditingController(text: item.materialName),
               qtyCtrl: TextEditingController(text: item.quantity.toString()),
               priceCtrl: TextEditingController(text: item.unitPrice.toString()),
+              selectedProductId: products
+                  .where((product) => product.sku == item.productCode)
+                  .firstOrNull
+                  ?.id,
             ),
           ),
         );
@@ -171,6 +182,33 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     return '/customers/new?returnTo=${Uri.encodeComponent(destination)}';
   }
 
+  String get _productCreateRoute {
+    final destination = _isEdit
+        ? '/visits/${widget.visitId}/edit'
+        : '/visits/new';
+    return '/products/new?returnTo=${Uri.encodeComponent(destination)}';
+  }
+
+  String _formatProductNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+  }
+
+  void _applyProductToRow(_MaterialRow row, Product? product) {
+    setState(() {
+      row.selectedProductId = product?.id;
+      if (product == null) return;
+      row.codeCtrl.text = product.sku;
+      row.nameCtrl.text = product.name;
+      row.priceCtrl.text = _formatProductNumber(product.servicePrice);
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_scheduledDate == null || _customerId == null) {
@@ -237,7 +275,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   @override
   Widget build(BuildContext context) {
     final customerProvider = context.watch<CustomerProvider>();
+    final productProvider = context.watch<ProductProvider>();
     final customers = customerProvider.items;
+    final products = productProvider.items
+        .where((item) => item.isActive)
+        .toList();
     final dateFormatter = DateFormat('dd.MM.yyyy HH:mm');
 
     if (customerProvider.loading && customers.isEmpty) {
@@ -298,10 +340,21 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                   : 'Yeni servis formu olusturun',
               subtitle:
                   'Musteri sikayeti, kullanilan malzemeler, iscilik ve toplamlar tek form yapisinda toplanir.',
-              trailing: FilledButton.tonalIcon(
-                onPressed: () => context.go(_customerCreateRoute),
-                icon: const Icon(Icons.add_business_outlined),
-                label: const Text('Yeni Firma'),
+              trailing: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go(_customerCreateRoute),
+                    icon: const Icon(Icons.add_business_outlined),
+                    label: const Text('Yeni Firma'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go(_productCreateRoute),
+                    icon: const Icon(Icons.inventory_2_outlined),
+                    label: const Text('Yeni Urun'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -425,19 +478,37 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               title: 'Malzeme ve Hizmet Kalemleri',
               description:
                   'Kod, malzeme adi, adet ve birim fiyat bilgileri servis formu tablosuna uygun tutulur.',
-              trailing: TextButton.icon(
-                onPressed: _addItem,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Kalem Ekle'),
+              trailing: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => context.go(_productCreateRoute),
+                    icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                    label: const Text('Yeni Urun'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _addItem,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Kalem Ekle'),
+                  ),
+                ],
               ),
               children: [
                 for (final entry in _items.asMap().entries)
                   _MaterialCard(
                     row: entry.value,
+                    products: products,
                     canDelete: _items.length > 1,
                     fmt: _fmt,
                     onDelete: () => _removeItem(entry.key),
                     onChanged: () => setState(() {}),
+                    onProductSelected: (productId) => _applyProductToRow(
+                      entry.value,
+                      products
+                          .where((item) => item.id == productId)
+                          .firstOrNull,
+                    ),
                   ),
               ],
             ),
@@ -538,17 +609,21 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
 class _MaterialCard extends StatelessWidget {
   final _MaterialRow row;
+  final List<Product> products;
   final bool canDelete;
   final NumberFormat fmt;
   final VoidCallback onDelete;
   final VoidCallback onChanged;
+  final ValueChanged<int?> onProductSelected;
 
   const _MaterialCard({
     required this.row,
+    required this.products,
     required this.canDelete,
     required this.fmt,
     required this.onDelete,
     required this.onChanged,
+    required this.onProductSelected,
   });
 
   @override
@@ -569,15 +644,7 @@ class _MaterialCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: row.codeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Kod No',
-                        prefixIcon: Icon(Icons.qr_code_2_outlined),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: _buildProductSelector()),
                   if (canDelete) ...[
                     const SizedBox(width: 12),
                     IconButton.filledTonal(
@@ -586,6 +653,14 @@ class _MaterialCard extends StatelessWidget {
                     ),
                   ],
                 ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: row.codeCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Kod No',
+                  prefixIcon: Icon(Icons.qr_code_2_outlined),
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -630,6 +705,61 @@ class _MaterialCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildProductSelector() {
+    if (products.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F8FC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD8E3EE)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, color: AppTheme.textMedium),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Kayitli urun yok. Kalemi manuel girebilir veya once urun ekleyebilirsiniz.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMedium,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<int?>(
+      key: ValueKey(row.selectedProductId),
+      initialValue: row.selectedProductId,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Kayitli Urun',
+        prefixIcon: Icon(Icons.inventory_2_outlined),
+      ),
+      items: [
+        const DropdownMenuItem<int?>(
+          value: null,
+          child: Text('Manuel kalem gir'),
+        ),
+        ...products.map(
+          (product) => DropdownMenuItem<int?>(
+            value: product.id,
+            child: Text(
+              '${product.sku} • ${product.name}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+      onChanged: onProductSelected,
     );
   }
 
@@ -752,12 +882,14 @@ class _MaterialRow {
   final TextEditingController nameCtrl;
   final TextEditingController qtyCtrl;
   final TextEditingController priceCtrl;
+  int? selectedProductId;
 
   _MaterialRow({
     required this.codeCtrl,
     required this.nameCtrl,
     required this.qtyCtrl,
     required this.priceCtrl,
+    this.selectedProductId,
   });
 
   factory _MaterialRow.empty() => _MaterialRow(

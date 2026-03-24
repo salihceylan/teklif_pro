@@ -7,6 +7,7 @@ import 'core/router.dart';
 import 'core/app_theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/customer_provider.dart';
+import 'providers/product_provider.dart';
 import 'providers/service_request_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/visit_provider.dart';
@@ -29,6 +30,7 @@ class TeklifProApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..tryAutoLogin()),
         ChangeNotifierProvider(create: (_) => CustomerProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => ServiceRequestProvider()),
         ChangeNotifierProvider(create: (_) => QuoteProvider()),
         ChangeNotifierProvider(create: (_) => VisitProvider()),

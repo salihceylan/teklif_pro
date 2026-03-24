@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../core/app_theme.dart';
 import '../../core/branding.dart';
 
+enum _BackdropTone { surface, auth }
+
 class AppScrollableBody extends StatelessWidget {
   final List<Widget> children;
   final double maxWidth;
@@ -19,14 +21,7 @@ class AppScrollableBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF4F7FB), Color(0xFFEFF5F1)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+    return _BrandedBackdrop.surface(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final horizontal = constraints.maxWidth >= 720 ? 24.0 : 16.0;
@@ -422,133 +417,159 @@ class AuthScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.primaryDark,
       body: SizedBox.expand(
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryDark,
-                AppTheme.primary,
-                AppTheme.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -120,
-                right: -70,
-                child: _GlowBlob(
-                  size: 280,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ),
-            Positioned(
-              bottom: -100,
-              left: -80,
-              child: _GlowBlob(
-                size: 240,
-                color: Colors.white.withValues(alpha: 0.06),
-              ),
-            ),
-            const Positioned.fill(child: _AuthWatermarkPattern()),
-            SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                    final wide = constraints.maxWidth >= 980;
-                    final padding = constraints.maxWidth >= 720 ? 28.0 : 18.0;
-                    final minHeight = (constraints.maxHeight - (padding * 2))
-                        .clamp(0.0, double.infinity);
+        child: _BrandedBackdrop.auth(
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth >= 980;
+                final padding = constraints.maxWidth >= 720 ? 28.0 : 18.0;
+                final minHeight = (constraints.maxHeight - (padding * 2)).clamp(
+                  0.0,
+                  double.infinity,
+                );
 
-                    final content = !showIntro
-                        ? Center(
+                final content = !showIntro
+                    ? Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 460),
+                          child: _AuthCard(
+                            title: formTitle,
+                            subtitle: formSubtitle,
+                            footer: footer,
+                            child: child,
+                          ),
+                        ),
+                      )
+                    : wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: _AuthIntro(
+                              eyebrow: eyebrow,
+                              title: title,
+                              subtitle: subtitle,
+                              highlights: highlights,
+                            ),
+                          ),
+                          const SizedBox(width: 32),
+                          SizedBox(
+                            width: 440,
+                            child: _AuthCard(
+                              title: formTitle,
+                              subtitle: formSubtitle,
+                              footer: footer,
+                              child: child,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _AuthIntro(
+                            eyebrow: eyebrow,
+                            title: title,
+                            subtitle: subtitle,
+                            highlights: highlights,
+                            compact: true,
+                          ),
+                          const SizedBox(height: 20),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 460),
+                            child: _AuthCard(
+                              title: formTitle,
+                              subtitle: formSubtitle,
+                              footer: footer,
+                              child: child,
+                            ),
+                          ),
+                        ],
+                      );
+
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(padding),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: minHeight),
+                    child: showIntro
+                        ? Align(
+                            alignment: Alignment.topCenter,
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 460),
-                              child: _AuthCard(
-                                title: formTitle,
-                                subtitle: formSubtitle,
-                                footer: footer,
-                                child: child,
-                              ),
+                              constraints: const BoxConstraints(maxWidth: 1180),
+                              child: content,
                             ),
                           )
-                        : wide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: _AuthIntro(
-                                  eyebrow: eyebrow,
-                                  title: title,
-                                  subtitle: subtitle,
-                                  highlights: highlights,
-                                ),
-                              ),
-                              const SizedBox(width: 32),
-                              SizedBox(
-                                width: 440,
-                                child: _AuthCard(
-                                  title: formTitle,
-                                  subtitle: formSubtitle,
-                                  footer: footer,
-                                  child: child,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _AuthIntro(
-                                eyebrow: eyebrow,
-                                title: title,
-                                subtitle: subtitle,
-                                highlights: highlights,
-                                compact: true,
-                              ),
-                              const SizedBox(height: 20),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 460),
-                                child: _AuthCard(
-                                  title: formTitle,
-                                  subtitle: formSubtitle,
-                                  footer: footer,
-                                  child: child,
-                                ),
-                              ),
-                            ],
-                          );
-
-                    return SingleChildScrollView(
-                      padding: EdgeInsets.all(padding),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: minHeight),
-                        child: showIntro
-                            ? Align(
-                                alignment: Alignment.topCenter,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 1180,
-                                  ),
-                                  child: content,
-                                ),
-                              )
-                            : Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 460,
-                                  ),
-                                  child: content,
-                                ),
-                              ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                        : Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 460),
+                              child: content,
+                            ),
+                          ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BrandedBackdrop extends StatelessWidget {
+  final Widget child;
+  final _BackdropTone tone;
+
+  const _BrandedBackdrop.surface({required this.child})
+    : tone = _BackdropTone.surface;
+
+  const _BrandedBackdrop.auth({required this.child})
+    : tone = _BackdropTone.auth;
+
+  @override
+  Widget build(BuildContext context) {
+    final isAuth = tone == _BackdropTone.auth;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isAuth
+              ? const [
+                  AppTheme.primaryDark,
+                  AppTheme.primary,
+                  AppTheme.secondary,
+                ]
+              : const [Color(0xFFEAF1FA), Color(0xFFF5FAF8), Color(0xFFE8F4F1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -120,
+            right: -70,
+            child: _GlowBlob(
+              size: isAuth ? 280 : 260,
+              color: isAuth
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppTheme.primary.withValues(alpha: 0.08),
+            ),
+          ),
+          Positioned(
+            bottom: -100,
+            left: -80,
+            child: _GlowBlob(
+              size: isAuth ? 240 : 230,
+              color: isAuth
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : AppTheme.secondary.withValues(alpha: 0.07),
+            ),
+          ),
+          Positioned.fill(
+            child: _BrandWatermarkPattern(opacityScale: isAuth ? 1 : 0.52),
+          ),
+          child,
+        ],
       ),
     );
   }
@@ -776,8 +797,10 @@ class _GlowBlob extends StatelessWidget {
   }
 }
 
-class _AuthWatermarkPattern extends StatelessWidget {
-  const _AuthWatermarkPattern();
+class _BrandWatermarkPattern extends StatelessWidget {
+  final double opacityScale;
+
+  const _BrandWatermarkPattern({required this.opacityScale});
 
   static const _specs = <_WatermarkSpec>[
     _WatermarkSpec(x: -0.1, y: 0.02, scale: 0.28, angle: -0.22, opacity: 0.18),
@@ -814,7 +837,7 @@ class _AuthWatermarkPattern extends StatelessWidget {
                     left: constraints.maxWidth * spec.x,
                     top: constraints.maxHeight * spec.y,
                     child: Opacity(
-                      opacity: spec.opacity,
+                      opacity: spec.opacity * opacityScale,
                       child: Transform.rotate(
                         angle: spec.angle,
                         child: SizedBox(

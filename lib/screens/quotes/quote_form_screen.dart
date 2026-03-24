@@ -3,10 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/app_theme.dart';
 import '../../models/customer.dart';
+import '../../models/product.dart';
 import '../../models/quote.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../../services/quote_document_service.dart';
 import '../widgets/app_shell.dart';
@@ -59,8 +62,12 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final customerProvider = context.read<CustomerProvider>();
+      final productProvider = context.read<ProductProvider>();
       if (customerProvider.items.isEmpty) {
         await customerProvider.load();
+      }
+      if (productProvider.items.isEmpty) {
+        await productProvider.load();
       }
       if (!mounted) return;
 
@@ -75,13 +82,13 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
             .where((item) => item.id == widget.quoteId)
             .firstOrNull;
         if (quote != null) {
-          _bindQuote(quote);
+          _bindQuote(quote, productProvider.items);
         }
       }
     });
   }
 
-  void _bindQuote(Quote quote) {
+  void _bindQuote(Quote quote, List<Product> products) {
     setState(() {
       _loadedQuote = quote;
       _titleCtrl.text = quote.title;
@@ -106,6 +113,10 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               unitCtrl: TextEditingController(text: item.unit),
               priceCtrl: TextEditingController(text: item.unitPrice.toString()),
               vatCtrl: TextEditingController(text: item.vatRate.toString()),
+              selectedProductId: products
+                  .where((product) => product.sku == item.productCode)
+                  .firstOrNull
+                  ?.id,
             ),
           ),
         );
@@ -173,6 +184,35 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
         ? '/quotes/${widget.quoteId}/edit'
         : '/quotes/new';
     return '/customers/new?returnTo=${Uri.encodeComponent(destination)}';
+  }
+
+  String get _productCreateRoute {
+    final destination = _isEdit
+        ? '/quotes/${widget.quoteId}/edit'
+        : '/quotes/new';
+    return '/products/new?returnTo=${Uri.encodeComponent(destination)}';
+  }
+
+  String _formatProductNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+  }
+
+  void _applyProductToRow(_ItemRow row, Product? product) {
+    setState(() {
+      row.selectedProductId = product?.id;
+      if (product == null) return;
+      row.codeCtrl.text = product.sku;
+      row.descCtrl.text = product.name;
+      row.unitCtrl.text = product.unit;
+      row.priceCtrl.text = _formatProductNumber(product.servicePrice);
+      row.vatCtrl.text = _formatProductNumber(product.vatRate);
+    });
   }
 
   Quote _buildDraftQuote(Customer? customer) {
@@ -317,7 +357,11 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
   @override
   Widget build(BuildContext context) {
     final customerProvider = context.watch<CustomerProvider>();
+    final productProvider = context.watch<ProductProvider>();
     final customers = customerProvider.items;
+    final products = productProvider.items
+        .where((item) => item.isActive)
+        .toList();
     final selectedCustomer = _selectedCustomer(customers);
 
     if (customerProvider.loading && customers.isEmpty) {
@@ -384,6 +428,11 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
                     onPressed: () => context.go(_customerCreateRoute),
                     icon: const Icon(Icons.add_business_outlined),
                     label: const Text('Yeni Firma'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go(_productCreateRoute),
+                    icon: const Icon(Icons.inventory_2_outlined),
+                    label: const Text('Yeni Urun'),
                   ),
                   FilledButton.icon(
                     onPressed: () => _printDraftQuote(customers),
@@ -590,19 +639,37 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               title: 'Teklif Kalemleri',
               description:
                   'Kalem kodu, birim, KDV ve toplam tutar bilgileri fiyat teklif formuna uygun sekilde tutulur.',
-              trailing: TextButton.icon(
-                onPressed: _addItem,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Kalem Ekle'),
+              trailing: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => context.go(_productCreateRoute),
+                    icon: const Icon(Icons.inventory_2_outlined, size: 18),
+                    label: const Text('Yeni Urun'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _addItem,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Kalem Ekle'),
+                  ),
+                ],
               ),
               children: [
                 for (final entry in _items.asMap().entries)
                   _QuoteItemCard(
                     row: entry.value,
+                    products: products,
                     canDelete: _items.length > 1,
                     fmt: _fmt,
                     onDelete: () => _removeItem(entry.key),
                     onChanged: () => setState(() {}),
+                    onProductSelected: (productId) => _applyProductToRow(
+                      entry.value,
+                      products
+                          .where((item) => item.id == productId)
+                          .firstOrNull,
+                    ),
                   ),
                 _SummaryPanel(
                   fmt: _fmt,
@@ -667,17 +734,21 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
 
 class _QuoteItemCard extends StatelessWidget {
   final _ItemRow row;
+  final List<Product> products;
   final bool canDelete;
   final NumberFormat fmt;
   final VoidCallback onDelete;
   final VoidCallback onChanged;
+  final ValueChanged<int?> onProductSelected;
 
   const _QuoteItemCard({
     required this.row,
+    required this.products,
     required this.canDelete,
     required this.fmt,
     required this.onDelete,
     required this.onChanged,
+    required this.onProductSelected,
   });
 
   @override
@@ -698,15 +769,7 @@ class _QuoteItemCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: row.codeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Kod',
-                        prefixIcon: Icon(Icons.qr_code_2_outlined),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: _buildProductSelector()),
                   if (canDelete) ...[
                     const SizedBox(width: 12),
                     IconButton.filledTonal(
@@ -715,6 +778,14 @@ class _QuoteItemCard extends StatelessWidget {
                     ),
                   ],
                 ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: row.codeCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Kod',
+                  prefixIcon: Icon(Icons.qr_code_2_outlined),
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -761,6 +832,61 @@ class _QuoteItemCard extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildProductSelector() {
+    if (products.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F8FC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD8E3EE)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.inventory_2_outlined, color: AppTheme.textMedium),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Kayitli urun yok. Kalemi manuel girebilir veya once urun ekleyebilirsiniz.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMedium,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<int?>(
+      key: ValueKey(row.selectedProductId),
+      initialValue: row.selectedProductId,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Kayitli Urun',
+        prefixIcon: Icon(Icons.inventory_2_outlined),
+      ),
+      items: [
+        const DropdownMenuItem<int?>(
+          value: null,
+          child: Text('Manuel kalem gir'),
+        ),
+        ...products.map(
+          (product) => DropdownMenuItem<int?>(
+            value: product.id,
+            child: Text(
+              '${product.sku} • ${product.name}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+      onChanged: onProductSelected,
     );
   }
 
@@ -928,6 +1054,7 @@ class _ItemRow {
   final TextEditingController unitCtrl;
   final TextEditingController priceCtrl;
   final TextEditingController vatCtrl;
+  int? selectedProductId;
 
   _ItemRow({
     required this.codeCtrl,
@@ -936,6 +1063,7 @@ class _ItemRow {
     required this.unitCtrl,
     required this.priceCtrl,
     required this.vatCtrl,
+    this.selectedProductId,
   });
 
   factory _ItemRow.empty() => _ItemRow(
