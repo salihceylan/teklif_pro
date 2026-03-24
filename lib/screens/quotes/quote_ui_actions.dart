@@ -66,7 +66,13 @@ class QuoteUiActions {
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        'Firma e-posta adresi otomatik doldurulur. Gerekirse alıcı adresini manuel olarak değiştirebilirsiniz.',
+                        style: TextStyle(fontSize: 13, height: 1.45),
+                      ),
+                      const SizedBox(height: 14),
                       TextFormField(
                         controller: emailCtrl,
                         keyboardType: TextInputType.emailAddress,
