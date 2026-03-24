@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_shell.dart';
 
@@ -20,6 +21,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _companyCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
+
+  static const _buttonTextStyle = TextStyle(
+    fontFamily: AppTheme.fontFamily,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    height: 1.15,
+  );
+
+  static const _linkTextStyle = TextStyle(
+    fontFamily: AppTheme.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 1.15,
+  );
 
   @override
   void dispose() {
@@ -87,6 +102,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const Divider(height: 1),
           const SizedBox(height: 14),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.primary,
+              textStyle: _linkTextStyle,
+            ),
             onPressed: () => context.go('/login'),
             child: const Text('Zaten hesabınız var mı? Giriş yapın'),
           ),
@@ -138,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
                     labelText: 'Firma Adı',
-                    hintText: 'Gudete Teknoloji',
+                    hintText: 'Güde Teknoloji',
                     prefixIcon: Icon(Icons.business_outlined),
                   ),
                 ),
@@ -167,6 +186,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 20),
             FilledButton(
+              style: FilledButton.styleFrom(
+                foregroundColor: Colors.white,
+                textStyle: _buttonTextStyle,
+              ),
               onPressed: loading ? null : _submit,
               child: loading
                   ? const SizedBox(

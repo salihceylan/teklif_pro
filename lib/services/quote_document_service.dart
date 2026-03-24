@@ -271,10 +271,10 @@ class QuoteDocumentService {
   static Future<pw.ThemeData> _loadTheme() {
     return _themeFuture ??= () async {
       final baseFont = pw.Font.ttf(
-        await rootBundle.load('assets/fonts/SegoeUI-Regular.ttf'),
+        await rootBundle.load('assets/fonts/noto/NotoSans-Regular.ttf'),
       );
       final boldFont = pw.Font.ttf(
-        await rootBundle.load('assets/fonts/SegoeUI-Bold.ttf'),
+        await rootBundle.load('assets/fonts/noto/NotoSans-Bold.ttf'),
       );
       return pw.ThemeData.withFont(base: baseFont, bold: boldFont);
     }();
