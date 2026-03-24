@@ -67,8 +67,10 @@ class AppPageIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final compactScreen = screenWidth < 480;
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(compactScreen ? 18 : 22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppTheme.primaryDark, AppTheme.primary, AppTheme.secondary],
@@ -106,26 +108,27 @@ class AppPageIntro extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final stacked = constraints.maxWidth < 820;
-              final titleFontSize = constraints.maxWidth < 540 ? 24.0 : 30.0;
+              final compact = constraints.maxWidth < 540;
+              final titleFontSize = compact ? 22.0 : 30.0;
               final leading = Container(
-                width: 62,
-                height: 62,
+                width: compact ? 54 : 62,
+                height: compact ? 54 : 62,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(compact ? 16 : 18),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.18),
                   ),
                 ),
-                child: Icon(icon, size: 28, color: Colors.white),
+                child: Icon(icon, size: compact ? 24 : 28, color: Colors.white),
               );
 
-              final textBlock = Column(
+              final headerText = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (badge != null) ...[
                     AppIntroTag(label: badge!),
-                    const SizedBox(height: 14),
+                    SizedBox(height: compact ? 10 : 14),
                   ],
                   Text(
                     title,
@@ -137,31 +140,26 @@ class AppPageIntro extends StatelessWidget {
                       height: 1.05,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: compact ? 8 : 12),
                   Text(
                     subtitle,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.82),
-                      fontSize: 14,
+                      fontSize: compact ? 13 : 14,
                       height: 1.55,
                     ),
                   ),
-                  if (supporting != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 18),
-                      child: supporting!,
-                    ),
                 ],
               );
 
               final trailingBlock = trailing == null
                   ? null
-                  : Align(
-                      alignment: Alignment.topRight,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: AppIntroPanel(child: trailing!),
+                  : ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: stacked ? constraints.maxWidth : 320,
+                        maxWidth: stacked ? constraints.maxWidth : 520,
                       ),
+                      child: AppIntroPanel(child: trailing!),
                     );
 
               if (stacked) {
@@ -172,12 +170,16 @@ class AppPageIntro extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         leading,
-                        const SizedBox(width: 16),
-                        Expanded(child: textBlock),
+                        SizedBox(width: compact ? 12 : 16),
+                        Expanded(child: headerText),
                       ],
                     ),
+                    if (supporting != null) ...[
+                      const SizedBox(height: 16),
+                      supporting!,
+                    ],
                     if (trailingBlock != null) ...[
-                      const SizedBox(height: 20),
+                      SizedBox(height: compact ? 14 : 18),
                       trailingBlock,
                     ],
                   ],
@@ -193,7 +195,19 @@ class AppPageIntro extends StatelessWidget {
                       children: [
                         leading,
                         const SizedBox(width: 18),
-                        Expanded(child: textBlock),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              headerText,
+                              if (supporting != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 18),
+                                  child: supporting!,
+                                ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -223,11 +237,14 @@ class AppIntroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 480;
     return Container(
-      padding: padding,
+      padding: compact
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12)
+          : padding,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(compact ? 16 : 18),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
         boxShadow: [
           BoxShadow(
@@ -260,6 +277,7 @@ class AppIntroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 480;
     final disabled = onPressed == null;
     final foreground = disabled
         ? Colors.white.withValues(alpha: 0.55)
@@ -291,13 +309,16 @@ class AppIntroActionButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(14),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 11 : 13,
+              vertical: compact ? 9 : 11,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: compact ? 22 : 26,
+                  height: compact ? 22 : 26,
                   decoration: BoxDecoration(
                     color: emphasized
                         ? AppTheme.primary.withValues(alpha: 0.12)
@@ -306,14 +327,14 @@ class AppIntroActionButton extends StatelessWidget {
                           ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 16, color: foreground),
+                  child: Icon(icon, size: compact ? 14 : 16, color: foreground),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: compact ? 6 : 8),
                 Text(
                   label,
                   style: TextStyle(
                     color: foreground,
-                    fontSize: 12.5,
+                    fontSize: compact ? 11.5 : 12.5,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -334,18 +355,23 @@ class AppIntroSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 480;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
-          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.76)),
-          const SizedBox(width: 6),
+          Icon(
+            icon,
+            size: compact ? 12 : 14,
+            color: Colors.white.withValues(alpha: 0.76),
+          ),
+          SizedBox(width: compact ? 4 : 6),
         ],
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.76),
-            fontSize: 11,
+            fontSize: compact ? 10 : 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.3,
           ),
@@ -371,9 +397,16 @@ class AppIntroStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 480;
     return Container(
-      constraints: const BoxConstraints(minWidth: 134, maxWidth: 180),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      constraints: BoxConstraints(
+        minWidth: compact ? 112 : 134,
+        maxWidth: compact ? 152 : 180,
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 12 : 14,
+        vertical: compact ? 11 : 13,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
@@ -384,29 +417,29 @@ class AppIntroStatCard extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Container(
-              width: 30,
-              height: 30,
+              width: compact ? 24 : 30,
+              height: compact ? 24 : 30,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 16, color: Colors.white),
+              child: Icon(icon, size: compact ? 13 : 16, color: Colors.white),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: compact ? 8 : 12),
           ],
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: compact ? 10 : 11,
               color: Colors.white.withValues(alpha: 0.72),
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: compact ? 4 : 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: compact ? 14 : 16,
               color: accentColor,
               fontWeight: FontWeight.w800,
               height: 1.2,
@@ -436,8 +469,12 @@ class AppIntroTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 480;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 6 : 7,
+      ),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
@@ -447,14 +484,14 @@ class AppIntroTag extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: foregroundColor),
-            const SizedBox(width: 6),
+            Icon(icon, size: compact ? 12 : 14, color: foregroundColor),
+            SizedBox(width: compact ? 4 : 6),
           ],
           Text(
             label,
             style: TextStyle(
               color: foregroundColor,
-              fontSize: 12,
+              fontSize: compact ? 11 : 12,
               fontWeight: FontWeight.w700,
             ),
           ),
