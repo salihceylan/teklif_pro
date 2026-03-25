@@ -23,14 +23,14 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
   Timer? _pollTimer;
   Timer? _countdownTimer;
   Duration _remaining = Duration.zero;
-  bool _loading = true;
+  bool _loading = false;
   bool _finishingLogin = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _createChallenge();
+    unawaited(_createChallenge());
   }
 
   @override
@@ -41,12 +41,20 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
   }
 
   Future<void> _createChallenge() async {
+    if (_loading) {
+      return;
+    }
     _pollTimer?.cancel();
     _countdownTimer?.cancel();
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _challenge = null;
+        _remaining = Duration.zero;
+      });
+    }
+
     try {
       final challenge = await _service.createQrChallenge();
       if (!mounted) {
@@ -57,19 +65,22 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
         _remaining = challenge.expiresAt.difference(DateTime.now());
         _loading = false;
       });
+
       _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         final expiresAt = _challenge?.expiresAt;
         if (!mounted || expiresAt == null) {
           return;
         }
         final next = expiresAt.difference(DateTime.now());
-        if (next.isNegative) {
+        if (next.isNegative || next.inSeconds <= 0) {
           _countdownTimer?.cancel();
+          _pollTimer?.cancel();
           setState(() => _remaining = Duration.zero);
           return;
         }
         setState(() => _remaining = next);
       });
+
       _pollTimer = Timer.periodic(
         Duration(seconds: challenge.pollIntervalSeconds),
         (_) => _pollChallenge(),
@@ -113,10 +124,14 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
         context.go('/panel');
         return;
       }
-      if (status.status == 'expired' || status.status == 'rejected') {
+      if (status.status == 'expired' ||
+          status.status == 'rejected' ||
+          status.status == 'consumed') {
         _pollTimer?.cancel();
+        _countdownTimer?.cancel();
         setState(() {
           _error = status.detail ?? 'Karekod oturumu sona erdi.';
+          _remaining = Duration.zero;
         });
       }
     } catch (_) {}
@@ -132,7 +147,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
           padding: const EdgeInsets.all(24),
           child: _loading
               ? const SizedBox(
-                  height: 220,
+                  height: 260,
                   child: Center(child: CircularProgressIndicator()),
                 )
               : Column(
@@ -158,6 +173,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
                     ),
                     const SizedBox(height: 18),
                     Container(
+                      height: 276,
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FBFD),
@@ -166,7 +182,11 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
                       ),
                       child: Center(
                         child: _challenge == null
-                            ? const SizedBox.shrink()
+                            ? const Icon(
+                                Icons.qr_code_2_rounded,
+                                size: 88,
+                                color: Color(0xFFCBD5E1),
+                              )
                             : QrImageView(
                                 data: _challenge!.qrPayload,
                                 version: QrVersions.auto,
@@ -198,7 +218,9 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
                               ),
                             ),
                             child: Text(
-                              _remaining.inSeconds > 0
+                              _challenge == null
+                                  ? 'Karekod bekleniyor'
+                                  : _remaining.inSeconds > 0
                                   ? 'Kalan süre: ${_remaining.inMinutes.toString().padLeft(2, '0')}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')}'
                                   : 'Karekod süresi doldu',
                               style: const TextStyle(

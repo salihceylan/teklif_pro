@@ -23,18 +23,15 @@ class DeviceDescriptor {
 }
 
 Future<DeviceDescriptor> resolveCurrentDeviceDescriptor() async {
-  final plugin = DeviceInfoPlugin();
-
   if (kIsWeb) {
-    final info = await plugin.webBrowserInfo;
-    final browser = _browserName(info.browserName.name);
-    return DeviceDescriptor(
-      deviceName: '$browser Tarayıcı',
+    return const DeviceDescriptor(
+      deviceName: 'Web Tarayıcı',
       deviceType: 'web',
-      platform: browser,
-      userAgent: info.userAgent,
+      platform: 'Web',
     );
   }
+
+  final plugin = DeviceInfoPlugin();
 
   switch (defaultTargetPlatform) {
     case TargetPlatform.android:
@@ -80,20 +77,5 @@ Future<DeviceDescriptor> resolveCurrentDeviceDescriptor() async {
         deviceType: 'unknown',
         platform: 'Fuchsia',
       );
-  }
-}
-
-String _browserName(String raw) {
-  switch (raw.toLowerCase()) {
-    case 'chrome':
-      return 'Chrome';
-    case 'firefox':
-      return 'Firefox';
-    case 'edge':
-      return 'Edge';
-    case 'safari':
-      return 'Safari';
-    default:
-      return 'Tarayıcı';
   }
 }
