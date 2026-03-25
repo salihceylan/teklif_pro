@@ -8,7 +8,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await Storage.init();
 
-    await tester.pumpWidget(const TeklifProApp());
+    await tester.pumpWidget(const TeklifProApp(skipInternetGuard: true));
     expect(find.byType(TeklifProApp), findsOneWidget);
   });
 }

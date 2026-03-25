@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import '../core/browser_push_manager.dart';
+import '../core/storage.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
-import '../core/storage.dart';
 
 class AuthProvider extends ChangeNotifier {
   final _service = AuthService();
@@ -17,13 +19,17 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> tryAutoLogin() async {
     final token = Storage.getToken();
-    if (token == null) return;
+    if (token == null) {
+      return;
+    }
     try {
       _user = await _service.me();
       await BrowserPushManager.instance.syncCurrentUser();
       notifyListeners();
-    } catch (_) {
-      await Storage.clear();
+    } catch (error) {
+      if (_isTokenInvalid(error)) {
+        await Storage.clear();
+      }
     }
   }
 
@@ -37,8 +43,8 @@ class AuthProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
       return true;
-    } catch (e) {
-      _error = _parseError(e);
+    } catch (error) {
+      _error = _parseError(error);
       _loading = false;
       notifyListeners();
       return false;
@@ -67,8 +73,8 @@ class AuthProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
       return true;
-    } catch (e) {
-      _error = _parseError(e);
+    } catch (error) {
+      _error = _parseError(error);
       _loading = false;
       notifyListeners();
       return false;
@@ -92,11 +98,26 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _parseError(dynamic e) {
-    try {
-      final data = (e as dynamic).response?.data;
-      if (data is Map) return data['detail']?.toString() ?? 'Bir hata oluştu';
-    } catch (_) {}
-    return 'Bağlantı hatası';
+  String _parseError(Object error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map && data['detail'] != null) {
+        return data['detail'].toString();
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return 'Bağlantı hatası';
+      }
+    }
+    return 'Bir hata oluştu';
+  }
+
+  bool _isTokenInvalid(Object error) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      return statusCode == 401 || statusCode == 403;
+    }
+    return false;
   }
 }

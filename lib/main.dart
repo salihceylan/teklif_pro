@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/app_notifications.dart';
+import 'core/internet_guard.dart';
 import 'core/storage.dart';
 import 'core/router.dart';
 import 'core/app_theme.dart';
@@ -22,7 +23,9 @@ void main() async {
 }
 
 class TeklifProApp extends StatelessWidget {
-  const TeklifProApp({super.key});
+  final bool skipInternetGuard;
+
+  const TeklifProApp({super.key, this.skipInternetGuard = false});
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +47,15 @@ class TeklifProApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             routerConfig: router,
-            builder: (context, child) => Stack(
-              fit: StackFit.expand,
-              children: [child ?? const SizedBox.shrink(), const _WebFontBootstrap()],
+            builder: (context, child) => AppInternetGate(
+              enabled: !skipInternetGuard,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  child ?? const SizedBox.shrink(),
+                  const _WebFontBootstrap(),
+                ],
+              ),
             ),
           );
         },
