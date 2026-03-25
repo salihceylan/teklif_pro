@@ -1125,7 +1125,7 @@ class _CompanyMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       children: [
         Container(
           width: large ? 56 : 46,
@@ -1142,28 +1142,34 @@ class _CompanyMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Text(
-              Branding.companyName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark,
-                letterSpacing: -0.2,
+        const Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                Branding.companyName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textDark,
+                  letterSpacing: -0.2,
+                ),
               ),
-            ),
-            Text(
-              Branding.companyTagline,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.textMedium,
-                fontWeight: FontWeight.w500,
+              Text(
+                Branding.companyTagline,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMedium,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
