@@ -69,15 +69,12 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
         }
 
         _closingAfterApproval = true;
-        final messenger = ScaffoldMessenger.of(context);
-        Navigator.of(context).pop();
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Tarayıcı oturumu onaylandı. Bilgisayarda giriş açılıyor.',
-            ),
-          ),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          Navigator.of(context).maybePop();
+        });
         return;
       }
     } catch (error) {
