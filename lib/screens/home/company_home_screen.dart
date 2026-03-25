@@ -1182,139 +1182,229 @@ class _HeroVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.08,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 280;
+
+        if (compact) {
+          return Container(
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
             ),
-          ),
-          Positioned(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: 86,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFDFEFF), Color(0xFFE7F0FB)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: const [
+                _HeroVisualCanvas(compact: true),
+                SizedBox(height: 14),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
-                    const Row(
-                      children: [
-                        _MiniDot(color: Color(0xFFE45858)),
-                        SizedBox(width: 6),
-                        _MiniDot(color: Color(0xFFF59E0B)),
-                        SizedBox(width: 6),
-                        _MiniDot(color: Color(0xFF10B981)),
-                      ],
+                    _FloatingNote(
+                      icon: Icons.shield_outlined,
+                      title: 'Kurumsal kimlik',
+                      subtitle: 'Güven veren anasayfa akışı',
                     ),
-                    const SizedBox(height: 18),
-                    Container(
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      height: 14,
-                      margin: const EdgeInsets.only(right: 70),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryDark.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _PanelLabel(text: 'Kurumsal görünüm'),
-                                    SizedBox(height: 12),
-                                    Expanded(
-                                      child: _BigVisualCard(
-                                        icon: Icons.language_rounded,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              children: const [
-                                Expanded(
-                                  child: _SmallVisualCard(
-                                    backgroundColor: Color(0xFFEDF6F4),
-                                    color: AppTheme.secondary,
-                                    icon: Icons.dashboard_customize_outlined,
-                                  ),
-                                ),
-                                SizedBox(height: 14),
-                                Expanded(
-                                  child: _SmallVisualCard(
-                                    backgroundColor: Color(0xFFF8F3EA),
-                                    color: Color(0xFFF59E0B),
-                                    icon: Icons.mobile_friendly_outlined,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    _FloatingNote(
+                      icon: Icons.lock_open_outlined,
+                      title: 'Teklif Pro',
+                      subtitle: 'Ayrı ürün giriş butonu',
                     ),
                   ],
                 ),
+              ],
+            ),
+          );
+        }
+
+        return AspectRatio(
+          aspectRatio: 1.08,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+                ),
+              ),
+              const Positioned(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: 86,
+                child: _HeroVisualCanvas(),
+              ),
+              const Positioned(
+                left: 18,
+                bottom: 22,
+                child: _FloatingNote(
+                  icon: Icons.shield_outlined,
+                  title: 'Kurumsal kimlik',
+                  subtitle: 'Güven veren anasayfa akışı',
+                ),
+              ),
+              const Positioned(
+                right: 18,
+                bottom: 18,
+                child: _FloatingNote(
+                  icon: Icons.lock_open_outlined,
+                  title: 'Teklif Pro',
+                  subtitle: 'Ayrı ürün giriş butonu',
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HeroVisualCanvas extends StatelessWidget {
+  final bool compact;
+
+  const _HeroVisualCanvas({this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFDFEFF), Color(0xFFE7F0FB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(compact ? 14 : 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Row(
+              children: [
+                _MiniDot(color: Color(0xFFE45858)),
+                SizedBox(width: 6),
+                _MiniDot(color: Color(0xFFF59E0B)),
+                SizedBox(width: 6),
+                _MiniDot(color: Color(0xFF10B981)),
+              ],
+            ),
+            SizedBox(height: compact ? 12 : 18),
+            Container(
+              height: compact ? 10 : 14,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
-          ),
-          const Positioned(
-            left: 18,
-            bottom: 22,
-            child: _FloatingNote(
-              icon: Icons.shield_outlined,
-              title: 'Kurumsal kimlik',
-              subtitle: 'Güven veren anasayfa akışı',
+            SizedBox(height: compact ? 8 : 10),
+            Container(
+              height: compact ? 10 : 14,
+              margin: EdgeInsets.only(right: compact ? 36 : 70),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryDark.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
-          ),
-          const Positioned(
-            right: 18,
-            bottom: 18,
-            child: _FloatingNote(
-              icon: Icons.lock_open_outlined,
-              title: 'Teklif Pro',
-              subtitle: 'Ayrı ürün giriş butonu',
+            SizedBox(height: compact ? 12 : 18),
+            Expanded(
+              child: compact
+                  ? Column(
+                      children: const [
+                        Expanded(
+                          child: _PrimaryVisualPanel(compact: true),
+                        ),
+                        SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _SmallVisualCard(
+                                backgroundColor: Color(0xFFEDF6F4),
+                                color: AppTheme.secondary,
+                                icon: Icons.dashboard_customize_outlined,
+                                compact: true,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: _SmallVisualCard(
+                                backgroundColor: Color(0xFFF8F3EA),
+                                color: Color(0xFFF59E0B),
+                                icon: Icons.mobile_friendly_outlined,
+                                compact: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: const [
+                        Expanded(child: _PrimaryVisualPanel()),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: _SmallVisualCard(
+                                  backgroundColor: Color(0xFFEDF6F4),
+                                  color: AppTheme.secondary,
+                                  icon: Icons.dashboard_customize_outlined,
+                                ),
+                              ),
+                              SizedBox(height: 14),
+                              Expanded(
+                                child: _SmallVisualCard(
+                                  backgroundColor: Color(0xFFF8F3EA),
+                                  color: Color(0xFFF59E0B),
+                                  icon: Icons.mobile_friendly_outlined,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryVisualPanel extends StatelessWidget {
+  final bool compact;
+
+  const _PrimaryVisualPanel({this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(compact ? 12 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PanelLabel(text: 'Kurumsal görünüm', compact: compact),
+            SizedBox(height: compact ? 8 : 12),
+            const Expanded(
+              child: _BigVisualCard(
+                icon: Icons.language_rounded,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1489,8 +1579,8 @@ class _ProductShowcase extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 380;
-        final height = compact ? 500.0 : 360.0;
-        const metricMinWidth = 96.0;
+        final height = compact ? 440.0 : 360.0;
+        final metricMinWidth = compact ? 120.0 : 96.0;
 
         return SizedBox(
           height: height,
@@ -1525,47 +1615,108 @@ class _ProductShowcase extends StatelessWidget {
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Row(
-                            children: [
-                              Icon(
-                                Icons.dashboard_customize_rounded,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Teklif Pro Paneli',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
+                      padding: EdgeInsets.all(compact ? 14 : 18),
+                      child: compact
+                          ? SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.dashboard_customize_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'Teklif Pro Paneli',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
+                                  const SizedBox(height: 14),
+                                  AdaptiveFieldRow(
+                                    maxColumns: 2,
+                                    minItemWidth: metricMinWidth,
+                                    spacing: 10,
+                                    children: [
+                                      _ProductMetric(
+                                        title: 'Müşteri',
+                                        value: '128',
+                                        compact: true,
+                                      ),
+                                      _ProductMetric(
+                                        title: 'Teklif',
+                                        value: '46',
+                                        compact: true,
+                                      ),
+                                      _ProductMetric(
+                                        title: 'Ziyaret',
+                                        value: '21',
+                                        compact: true,
+                                      ),
+                                      _ProductMetric(
+                                        title: 'Fatura',
+                                        value: '18',
+                                        compact: true,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const _DarkInfoCard(
+                                    text:
+                                        'Yer tutucu ürün vitrin alanı. Gerçek ekran görüntüleri daha sonra eklenebilir.',
+                                    compact: true,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 18),
-                          AdaptiveFieldRow(
-                            maxColumns: 4,
-                            minItemWidth: metricMinWidth,
-                            children: const [
-                              _ProductMetric(title: 'Müşteri', value: '128'),
-                              _ProductMetric(title: 'Teklif', value: '46'),
-                              _ProductMetric(title: 'Ziyaret', value: '21'),
-                              _ProductMetric(title: 'Fatura', value: '18'),
-                            ],
-                          ),
-                          const Spacer(),
-                          const _DarkInfoCard(
-                            text:
-                                'Yer tutucu ürün vitrin alanı. Gerçek ekran görüntüleri daha sonra eklenebilir.',
-                          ),
-                        ],
-                      ),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.dashboard_customize_rounded,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'Teklif Pro Paneli',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 18),
+                                AdaptiveFieldRow(
+                                  maxColumns: 4,
+                                  minItemWidth: metricMinWidth,
+                                  children: const [
+                                    _ProductMetric(title: 'Müşteri', value: '128'),
+                                    _ProductMetric(title: 'Teklif', value: '46'),
+                                    _ProductMetric(title: 'Ziyaret', value: '21'),
+                                    _ProductMetric(title: 'Fatura', value: '18'),
+                                  ],
+                                ),
+                                const Spacer(),
+                                const _DarkInfoCard(
+                                  text:
+                                      'Yer tutucu ürün vitrin alanı. Gerçek ekran görüntüleri daha sonra eklenebilir.',
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -1581,13 +1732,18 @@ class _ProductShowcase extends StatelessWidget {
 class _ProductMetric extends StatelessWidget {
   final String title;
   final String value;
+  final bool compact;
 
-  const _ProductMetric({required this.title, required this.value});
+  const _ProductMetric({
+    required this.title,
+    required this.value,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(compact ? 12 : 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(18),
@@ -1598,17 +1754,17 @@ class _ProductMetric extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 22,
+            style: TextStyle(
+              fontSize: compact ? 18 : 22,
               fontWeight: FontWeight.w800,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: compact ? 2 : 4),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
+            style: TextStyle(
+              fontSize: compact ? 11 : 12,
               color: Colors.white70,
               fontWeight: FontWeight.w600,
             ),
@@ -1977,13 +2133,17 @@ class _FloatingNote extends StatelessWidget {
 
 class _PanelLabel extends StatelessWidget {
   final String text;
+  final bool compact;
 
-  const _PanelLabel({required this.text});
+  const _PanelLabel({required this.text, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 8,
+        vertical: compact ? 3 : 4,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
@@ -1993,9 +2153,9 @@ class _PanelLabel extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         softWrap: false,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppTheme.primary,
-          fontSize: 12,
+          fontSize: compact ? 11 : 12,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -2019,7 +2179,7 @@ class _BigVisualCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Center(child: Icon(icon, size: 54, color: Colors.white)),
+      child: Center(child: Icon(icon, size: 44, color: Colors.white)),
     );
   }
 }
@@ -2028,11 +2188,13 @@ class _SmallVisualCard extends StatelessWidget {
   final Color backgroundColor;
   final Color color;
   final IconData icon;
+  final bool compact;
 
   const _SmallVisualCard({
     required this.backgroundColor,
     required this.color,
     required this.icon,
+    this.compact = false,
   });
 
   @override
@@ -2042,27 +2204,32 @@ class _SmallVisualCard extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Center(child: Icon(icon, size: 44, color: color)),
+      child: Center(child: Icon(icon, size: compact ? 34 : 44, color: color)),
     );
   }
 }
 
 class _DarkInfoCard extends StatelessWidget {
   final String text;
+  final bool compact;
 
-  const _DarkInfoCard({required this.text});
+  const _DarkInfoCard({required this.text, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(compact ? 12 : 14),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white70, height: 1.45),
+        style: TextStyle(
+          color: Colors.white70,
+          height: 1.45,
+          fontSize: compact ? 12 : 14,
+        ),
       ),
     );
   }

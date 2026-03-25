@@ -17,10 +17,11 @@ class ContactMapEmbed extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppTheme.border),
       ),
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 52,
@@ -53,7 +54,7 @@ class ContactMapEmbed extends StatelessWidget {
                 color: AppTheme.textMedium,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
