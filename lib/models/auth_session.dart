@@ -1,3 +1,5 @@
+import '../core/api_date_time.dart';
+
 class AuthSession {
   final String id;
   final String deviceName;
@@ -30,9 +32,9 @@ class AuthSession {
     platform: json['platform'] as String? ?? 'Bilinmiyor',
     loginMethod: json['login_method'] as String? ?? 'password',
     userAgent: json['user_agent'] as String?,
-    createdAt: DateTime.parse(json['created_at'] as String),
-    lastSeenAt: DateTime.parse(json['last_seen_at'] as String),
-    expiresAt: DateTime.parse(json['expires_at'] as String),
+    createdAt: parseApiDateTime(json['created_at'] as String),
+    lastSeenAt: parseApiDateTime(json['last_seen_at'] as String),
+    expiresAt: parseApiDateTime(json['expires_at'] as String),
     isCurrent: json['is_current'] as bool? ?? false,
   );
 }

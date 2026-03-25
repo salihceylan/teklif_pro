@@ -18,10 +18,12 @@ class QrLoginDialog extends StatefulWidget {
 
 class _QrLoginDialogState extends State<QrLoginDialog> {
   final _service = AuthSessionService();
+  static const Duration _autoRefreshDelay = Duration(milliseconds: 600);
 
   QrLoginChallenge? _challenge;
   Timer? _pollTimer;
   Timer? _countdownTimer;
+  Timer? _refreshTimer;
   Duration _remaining = Duration.zero;
   bool _loading = false;
   bool _finishingLogin = false;
@@ -37,6 +39,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
   void dispose() {
     _pollTimer?.cancel();
     _countdownTimer?.cancel();
+    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -44,8 +47,11 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
     if (_loading) {
       return;
     }
+
     _pollTimer?.cancel();
     _countdownTimer?.cancel();
+    _refreshTimer?.cancel();
+
     if (mounted) {
       setState(() {
         _loading = true;
@@ -60,6 +66,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
       if (!mounted) {
         return;
       }
+
       setState(() {
         _challenge = challenge;
         _remaining = challenge.expiresAt.difference(DateTime.now());
@@ -71,13 +78,19 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
         if (!mounted || expiresAt == null) {
           return;
         }
+
         final next = expiresAt.difference(DateTime.now());
         if (next.isNegative || next.inSeconds <= 0) {
           _countdownTimer?.cancel();
           _pollTimer?.cancel();
-          setState(() => _remaining = Duration.zero);
+          setState(() {
+            _remaining = Duration.zero;
+            _error = null;
+          });
+          _scheduleAutoRefresh();
           return;
         }
+
         setState(() => _remaining = next);
       });
 
@@ -101,6 +114,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
     if (challenge == null || _finishingLogin) {
       return;
     }
+
     try {
       final status = await _service.pollChallenge(
         challengeId: challenge.challengeId,
@@ -109,6 +123,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
       if (!mounted) {
         return;
       }
+
       if (status.status == 'approved' &&
           status.accessToken != null &&
           status.user != null) {
@@ -124,17 +139,38 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
         context.go('/panel');
         return;
       }
+
       if (status.status == 'expired' ||
           status.status == 'rejected' ||
           status.status == 'consumed') {
         _pollTimer?.cancel();
         _countdownTimer?.cancel();
+
+        if (status.status == 'expired') {
+          setState(() {
+            _error = null;
+            _remaining = Duration.zero;
+          });
+          _scheduleAutoRefresh();
+          return;
+        }
+
         setState(() {
           _error = status.detail ?? 'Karekod oturumu sona erdi.';
           _remaining = Duration.zero;
         });
       }
     } catch (_) {}
+  }
+
+  void _scheduleAutoRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer(_autoRefreshDelay, () {
+      if (!mounted || _loading || _finishingLogin) {
+        return;
+      }
+      unawaited(_createChallenge());
+    });
   }
 
   @override
@@ -222,7 +258,7 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
                                   ? 'Karekod bekleniyor'
                                   : _remaining.inSeconds > 0
                                   ? 'Kalan süre: ${_remaining.inMinutes.toString().padLeft(2, '0')}:${(_remaining.inSeconds % 60).toString().padLeft(2, '0')}'
-                                  : 'Karekod süresi doldu',
+                                  : 'Yeni karekod hazırlanıyor...',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF173B72),
@@ -233,20 +269,12 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      alignment: WrapAlignment.end,
-                      children: [
-                        OutlinedButton(
-                          onPressed: _createChallenge,
-                          child: const Text('Yeni Karekod Oluştur'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Kapat'),
-                        ),
-                      ],
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Kapat'),
+                      ),
                     ),
                   ],
                 ),

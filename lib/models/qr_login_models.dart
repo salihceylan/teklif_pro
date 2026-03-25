@@ -1,3 +1,4 @@
+import '../core/api_date_time.dart';
 import 'user.dart';
 
 class QrLoginChallenge {
@@ -20,7 +21,7 @@ class QrLoginChallenge {
         challengeId: json['challenge_id'] as String,
         qrPayload: json['qr_payload'] as String,
         pollToken: json['poll_token'] as String,
-        expiresAt: DateTime.parse(json['expires_at'] as String),
+        expiresAt: parseApiDateTime(json['expires_at'] as String),
         pollIntervalSeconds: json['poll_interval_seconds'] as int? ?? 2,
       );
 }
@@ -44,8 +45,8 @@ class QrLoginPreview {
     challengeId: json['challenge_id'] as String,
     deviceName: json['device_name'] as String? ?? 'Tarayıcı',
     platform: json['platform'] as String? ?? 'Bilinmiyor',
-    createdAt: DateTime.parse(json['created_at'] as String),
-    expiresAt: DateTime.parse(json['expires_at'] as String),
+    createdAt: parseApiDateTime(json['created_at'] as String),
+    expiresAt: parseApiDateTime(json['expires_at'] as String),
   );
 }
 
@@ -66,7 +67,7 @@ class QrLoginStatus {
 
   factory QrLoginStatus.fromJson(Map<String, dynamic> json) => QrLoginStatus(
     status: json['status'] as String? ?? 'pending',
-    expiresAt: DateTime.parse(json['expires_at'] as String),
+    expiresAt: parseApiDateTime(json['expires_at'] as String),
     detail: json['detail'] as String?,
     accessToken: json['access_token'] as String?,
     user: json['user'] is Map
