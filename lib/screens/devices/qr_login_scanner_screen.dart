@@ -22,6 +22,7 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
   final _format = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
 
   bool _handlingScan = false;
+  bool _closingAfterApproval = false;
 
   @override
   void dispose() {
@@ -30,44 +31,53 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
   }
 
   Future<void> _handleDetect(BarcodeCapture capture) async {
-    if (_handlingScan) {
+    if (_handlingScan || _closingAfterApproval) {
       return;
     }
+
     final raw = capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
     final challengeId = raw == null ? null : _service.parseQrChallengeId(raw);
     if (challengeId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(buildErrorSnackBar('Geçerli bir giriş karekodu okunamadı.'));
+      ScaffoldMessenger.of(context).showSnackBar(
+        buildErrorSnackBar('Geçerli bir giriş karekodu okunamadı.'),
+      );
       return;
     }
 
     setState(() => _handlingScan = true);
     await _scannerController.stop();
+
     try {
       final preview = await _service.fetchChallengePreview(challengeId);
       if (!mounted) {
         return;
       }
+
       final approved = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (context) => _ApproveDialog(
+        builder: (dialogContext) => _ApproveDialog(
           preview: preview,
           format: _format,
         ),
       );
+
       if (approved == true) {
         await _service.approveChallenge(challengeId);
         if (!mounted) {
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
+
+        _closingAfterApproval = true;
+        final messenger = ScaffoldMessenger.of(context);
+        Navigator.of(context).pop();
+        messenger.showSnackBar(
           const SnackBar(
-            content: Text('Tarayıcı oturumu onaylandı. Bilgisayarda giriş açılıyor.'),
+            content: Text(
+              'Tarayıcı oturumu onaylandı. Bilgisayarda giriş açılıyor.',
+            ),
           ),
         );
-        Navigator.pop(context);
         return;
       }
     } catch (error) {
@@ -78,7 +88,7 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
         context,
       ).showSnackBar(buildErrorSnackBar(_service.mapError(error)));
     } finally {
-      if (mounted) {
+      if (mounted && !_closingAfterApproval) {
         setState(() => _handlingScan = false);
         await _scannerController.start();
       }
@@ -168,8 +178,8 @@ class _ApproveDialog extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text('Platform: ${preview.platform}'),
-          Text('İstek: ${format.format(preview.createdAt.toLocal())}'),
-          Text('Son geçerlilik: ${format.format(preview.expiresAt.toLocal())}'),
+          Text('İstek: ${format.format(preview.createdAt)}'),
+          Text('Son geçerlilik: ${format.format(preview.expiresAt)}'),
           const SizedBox(height: 14),
           const Text(
             'Bu giriş size ait değilse onaylamayın.',
