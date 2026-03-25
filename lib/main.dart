@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -48,7 +49,7 @@ class TeklifProApp extends StatelessWidget {
             theme: AppTheme.light,
             routerConfig: router,
             builder: (context, child) => AppInternetGate(
-              enabled: !skipInternetGuard,
+              enabled: !skipInternetGuard && !kIsWeb,
               child: Stack(
                 fit: StackFit.expand,
                 children: [

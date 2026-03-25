@@ -100,26 +100,36 @@ class _AppInternetGateState extends State<AppInternetGate> {
   }
 
   Future<void> _bootstrap() async {
-    final online = await _service.hasInternet();
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _checking = false;
-      _hasInternet = online;
-    });
-    if (online) {
-      await _retryStoredSessionIfNeeded();
-    }
-    _subscription = _service.watchInternet().listen((onlineNow) async {
+    try {
+      final online = await _service.hasInternet();
       if (!mounted) {
         return;
       }
-      setState(() => _hasInternet = onlineNow);
-      if (onlineNow) {
+      setState(() {
+        _checking = false;
+        _hasInternet = online;
+      });
+      if (online) {
         await _retryStoredSessionIfNeeded();
       }
-    });
+      _subscription = _service.watchInternet().listen((onlineNow) async {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _hasInternet = onlineNow);
+        if (onlineNow) {
+          await _retryStoredSessionIfNeeded();
+        }
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _checking = false;
+        _hasInternet = true;
+      });
+    }
   }
 
   Future<void> _retryStoredSessionIfNeeded() async {
@@ -155,16 +165,26 @@ class _AppInternetGateState extends State<AppInternetGate> {
 
   Future<void> _retryNow() async {
     setState(() => _checking = true);
-    final online = await _service.hasInternet();
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _checking = false;
-      _hasInternet = online;
-    });
-    if (online) {
-      await _retryStoredSessionIfNeeded();
+    try {
+      final online = await _service.hasInternet();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _checking = false;
+        _hasInternet = online;
+      });
+      if (online) {
+        await _retryStoredSessionIfNeeded();
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _checking = false;
+        _hasInternet = true;
+      });
     }
   }
 
