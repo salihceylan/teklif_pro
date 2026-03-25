@@ -1125,7 +1125,7 @@ class _CompanyMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.max,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: large ? 56 : 46,
@@ -1142,7 +1142,8 @@ class _CompanyMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const Flexible(
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: large ? 260 : 200),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

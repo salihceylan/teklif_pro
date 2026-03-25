@@ -82,6 +82,16 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> completeExternalLogin({
+    required String accessToken,
+    required User user,
+  }) async {
+    await Storage.saveToken(accessToken);
+    _user = user;
+    await BrowserPushManager.instance.syncCurrentUser();
+    notifyListeners();
+  }
+
   String _parseError(dynamic e) {
     try {
       final data = (e as dynamic).response?.data;

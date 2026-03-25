@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -119,6 +120,19 @@ class AppDrawer extends StatelessWidget {
                 ),
                 const _DrawerDivider(label: 'TERCİHLER'),
                 _DrawerItem(
+                  icon: Icons.devices_other_outlined,
+                  label: 'Cihazlar',
+                  route: '/devices',
+                  currentRoute: currentRoute,
+                ),
+                if (!kIsWeb)
+                  _DrawerItem(
+                    icon: Icons.qr_code_scanner_outlined,
+                    label: 'Karekodla Web Girişi',
+                    route: '/devices/qr-login',
+                    currentRoute: currentRoute,
+                  ),
+                _DrawerItem(
                   icon: Icons.notifications_outlined,
                   label: 'Bildirimler',
                   route: '/notifications',
@@ -150,10 +164,12 @@ class AppDrawer extends StatelessWidget {
                 fontSize: 14,
               ),
             ),
-            onTap: () {
+            onTap: () async {
               Navigator.pop(context);
-              context.read<AuthProvider>().logout();
-              context.go('/');
+              await context.read<AuthProvider>().logout();
+              if (context.mounted) {
+                context.go('/');
+              }
             },
           ),
           const SizedBox(height: 16),
@@ -235,7 +251,9 @@ class _DrawerItem extends StatelessWidget {
         dense: true,
         onTap: () {
           Navigator.pop(context);
-          if (!isActive) context.go(route);
+          if (!isActive) {
+            context.go(route);
+          }
         },
       ),
     );

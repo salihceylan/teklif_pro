@@ -5,6 +5,8 @@ import '../providers/auth_provider.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
+import '../screens/devices/devices_screen.dart';
+import '../screens/devices/qr_login_scanner_screen.dart';
 import '../screens/home/company_home_screen.dart';
 import '../screens/notifications/notification_settings_screen.dart';
 import '../screens/customers/customers_screen.dart';
@@ -47,6 +49,11 @@ GoRouter buildRouter(BuildContext context) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/panel', builder: (_, _) => const DashboardScreen()),
+      GoRoute(path: '/devices', builder: (_, _) => const DevicesScreen()),
+      GoRoute(
+        path: '/devices/qr-login',
+        builder: (_, _) => const QrLoginScannerScreen(),
+      ),
       GoRoute(
         path: '/notifications',
         builder: (_, _) => const NotificationSettingsScreen(),

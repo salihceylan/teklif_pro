@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../widgets/app_shell.dart';
+import 'qr_login_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,7 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     final auth = context.read<AuthProvider>();
     final ok = await auth.login(_emailCtrl.text.trim(), _passCtrl.text);
     if (!ok && mounted) {
@@ -80,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: Icons.verified_user_outlined,
           title: 'Güvenli oturum',
           description:
-              'JWT tabanlı giriş ile tüm istekler doğrulanmış oturum üzerinden çalışır.',
+              'Tüm istekler doğrulanmış oturum üzerinden ilerler; yeni cihazlar ayrıca yönetilebilir.',
         ),
       ],
       footer: Column(
@@ -111,7 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'ornek@firma.com',
                 prefixIcon: Icon(Icons.email_outlined),
               ),
-              validator: (value) => value!.isEmpty ? 'E-posta girin' : null,
+              validator: (value) =>
+                  value == null || value.isEmpty ? 'E-posta girin' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -131,7 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
-              validator: (value) => value!.isEmpty ? 'Şifre girin' : null,
+              validator: (value) =>
+                  value == null || value.isEmpty ? 'Şifre girin' : null,
             ),
             const SizedBox(height: 20),
             FilledButton(
@@ -151,6 +157,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     )
                   : const Text('Giriş Yap'),
             ),
+            if (kIsWeb) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: loading
+                    ? null
+                    : () => showDialog<void>(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (_) => const QrLoginDialog(),
+                      ),
+                icon: const Icon(Icons.qr_code_2_rounded),
+                label: const Text('Karekod ile Giriş'),
+              ),
+            ],
           ],
         ),
       ),

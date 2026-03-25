@@ -1,12 +1,14 @@
 import '../core/api_client.dart';
+import '../core/device_descriptor.dart';
 import '../core/storage.dart';
 import '../models/user.dart';
 
 class AuthService {
   Future<User> login(String email, String password) async {
+    final descriptor = await resolveCurrentDeviceDescriptor();
     final res = await ApiClient.instance.post(
       '/auth/login',
-      data: {'email': email, 'password': password},
+      data: {'email': email, 'password': password, ...descriptor.toJson()},
     );
     await Storage.saveToken(res.data['access_token']);
     return User.fromJson(res.data['user']);
@@ -19,6 +21,7 @@ class AuthService {
     String? phone,
     String? companyName,
   }) async {
+    final descriptor = await resolveCurrentDeviceDescriptor();
     final res = await ApiClient.instance.post(
       '/auth/register',
       data: {
@@ -27,6 +30,7 @@ class AuthService {
         'full_name': fullName,
         'phone': phone,
         'company_name': companyName,
+        ...descriptor.toJson(),
       },
     );
     await Storage.saveToken(res.data['access_token']);
@@ -38,5 +42,10 @@ class AuthService {
     return User.fromJson(res.data);
   }
 
-  Future<void> logout() async => await Storage.clear();
+  Future<void> logout() async {
+    try {
+      await ApiClient.instance.post('/auth/logout');
+    } catch (_) {}
+    await Storage.clear();
+  }
 }
