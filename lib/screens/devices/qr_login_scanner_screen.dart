@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -73,7 +74,7 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
           if (!mounted) {
             return;
           }
-          Navigator.of(context).maybePop();
+          context.pop();
         });
         return;
       }

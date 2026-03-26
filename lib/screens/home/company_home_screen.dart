@@ -1197,7 +1197,10 @@ class _HeroVisual extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: const [
-                _HeroVisualCanvas(compact: true),
+                SizedBox(
+                  height: 200,
+                  child: _HeroVisualCanvas(compact: true),
+                ),
                 SizedBox(height: 14),
                 Wrap(
                   spacing: 10,
