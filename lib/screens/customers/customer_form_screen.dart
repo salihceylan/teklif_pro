@@ -277,7 +277,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
           ),
           label: Text(
             _showAdvancedSections
-                ? 'Detayli alanlari gizle'
+                ? 'Detaylı alanları gizle'
                 : 'Daha fazla bilgi ekle',
           ),
         ),
@@ -312,7 +312,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                   ? 'Şirket profilini güncelleyin'
                   : 'Sadece şirket adıyla kayıt açın',
               subtitle: _isEdit
-                  ? 'Iletisim, vergi ve sektor bilgilerini istediginiz zaman guncelleyebilirsiniz.'
+                  ? 'İletişim, vergi ve sektör bilgilerini istediğiniz zaman güncelleyebilirsiniz.'
                   : 'İlk adımda sadece şirket unvanı zorunlu. Diğer bilgileri ister şimdi, ister daha sonra düzenleyin.',
               trailing: _currentCustomer?.customerCode == null
                   ? null
@@ -348,7 +348,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
               const SizedBox(height: 20),
               AppSectionCard(
                 icon: Icons.contact_phone_outlined,
-                title: 'Iletisim Bilgileri',
+                title: 'İletişim Bilgileri',
                 description:
                     'Yetkili kişi ve iletişim alanları opsiyoneldir. Sonradan da güncellenebilir.',
                 children: [
@@ -403,7 +403,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                 icon: Icons.badge_outlined,
                 title: 'Resmi ve Finansal Bilgiler',
                 description:
-                    'Vergi, MERSIS, KEP ve banka bilgileri sirket kurnyesini tamamlar.',
+                    'Vergi, MERSIS, KEP ve banka bilgileri şirket künye bilgisini tamamlar.',
                 children: [
                   AdaptiveFieldRow(
                     maxColumns: 4,
@@ -448,7 +448,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                         controller: _employeeCountCtrl,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'Personel Sayisi',
+                          labelText: 'Personel Sayısı',
                           prefixIcon: Icon(Icons.groups_2_outlined),
                         ),
                       ),
@@ -494,7 +494,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _cityCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'Sehir',
+                          labelText: 'Şehir',
                           prefixIcon: Icon(Icons.location_city_outlined),
                         ),
                       ),
@@ -530,7 +530,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                       TextFormField(
                         controller: _naceNameCtrl,
                         decoration: const InputDecoration(
-                          labelText: 'NACE Adi',
+                          labelText: 'NACE Adı',
                           prefixIcon: Icon(Icons.schema_outlined),
                         ),
                       ),
@@ -570,7 +570,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                 icon: Icons.tips_and_updates_outlined,
                 title: 'Ticari Notlar',
                 description:
-                    'Hedef musteri grubu, satis kanali ve serbest notlar burada tutulur.',
+                    'Hedef müşteri grubu, satış kanalı ve serbest notlar burada tutulur.',
                 children: [
                   AdaptiveFieldRow(
                     maxColumns: 2,

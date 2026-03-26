@@ -868,7 +868,7 @@ class _QuoteFormScreenState extends State<QuoteFormScreen> {
               icon: Icons.gavel_outlined,
               title: 'Ek Kosullar ve Notlar',
               description:
-                  'Belgenin alt bolumunde yer alan aciklama ve kosul maddeleri burada tutulur.',
+                  'Belgenin alt bölümünde yer alan açıklama ve koşul maddeleri burada tutulur.',
               children: [
                 TextFormField(
                   controller: _termsCtrl,

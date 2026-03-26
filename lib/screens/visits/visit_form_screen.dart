@@ -834,7 +834,7 @@ class _MaterialCard extends StatelessWidget {
               TextFormField(
                 controller: row.nameCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Malzemenin Adi',
+                  labelText: 'Malzemenin Adı',
                   prefixIcon: Icon(Icons.widgets_outlined),
                 ),
                 validator: (value) => value == null || value.trim().isEmpty

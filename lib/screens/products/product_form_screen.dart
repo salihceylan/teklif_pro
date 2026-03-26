@@ -216,7 +216,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.category_outlined,
-              title: 'Temel Tanim',
+              title: 'Temel Tanım',
               description:
                   'Kayıt için sadece ürün adı zorunlu. Diğer alanları ihtiyaca göre doldurabilirsiniz.',
               children: [
@@ -284,7 +284,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               icon: Icons.qr_code_2_outlined,
               title: 'Kodlama ve Birim',
               description:
-                  'Resmi stok kodu ve barkod alanlari opsiyoneldir. SKU bos birakilirsa otomatik uretilir.',
+                  'Resmi stok kodu ve barkod alanları opsiyoneldir. SKU boş bırakılırsa otomatik üretilir.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -295,7 +295,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       textCapitalization: TextCapitalization.characters,
                       decoration: const InputDecoration(
                         labelText: 'SKU / Stok Kodu',
-                        hintText: 'Bos birakilabilir',
+                        hintText: 'Boş bırakılabilir',
                         prefixIcon: Icon(Icons.badge_outlined),
                       ),
                     ),
@@ -408,7 +408,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.inventory_outlined,
-              title: 'Stok Yonetimi',
+              title: 'Stok Yönetimi',
               description:
                   'Stoklu ürünlerde mevcut miktar ve kritik seviye tutulur. Hizmet kalemlerinde takip kapatabilirsiniz.',
               children: [
@@ -416,7 +416,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   value: _trackInventory,
                   onChanged: (value) => setState(() => _trackInventory = value),
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Stok takibi acik'),
+                  title: const Text('Stok takibi açık'),
                   subtitle: const Text(
                     'Açıksa stok miktarı ve kritik seviye panellerde takip edilir.',
                   ),

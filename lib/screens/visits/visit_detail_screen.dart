@@ -48,7 +48,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
       customers.where((item) => item.id == id).firstOrNull;
 
   String _customerName(List<Customer> customers, int id) =>
-      _customer(customers, id)?.companyName ?? 'Musteri #$id';
+      _customer(customers, id)?.companyName ?? 'Müşteri #$id';
 
   void _goBack() {
     if (Navigator.of(context).canPop()) {
@@ -91,7 +91,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
         context,
         title: 'Servis Formunu Sil',
         message:
-            '${visit.serviceCode ?? 'Bu'} servis formunu silmek istediginizden emin misiniz?',
+            '${visit.serviceCode ?? 'Bu'} servis formunu silmek istediğinizden emin misiniz?',
       );
       if (!confirmed || !mounted) {
         return;
@@ -144,7 +144,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded),
-            tooltip: 'Servis formu islemleri',
+            tooltip: 'Servis formu işlemleri',
             onSelected: (value) =>
                 _handleMenuAction(value, visit, customer: customer),
             itemBuilder: (_) => const [
@@ -152,14 +152,14 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                 value: 'print',
                 child: ActionMenuRow(
                   icon: Icons.print_outlined,
-                  label: 'Servis Ciktisi',
+                  label: 'Servis Çıktısı',
                 ),
               ),
               PopupMenuItem(
                 value: 'mail',
                 child: ActionMenuRow(
                   icon: Icons.email_outlined,
-                  label: 'Mail Gonder',
+                  label: 'Mail Gönder',
                 ),
               ),
               PopupMenuItem(
@@ -278,7 +278,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ).format(visit.scheduledDate),
                   ),
                   _InfoPanel(
-                    label: 'Gerceklesen Tarih',
+                    label: 'Gerçekleşen Tarih',
                     value: visit.actualDate == null
                         ? '-'
                         : DateFormat(
@@ -317,7 +317,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                   ),
                 ],
               ),
-              _DetailLine('Sikayet / Talep', visit.complaint),
+              _DetailLine('Şikayet / Talep', visit.complaint),
             ],
           ),
           const SizedBox(height: 20),
@@ -358,7 +358,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                             'Toplam ${_currency.format(item.totalPriceUsd)} USD',
                           ),
                           _MiniPill(
-                            'TL Karsilik ${_currency.format(item.totalPrice)} TL',
+                            'TL Karşılık ${_currency.format(item.totalPrice)} TL',
                           ),
                         ],
                       ),
@@ -384,12 +384,12 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'Iscilik (USD)',
+                      'İşçilik (USD)',
                       '${_currency.format(visit.laborAmountUsd)} USD',
                     ),
                     const SizedBox(height: 8),
                     _SummaryRow(
-                      'Iscilik (TL)',
+                      'İşçilik (TL)',
                       '${_currency.format(visit.laborAmount)} TL',
                     ),
                     const SizedBox(height: 8),
@@ -425,8 +425,8 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
               icon: Icons.notes_outlined,
               title: 'Notlar',
               children: [
-                _DetailLine('Musteri Notlari', visit.notes),
-                _DetailLine('Teknisyen Notlari', visit.technicianNotes),
+                _DetailLine('Müşteri Notları', visit.notes),
+                _DetailLine('Teknisyen Notları', visit.technicianNotes),
               ],
             ),
           ],
