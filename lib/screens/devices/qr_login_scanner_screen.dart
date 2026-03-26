@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -31,27 +33,26 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
     super.dispose();
   }
 
-  Future<void> _handleDetect(BarcodeCapture capture) async {
-    if (_handlingScan || _closingAfterApproval) {
-      return;
-    }
+  // Synchronous — returns instantly so the barcode stream is never blocked.
+  void _handleDetect(BarcodeCapture capture) {
+    if (_handlingScan || _closingAfterApproval) return;
 
-    final raw = capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
-    final challengeId = raw == null ? null : _service.parseQrChallengeId(raw);
-    if (challengeId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        buildErrorSnackBar('Geçerli bir giriş karekodu okunamadı.'),
-      );
-      return;
-    }
+    final raw =
+        capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
+    final challengeId =
+        raw == null ? null : _service.parseQrChallengeId(raw);
+    if (challengeId == null) return;
 
     setState(() => _handlingScan = true);
+    // Stop camera immediately (fire-and-forget) to free CPU before the dialog.
+    unawaited(_scannerController.stop());
+    unawaited(_processScan(challengeId));
+  }
 
+  Future<void> _processScan(String challengeId) async {
     try {
       final preview = await _service.fetchChallengePreview(challengeId);
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       final approved = await showDialog<bool>(
         context: context,
@@ -64,29 +65,24 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
 
       if (approved == true) {
         await _service.approveChallenge(challengeId);
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) return;
 
         _closingAfterApproval = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) {
-            return;
-          }
+          if (!mounted) return;
           context.pop();
         });
         return;
       }
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(buildErrorSnackBar(_service.mapError(error)));
     } finally {
       if (mounted && !_closingAfterApproval) {
         setState(() => _handlingScan = false);
+        unawaited(_scannerController.start());
       }
     }
   }
