@@ -136,7 +136,9 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
           return;
         }
         Navigator.of(context).pop();
-        context.go('/panel');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) context.go('/panel');
+        });
         return;
       }
 
