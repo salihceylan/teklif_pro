@@ -1142,8 +1142,7 @@ class _CompanyMark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: large ? 260 : 200),
+        Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

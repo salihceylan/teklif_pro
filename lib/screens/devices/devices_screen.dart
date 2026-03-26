@@ -312,14 +312,9 @@ class _SessionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: busy ? null : onRevoke,
-                icon: const Icon(Icons.logout_rounded),
-                label: Text(session.isCurrent ? 'Bu Oturumu Kapat' : 'Kapat'),
-              ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -340,6 +335,15 @@ class _SessionCard extends StatelessWidget {
                 value: format.format(session.expiresAt.toLocal()),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: busy ? null : onRevoke,
+              icon: const Icon(Icons.logout_rounded),
+              label: Text(session.isCurrent ? 'Bu Oturumu Kapat' : 'Kapat'),
+            ),
           ),
         ],
       ),
