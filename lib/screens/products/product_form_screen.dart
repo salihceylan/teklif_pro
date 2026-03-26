@@ -384,7 +384,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Ürün aktif olarak kullanılsın'),
                   subtitle: const Text(
-                    'Pasif urunler listede gorunur ancak yeni kayitlarda secilmez.',
+                    'Pasif ürünler listede görünür ancak yeni kayıtlarda seçilmez.',
                   ),
                 ),
                 Container(
@@ -459,7 +459,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       border: Border.all(color: const Color(0xFFD9E5F0)),
                     ),
                     child: const Text(
-                      'Bu kayit stoktan dusulmeyen bir hizmet veya serbest kalem olarak tutulacak.',
+                      'Bu kayıt stoktan düşülmeyen bir hizmet veya serbest kalem olarak tutulacak.',
                       style: TextStyle(
                         fontSize: 13,
                         color: Color(0xFF607085),

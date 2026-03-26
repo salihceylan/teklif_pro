@@ -166,7 +166,7 @@ class _VisitDetailScreenState extends State<VisitDetailScreen> {
                 value: 'edit',
                 child: ActionMenuRow(
                   icon: Icons.edit_outlined,
-                  label: 'Duzenle',
+                  label: 'Düzenle',
                 ),
               ),
               PopupMenuItem(

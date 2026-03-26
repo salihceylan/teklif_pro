@@ -141,9 +141,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 20),
             AppSectionCard(
               icon: Icons.rocket_launch_outlined,
-              title: 'Hizli Baslangic',
+              title: 'Hızlı Başlangıç',
               description:
-                  'En sik kullanilan uc kayit akisini tek dokunusla baslatin.',
+                  'En sık kullanılan üç kayıt akışını tek dokunuşla başlatın.',
               children: [
                 AdaptiveFieldRow(
                   maxColumns: 3,
@@ -153,7 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       icon: Icons.add_business_outlined,
                       title: 'Şirket Ekle',
                       description:
-                          'Sadece sirket unvani ile hizli kayit acin, diger bilgileri sonra duzenleyin.',
+                          'Sadece şirket ünvanı ile hızlı kayıt açın, diğer bilgileri sonra düzenleyin.',
                       buttonLabel: 'Yeni Firma',
                       color: AppTheme.primary,
                       onTap: () => context.go('/customers/new'),
@@ -162,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       icon: Icons.request_quote_outlined,
                       title: 'Teklif Hazırla',
                       description:
-                          'Kalemler, KDV, belge numarasi ve ciktiyi tek formda yonetin.',
+                          'Kalemler, KDV, belge numarası ve çıktıyı tek formda yönetin.',
                       buttonLabel: 'Teklif Oluştur',
                       color: const Color(0xFF1F7A8C),
                       onTap: () => context.go('/quotes/new'),
