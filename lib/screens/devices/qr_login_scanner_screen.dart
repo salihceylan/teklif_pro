@@ -46,7 +46,6 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
     }
 
     setState(() => _handlingScan = true);
-    await _scannerController.stop();
 
     try {
       final preview = await _service.fetchChallengePreview(challengeId);
@@ -88,7 +87,6 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
     } finally {
       if (mounted && !_closingAfterApproval) {
         setState(() => _handlingScan = false);
-        await _scannerController.start();
       }
     }
   }
