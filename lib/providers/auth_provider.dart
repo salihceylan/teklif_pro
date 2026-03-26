@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../core/api_exception.dart';
 import '../core/browser_push_manager.dart';
 import '../core/storage.dart';
 import '../models/user.dart';
@@ -26,8 +26,8 @@ class AuthProvider extends ChangeNotifier {
       _user = await _service.me();
       await BrowserPushManager.instance.syncCurrentUser();
       notifyListeners();
-    } catch (error) {
-      if (_isTokenInvalid(error)) {
+    } catch (e) {
+      if (_isTokenInvalid(e)) {
         await Storage.clear();
       }
     }
@@ -43,8 +43,8 @@ class AuthProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
       return true;
-    } catch (error) {
-      _error = _parseError(error);
+    } catch (e) {
+      _error = parseApiError(e);
       _loading = false;
       notifyListeners();
       return false;
@@ -73,8 +73,8 @@ class AuthProvider extends ChangeNotifier {
       _loading = false;
       notifyListeners();
       return true;
-    } catch (error) {
-      _error = _parseError(error);
+    } catch (e) {
+      _error = parseApiError(e);
       _loading = false;
       notifyListeners();
       return false;
@@ -98,26 +98,5 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _parseError(Object error) {
-    if (error is DioException) {
-      final data = error.response?.data;
-      if (data is Map && data['detail'] != null) {
-        return data['detail'].toString();
-      }
-      if (error.type == DioExceptionType.connectionError ||
-          error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return 'Bağlantı hatası';
-      }
-    }
-    return 'Bir hata oluştu';
-  }
-
-  bool _isTokenInvalid(Object error) {
-    if (error is DioException) {
-      final statusCode = error.response?.statusCode;
-      return statusCode == 401 || statusCode == 403;
-    }
-    return false;
-  }
+  bool _isTokenInvalid(Object error) => isTokenExpiredError(error);
 }

@@ -3,18 +3,18 @@ import 'constants.dart';
 import 'storage.dart';
 
 class ApiClient {
-  static final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: AppConstants.baseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json'},
-    ),
-  );
+  static final Dio _dio = _buildDio();
 
-  static Dio get instance {
-    _dio.interceptors.clear();
-    _dio.interceptors.add(
+  static Dio _buildDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: AppConstants.baseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
+    dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
           final token = Storage.getToken();
@@ -28,6 +28,8 @@ class ApiClient {
         },
       ),
     );
-    return _dio;
+    return dio;
   }
+
+  static Dio get instance => _dio;
 }

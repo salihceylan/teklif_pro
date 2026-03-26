@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../core/api_exception.dart';
 import '../core/app_notifications.dart';
 import '../models/invoice.dart';
 import '../services/invoice_service.dart';
@@ -7,16 +9,24 @@ class InvoiceProvider extends ChangeNotifier {
   final _service = InvoiceService();
   List<Invoice> _items = [];
   bool _loading = false;
+  String? _error;
 
   List<Invoice> get items => _items;
   bool get loading => _loading;
+  String? get error => _error;
 
   Future<void> load() async {
     _loading = true;
+    _error = null;
     notifyListeners();
-    _items = await _service.list();
-    _loading = false;
-    notifyListeners();
+    try {
+      _items = await _service.list();
+    } catch (e) {
+      _error = parseApiError(e);
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> create(Map<String, dynamic> data) async {
