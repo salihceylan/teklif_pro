@@ -22,31 +22,44 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
   final _scannerController = MobileScannerController(
     formats: const [BarcodeFormat.qrCode],
   );
+  // Direct stream subscription so we can pause/resume in Dart only,
+  // without touching the Android camera (no platform-thread blocking).
+  StreamSubscription<BarcodeCapture>? _barcodeSub;
   final _format = DateFormat('dd.MM.yyyy HH:mm', 'tr_TR');
 
-  bool _handlingScan = false;
   bool _closingAfterApproval = false;
 
   @override
+  void initState() {
+    super.initState();
+    _barcodeSub = _scannerController.barcodes.listen(_onBarcode);
+  }
+
+  @override
   void dispose() {
+    _barcodeSub?.cancel();
     _scannerController.dispose();
     super.dispose();
   }
 
-  // Synchronous — returns instantly so the barcode stream is never blocked.
-  void _handleDetect(BarcodeCapture capture) {
-    if (_handlingScan || _closingAfterApproval) return;
+  void _onBarcode(BarcodeCapture capture) {
+    if (_closingAfterApproval) return;
+
+    // Pause the stream immediately — pure Dart operation,
+    // zero Android platform-thread involvement.
+    _barcodeSub?.pause();
 
     final raw =
         capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
     final challengeId =
         raw == null ? null : _service.parseQrChallengeId(raw);
-    if (challengeId == null) return;
 
-    setState(() => _handlingScan = true);
-    // Stop camera immediately (fire-and-forget) to free CPU before the dialog.
-    unawaited(_scannerController.stop());
-    unawaited(_processScan(challengeId));
+    if (challengeId == null) {
+      _barcodeSub?.resume();
+      return;
+    }
+
+    _processScan(challengeId);
   }
 
   Future<void> _processScan(String challengeId) async {
@@ -80,9 +93,9 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
         context,
       ).showSnackBar(buildErrorSnackBar(_service.mapError(error)));
     } finally {
+      // Resume only if we're still on this screen and not closing.
       if (mounted && !_closingAfterApproval) {
-        setState(() => _handlingScan = false);
-        unawaited(_scannerController.start());
+        _barcodeSub?.resume();
       }
     }
   }
@@ -103,10 +116,8 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: MobileScanner(
-              controller: _scannerController,
-              onDetect: _handleDetect,
-            ),
+            // No onDetect — handled via _barcodeSub above.
+            child: MobileScanner(controller: _scannerController),
           ),
           Positioned(
             left: 20,

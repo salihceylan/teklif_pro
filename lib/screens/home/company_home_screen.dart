@@ -1395,17 +1395,23 @@ class _PrimaryVisualPanel extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.all(compact ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _PanelLabel(text: 'Kurumsal görünüm', compact: compact),
-            SizedBox(height: compact ? 8 : 12),
-            const Expanded(
-              child: _BigVisualCard(
-                icon: Icons.language_rounded,
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Hide label when available height is too small to fit it.
+            final showLabel = constraints.maxHeight >= 40;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showLabel) ...[
+                  _PanelLabel(text: 'Kurumsal görünüm', compact: compact),
+                  SizedBox(height: compact ? 8 : 12),
+                ],
+                Expanded(
+                  child: _BigVisualCard(icon: Icons.language_rounded),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -2181,7 +2187,10 @@ class _BigVisualCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Center(child: Icon(icon, size: 44, color: Colors.white)),
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Icon(icon, size: 44, color: Colors.white),
+      ),
     );
   }
 }
