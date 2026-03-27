@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +63,26 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
     _processScan(challengeId);
   }
 
+  void _closeScreen() {
+    _closingAfterApproval = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/devices');
+      }
+    });
+  }
+
+  bool _isFatalError(Object error) {
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+      return status == 409 || status == 403 || status == 404;
+    }
+    return false;
+  }
+
   Future<void> _processScan(String challengeId) async {
     try {
       final preview = await _service.fetchChallengePreview(challengeId);
@@ -77,20 +98,25 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
       );
 
       if (approved == true) {
+        // approveChallenge'dan ÖNCE limit kontrolü yap.
+        // Backend önce session oluşturabilir, sonra 409 dönebilir;
+        // bu kontrolle tarayıcıya gereksiz giriş yaptırılmaz.
+        final sessions = await _service.listSessions();
+        if (sessions.length >= 3) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            buildErrorSnackBar(
+              'Maksimum 3 cihaz sınırı dolu. Devam etmek için bir cihaz oturumunu kapatın.',
+            ),
+          );
+          _closeScreen();
+          return;
+        }
+
         await _service.approveChallenge(challengeId);
         if (!mounted) return;
 
-        _closingAfterApproval = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          // Drawer'dan açıldığında context.go() kullanıldığı için stack boş
-          // olabilir; canPop kontrolü ile güvenli şekilde geri dön.
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/devices');
-          }
-        });
+        _closeScreen();
         return;
       }
     } catch (error) {
@@ -98,6 +124,10 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(buildErrorSnackBar(_service.mapError(error)));
+      // Cihaz limiti gibi terminal hatalarda kamerayı kapat ve geri dön.
+      if (_isFatalError(error)) {
+        _closeScreen();
+      }
     } finally {
       // Resume only if we're still on this screen and not closing.
       if (mounted && !_closingAfterApproval) {
