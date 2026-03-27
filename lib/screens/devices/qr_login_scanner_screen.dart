@@ -111,54 +111,185 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Karekod ile Web Girişi')),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            // No onDetect — handled via _barcodeSub above.
-            child: MobileScanner(controller: _scannerController),
-          ),
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 28,
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.62),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final screenHeight = constraints.maxHeight;
+        final windowSize = screenWidth * 0.68;
+        final left = (screenWidth - windowSize) / 2;
+        final top = (screenHeight - windowSize) / 2 - 40;
+        final scanWindow = Rect.fromLTWH(left, top, windowSize, windowSize);
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('Karekod ile Web Girişi')),
+          body: Stack(
+            children: [
+              Positioned.fill(
+                // scanWindow restricts ML analysis to the central square —
+                // dramatically reduces TFLite CPU load and prevents ANR.
+                child: MobileScanner(
+                  controller: _scannerController,
+                  scanWindow: scanWindow,
+                ),
               ),
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Tarayıcıdaki karekodu okutun',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+              // Dark overlay with a hole cut out for the scan window.
+              Positioned.fill(
+                child: _ScanOverlay(scanWindow: scanWindow),
+              ),
+              // Corner brackets drawn on top.
+              Positioned(
+                left: left,
+                top: top,
+                width: windowSize,
+                height: windowSize,
+                child: const _ScanCorners(),
+              ),
+              Positioned(
+                left: 20,
+                right: 20,
+                bottom: 28,
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.62),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Onay vermeden önce hangi tarayıcıda giriş açılacağını kontrol edeceksiniz.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.45,
-                    ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Tarayıcıdaki karekodu okutun',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Onay vermeden önce hangi tarayıcıda giriş açılacağını kontrol edeceksiniz.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+}
+
+/// Draws a dark semi-transparent overlay with a transparent rectangle
+/// cut out at [scanWindow].
+class _ScanOverlay extends StatelessWidget {
+  final Rect scanWindow;
+
+  const _ScanOverlay({required this.scanWindow});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _OverlayPainter(scanWindow: scanWindow));
+  }
+}
+
+class _OverlayPainter extends CustomPainter {
+  final Rect scanWindow;
+
+  _OverlayPainter({required this.scanWindow});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.55);
+    final full = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rrect = RRect.fromRectAndRadius(
+      scanWindow,
+      const Radius.circular(16),
+    );
+    // Fill everything, then cut the hole.
+    final path = Path()
+      ..addRect(full)
+      ..addRRect(rrect)
+      ..fillType = PathFillType.evenOdd;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_OverlayPainter old) => old.scanWindow != scanWindow;
+}
+
+/// Draws animated corner brackets inside the scan window.
+class _ScanCorners extends StatelessWidget {
+  const _ScanCorners();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _CornerPainter());
+  }
+}
+
+class _CornerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const len = 28.0;
+    const radius = 12.0;
+    const stroke = 3.5;
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = stroke
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final corners = [
+      // top-left
+      [Offset(0, radius), Offset(0, 0), Offset(radius, 0)],
+      // top-right
+      [
+        Offset(size.width - radius, 0),
+        Offset(size.width, 0),
+        Offset(size.width, radius),
+      ],
+      // bottom-left
+      [
+        Offset(0, size.height - radius),
+        Offset(0, size.height),
+        Offset(radius, size.height),
+      ],
+      // bottom-right
+      [
+        Offset(size.width - radius, size.height),
+        Offset(size.width, size.height),
+        Offset(size.width, size.height - radius),
+      ],
+    ];
+
+    for (final pts in corners) {
+      // extend each arm by `len`
+      final a = pts[0];
+      final corner = pts[1];
+      final b = pts[2];
+      final da = (a - corner) / (a - corner).distance * len;
+      final db = (b - corner) / (b - corner).distance * len;
+      final path = Path()
+        ..moveTo(corner.dx + da.dx, corner.dy + da.dy)
+        ..lineTo(corner.dx, corner.dy)
+        ..lineTo(corner.dx + db.dx, corner.dy + db.dy);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CornerPainter old) => false;
 }
 
 class _ApproveDialog extends StatelessWidget {
