@@ -98,21 +98,6 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
       );
 
       if (approved == true) {
-        // approveChallenge'dan ÖNCE limit kontrolü yap.
-        // Backend önce session oluşturabilir, sonra 409 dönebilir;
-        // bu kontrolle tarayıcıya gereksiz giriş yaptırılmaz.
-        final sessions = await _service.listSessions();
-        if (sessions.length >= 3) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            buildErrorSnackBar(
-              'Maksimum 3 cihaz sınırı dolu. Devam etmek için bir cihaz oturumunu kapatın.',
-            ),
-          );
-          _closeScreen();
-          return;
-        }
-
         await _service.approveChallenge(challengeId);
         if (!mounted) return;
 
