@@ -83,7 +83,13 @@ class _QrLoginScannerScreenState extends State<QrLoginScannerScreen> {
         _closingAfterApproval = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          context.pop();
+          // Drawer'dan açıldığında context.go() kullanıldığı için stack boş
+          // olabilir; canPop kontrolü ile güvenli şekilde geri dön.
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/devices');
+          }
         });
         return;
       }
