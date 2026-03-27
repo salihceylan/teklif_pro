@@ -12,6 +12,8 @@ import '../widgets/app_drawer.dart';
 import '../widgets/destructive_confirm_dialog.dart';
 import 'customer_delete_verification_dialog.dart';
 
+enum _Sort { newest, az, za }
+
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
 
@@ -20,19 +22,78 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  _Sort _sort = _Sort.newest;
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_handleSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => context.read<CustomerProvider>().load(),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController
+      ..removeListener(_handleSearchChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleSearchChanged() {
+    final next = _searchController.text.trim();
+    if (next == _query) return;
+    setState(() => _query = next);
+  }
+
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _query = '';
+      _sort = _Sort.newest;
+    });
+  }
+
+  bool get _hasActiveFilters =>
+      _query.isNotEmpty || _sort != _Sort.newest;
+
+  bool _matchesQuery(Customer c) {
+    if (_query.isEmpty) return true;
+    final haystack = [
+      c.companyName,
+      c.customerCode ?? '',
+      c.contactName ?? '',
+      c.phone ?? '',
+      c.email ?? '',
+      c.taxNumber ?? '',
+      c.city ?? '',
+    ].join(' ').toLowerCase();
+    final tokens = _query
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty);
+    return tokens.every(haystack.contains);
+  }
+
+  List<Customer> _filtered(List<Customer> items) {
+    final list = items.where(_matchesQuery).toList();
+    if (_sort == _Sort.az) {
+      list.sort((a, b) =>
+          a.companyName.toLowerCase().compareTo(b.companyName.toLowerCase()));
+    } else if (_sort == _Sort.za) {
+      list.sort((a, b) =>
+          b.companyName.toLowerCase().compareTo(a.companyName.toLowerCase()));
+    }
+    return list;
   }
 
   String _buildDeleteMessage(String companyName, CustomerDeleteImpact impact) {
     final deletionMessage = impact.hasDependencies
         ? '$companyName firmasını silerseniz bu firmaya bağlı ${_dependencyParts(impact).join(', ')} kayıtları da kalıcı olarak silinecek.'
         : '$companyName firma kaydını silmek istediğinizden emin misiniz?';
-
     return '$deletionMessage Bu işlem geri alınamaz.\n\nDevam ederseniz hesabınızın e-posta adresine 4 haneli doğrulama kodu gönderilecek.';
   }
 
@@ -49,9 +110,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
   Future<void> _confirmDelete(Customer customer) async {
     final provider = context.read<CustomerProvider>();
     final impact = await provider.inspectDeleteImpact(customer.id);
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final confirmed = await showDestructiveConfirmDialog(
       context,
@@ -59,21 +118,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
       message: _buildDeleteMessage(customer.companyName, impact),
       confirmLabel: 'Kodu Gönder',
     );
-    if (!confirmed || !mounted) {
-      return;
-    }
+    if (!confirmed || !mounted) return;
 
     final result = await _requestVerification(customer);
-    if (!mounted || result == null) {
-      return;
-    }
+    if (!mounted || result == null) return;
 
     final message = result.hasDependencies
         ? 'Firma ve bağlı kayıtlar silindi'
         : 'Firma silindi';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<CustomerDeleteImpact?> _requestVerification(Customer customer) async {
@@ -90,17 +143,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
         ),
       );
     } on CustomerDeleteVerificationException catch (error) {
-      if (!mounted) {
-        return null;
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      if (!mounted) return null;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.message)));
       return null;
     } catch (_) {
-      if (!mounted) {
-        return null;
-      }
+      if (!mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Doğrulama kodu gönderilemedi')),
       );
@@ -111,6 +159,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CustomerProvider>();
+    final filteredItems = _filtered(provider.items);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Firmalar')),
@@ -133,10 +182,24 @@ class _CustomersScreenState extends State<CustomersScreen> {
               onRefresh: provider.load,
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
-                itemCount: provider.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemCount: filteredItems.length + 1,
+                separatorBuilder: (_, index) =>
+                    index == 0 ? const SizedBox(height: 12) : const SizedBox(height: 10),
                 itemBuilder: (context, index) {
-                  final customer = provider.items[index];
+                  if (index == 0) {
+                    return _FilterBar(
+                      searchController: _searchController,
+                      totalCount: provider.items.length,
+                      filteredCount: filteredItems.length,
+                      sort: _sort,
+                      hasActiveFilters: _hasActiveFilters,
+                      onSortChanged: (v) => setState(() => _sort = v),
+                      onClear: _clearFilters,
+                      entityLabel: 'firma',
+                      searchHint: 'Ad, yetkili, telefon, şehir...',
+                    );
+                  }
+                  final customer = filteredItems[index - 1];
                   return Card(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
@@ -183,8 +246,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                           color: AppTheme.textDark,
                                         ),
                                       ),
-                                      if ((customer.customerCode ?? '')
-                                          .isNotEmpty)
+                                      if ((customer.customerCode ?? '').isNotEmpty)
                                         _ChipLabel(
                                           label: 'ID ${customer.customerCode!}',
                                         ),
@@ -193,8 +255,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                   const SizedBox(height: 6),
                                   Text(
                                     [
-                                      if ((customer.contactName ?? '')
-                                          .isNotEmpty)
+                                      if ((customer.contactName ?? '').isNotEmpty)
                                         customer.contactName!,
                                       if ((customer.phone ?? '').isNotEmpty)
                                         customer.phone!,
@@ -212,8 +273,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                       padding: const EdgeInsets.only(top: 6),
                                       child: Text(
                                         [
-                                          if ((customer.taxNumber ?? '')
-                                              .isNotEmpty)
+                                          if ((customer.taxNumber ?? '').isNotEmpty)
                                             'Vergi No: ${customer.taxNumber}',
                                           if ((customer.city ?? '').isNotEmpty)
                                             customer.city!,
@@ -275,6 +335,104 @@ class _CustomersScreenState extends State<CustomersScreen> {
     );
   }
 }
+
+// ── Shared filter bar ─────────────────────────────────────────────────────────
+
+class _FilterBar extends StatelessWidget {
+  final TextEditingController searchController;
+  final int totalCount;
+  final int filteredCount;
+  final _Sort sort;
+  final bool hasActiveFilters;
+  final ValueChanged<_Sort> onSortChanged;
+  final VoidCallback onClear;
+  final String entityLabel;
+  final String searchHint;
+
+  const _FilterBar({
+    required this.searchController,
+    required this.totalCount,
+    required this.filteredCount,
+    required this.sort,
+    required this.hasActiveFilters,
+    required this.onSortChanged,
+    required this.onClear,
+    required this.entityLabel,
+    required this.searchHint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final summaryColor =
+        filteredCount == 0 ? AppTheme.danger : AppTheme.textMedium;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${filteredCount} sonuç  •  toplam $totalCount $entityLabel',
+                    style: TextStyle(fontSize: 13, color: summaryColor),
+                  ),
+                ),
+                if (hasActiveFilters)
+                  TextButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: const Text('Temizle'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.textMedium,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: searchHint,
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: onClear,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<_Sort>(
+              initialValue: sort,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'Sıralama',
+                isDense: true,
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: _Sort.newest,
+                  child: Text('Yeni eklenen'),
+                ),
+                DropdownMenuItem(value: _Sort.az, child: Text('A → Z')),
+                DropdownMenuItem(value: _Sort.za, child: Text('Z → A')),
+              ],
+              onChanged: (v) { if (v != null) onSortChanged(v); },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Helper widgets ────────────────────────────────────────────────────────────
 
 class _ChipLabel extends StatelessWidget {
   final String label;
